@@ -1,12 +1,6 @@
 import Foundation
 import SwiftData
 
-enum SyncStatus: String, Codable {
-    case pending
-    case synced
-    case failed
-}
-
 enum RoundType: String, Codable, CaseIterable {
     case day1 = "Day 1"
     case day2 = "Day 2"

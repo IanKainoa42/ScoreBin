@@ -6,9 +6,8 @@ import Foundation
 class SupabaseService {
     static let shared = SupabaseService()
 
-    // Configure these with your Supabase project credentials
-    private let supabaseURL = "YOUR_SUPABASE_URL"
-    private let supabaseKey = "YOUR_SUPABASE_ANON_KEY"
+    private let supabaseURL = AppConfig.Supabase.url
+    private let supabaseKey = AppConfig.Supabase.key
 
     private static let iso8601Formatter = ISO8601DateFormatter()
 

@@ -9,6 +9,7 @@ final class Competition {
     var location: String
     var notes: String
     var createdAt: Date
+    var syncStatus: SyncStatus = .pending
 
     @Relationship(deleteRule: .cascade, inverse: \Scoresheet.competition)
     var scoresheets: [Scoresheet]
@@ -27,6 +28,7 @@ final class Competition {
         self.location = location
         self.notes = notes
         self.createdAt = createdAt
+        self.syncStatus = .pending
         self.scoresheets = []
     }
 
