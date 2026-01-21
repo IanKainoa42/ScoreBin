@@ -128,7 +128,7 @@ enum ScoringRules {
     static let stuntDriverDegreeRange = ScoreRange(min: 0, max: 0.8, step: 0.1)
     static let stuntDriverMaxPartRange = ScoreRange(min: 0, max: 0.7, step: 0.1)
 
-    static let pyramidDifficultyRange = ScoreRange(min: 2.0, max: 4.0, step: 0.5)
+    static let pyramidDifficultyRange = ScoreRange(min: 2.0, max: 4.0, step: 0.1)
     static let pyramidExecutionRange = ScoreRange(min: 2.8, max: 4.0, step: 0.1)
 
     static let tossDifficultyRange = ScoreRange(min: 1.0, max: 2.0, step: 0.5)
