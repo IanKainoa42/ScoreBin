@@ -11,6 +11,7 @@ final class Team {
     var tier: String           // elite, etc.
     var athleteCount: Int
     var createdAt: Date
+    var syncStatus: SyncStatus = .pending
 
     @Relationship(deleteRule: .cascade, inverse: \Scoresheet.team)
     var scoresheets: [Scoresheet]
@@ -33,6 +34,7 @@ final class Team {
         self.tier = tier
         self.athleteCount = athleteCount
         self.createdAt = createdAt
+        self.syncStatus = .pending
         self.scoresheets = []
     }
 

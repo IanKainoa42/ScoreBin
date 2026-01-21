@@ -83,37 +83,51 @@ class SyncManager {
     // MARK: - Individual Sync Methods
 
     private func syncGyms(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Gym>()
-        let gyms = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+        let pendingGyms = try context.fetch(descriptor)
 
-        for gym in gyms {
+        for gym in pendingGyms {
             try await supabase.uploadGym(gym)
+            gym.syncStatus = .synced
+        }
+
+        if !pendingGyms.isEmpty {
+            try context.save()
         }
     }
 
     private func syncTeams(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Team>()
-        let teams = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+        let pendingTeams = try context.fetch(descriptor)
 
-        for team in teams {
+        for team in pendingTeams {
             try await supabase.uploadTeam(team)
+            team.syncStatus = .synced
+        }
+
+        if !pendingTeams.isEmpty {
+            try context.save()
         }
     }
 
     private func syncCompetitions(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Competition>()
-        let competitions = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+        let pendingCompetitions = try context.fetch(descriptor)
 
-        for competition in competitions {
+        for competition in pendingCompetitions {
             try await supabase.uploadCompetition(competition)
+            competition.syncStatus = .synced
+        }
+
+        if !pendingCompetitions.isEmpty {
+            try context.save()
         }
     }
 
     private func syncScoresheets(context: ModelContext) async throws {
         // Fetch all scoresheets and filter for pending
-        let descriptor = FetchDescriptor<Scoresheet>()
-        let allScoresheets = try context.fetch(descriptor)
-        let pendingScoresheets = allScoresheets.filter { $0.syncStatus == SyncStatus.pending }
+        let descriptor = FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+        let pendingScoresheets = try context.fetch(descriptor)
 
         for scoresheet in pendingScoresheets {
             try await supabase.uploadScoresheet(scoresheet)
