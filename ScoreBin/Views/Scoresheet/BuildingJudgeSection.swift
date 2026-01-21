@@ -16,6 +16,11 @@ struct BuildingJudgeSection: View {
         (scoresheet.tossDifficulty + scoresheet.tossExecution).rounded2
     }
 
+    /// Level 1 teams cannot perform tosses
+    var showTosses: Bool {
+        scoresheet.team?.level != "L1"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -92,33 +97,35 @@ struct BuildingJudgeSection: View {
                     )
                 }
 
-                Divider()
-                    .background(Color.scoreBinBorder)
+                // TOSSES Section (not shown for Level 1)
+                if showTosses {
+                    Divider()
+                        .background(Color.scoreBinBorder)
 
-                // TOSSES Section
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("TOSSES")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("TOSSES")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray)
 
-                    ScoreInputRow(
-                        label: "Difficulty",
-                        value: $scoresheet.tossDifficulty,
-                        range: ScoringRules.tossDifficultyRange
-                    )
-                    ScoreInputRow(
-                        label: "Execution",
-                        value: $scoresheet.tossExecution,
-                        range: ScoringRules.tossExecutionRange
-                    )
+                        ScoreInputRow(
+                            label: "Difficulty",
+                            value: $scoresheet.tossDifficulty,
+                            range: ScoringRules.tossDifficultyRange
+                        )
+                        ScoreInputRow(
+                            label: "Execution",
+                            value: $scoresheet.tossExecution,
+                            range: ScoringRules.tossExecutionRange
+                        )
 
-                    SectionTotalRow(
-                        label: "Toss Total",
-                        value: tossTotal,
-                        maxValue: ScoringRules.Maximums.tossTotal,
-                        color: .buildingRed
-                    )
+                        SectionTotalRow(
+                            label: "Toss Total",
+                            value: tossTotal,
+                            maxValue: ScoringRules.Maximums.tossTotal,
+                            color: .buildingRed
+                        )
+                    }
                 }
 
                 Divider()

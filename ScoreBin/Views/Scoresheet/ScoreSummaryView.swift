@@ -10,21 +10,21 @@ struct ScoreSummaryView: View {
                 CategoryTotalCard(
                     title: "Building",
                     score: viewModel.buildingTotal,
-                    maxScore: ScoringRules.Maximums.buildingTotal,
+                    maxScore: viewModel.maxBuildingScore,
                     color: .buildingRed
                 )
 
                 CategoryTotalCard(
                     title: "Tumbling",
                     score: viewModel.tumblingTotal,
-                    maxScore: ScoringRules.Maximums.tumblingTotal,
+                    maxScore: viewModel.maxTumblingScore,
                     color: .tumblingTeal
                 )
 
                 CategoryTotalCard(
                     title: "Overall",
                     score: viewModel.overallTotal,
-                    maxScore: ScoringRules.Maximums.overallTotal,
+                    maxScore: viewModel.maxOverallScore,
                     color: .overallYellow
                 )
 

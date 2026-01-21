@@ -5,6 +5,9 @@ struct ScoreInputRow: View {
     @Binding var value: Double
     let range: ScoringRules.ScoreRange
 
+    @State private var showingPad = false
+    @State private var inputText = ""
+
     var body: some View {
         HStack {
             Text(label)
@@ -24,14 +27,20 @@ struct ScoreInputRow: View {
                 }
                 .buttonStyle(.plain)
 
-                TextField("", value: $value, format: .number)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.center)
-                    .frame(width: 50)
-                    .padding(.vertical, 6)
-                    .background(Color.scoreBinBackground)
-                    .cornerRadius(6)
-                    .foregroundColor(.white)
+                Button {
+                    inputText = ""
+                    showingPad = true
+                } label: {
+                    Text(value.scoreFormatted)
+                        .font(.system(.body, design: .monospaced))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 50)
+                        .padding(.vertical, 6)
+                        .background(Color.scoreBinBackground)
+                        .cornerRadius(6)
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.plain)
 
                 Button {
                     if value < range.max {
@@ -45,6 +54,138 @@ struct ScoreInputRow: View {
             }
         }
         .padding(.vertical, 4)
+        .sheet(isPresented: $showingPad) {
+            DecimalPadView(
+                inputText: $inputText,
+                value: $value,
+                range: range,
+                isPresented: $showingPad
+            )
+            .presentationDetents([.height(350)])
+            .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+// MARK: - Custom Decimal Pad
+
+struct DecimalPadView: View {
+    @Binding var inputText: String
+    @Binding var value: Double
+    let range: ScoringRules.ScoreRange
+    @Binding var isPresented: Bool
+
+    private let buttons: [[String]] = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        [".", "0", "⌫"]
+    ]
+
+    var displayText: String {
+        inputText.isEmpty ? value.scoreFormatted : inputText
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Display
+            Text(displayText)
+                .font(.system(size: 48, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(Color.scoreBinBackground)
+                .cornerRadius(12)
+
+            // Range indicator
+            Text("Range: \(range.min.scoreFormatted) - \(range.max.scoreFormatted)")
+                .font(.caption)
+                .foregroundColor(.gray)
+
+            // Keypad
+            VStack(spacing: 12) {
+                ForEach(buttons, id: \.self) { row in
+                    HStack(spacing: 12) {
+                        ForEach(row, id: \.self) { button in
+                            DecimalPadButton(title: button) {
+                                handleButtonPress(button)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Done button
+            Button {
+                applyValue()
+            } label: {
+                Text("Done")
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.scoreBinCyan)
+                    .cornerRadius(10)
+            }
+        }
+        .padding(20)
+        .background(Color.scoreBinCardBackground)
+    }
+
+    private func handleButtonPress(_ button: String) {
+        switch button {
+        case "⌫":
+            if !inputText.isEmpty {
+                inputText.removeLast()
+            }
+        case ".":
+            // Only add decimal if not already present and within length limit
+            if !inputText.contains(".") && inputText.count < 4 {
+                if inputText.isEmpty {
+                    inputText = "0."
+                } else {
+                    inputText += "."
+                }
+            }
+        default:
+            // Limit to 5 characters (00.00 format)
+            if inputText.count < 5 {
+                // Don't allow more than 2 decimal places
+                if let dotIndex = inputText.firstIndex(of: ".") {
+                    let decimalPlaces = inputText.distance(from: dotIndex, to: inputText.endIndex) - 1
+                    if decimalPlaces >= 2 {
+                        return
+                    }
+                }
+                inputText += button
+            }
+        }
+    }
+
+    private func applyValue() {
+        if let newValue = Double(inputText) {
+            // Clamp to range
+            value = min(range.max, max(range.min, newValue))
+        }
+        isPresented = false
+    }
+}
+
+struct DecimalPadButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 28, weight: .medium))
+                .foregroundColor(title == "⌫" ? .gray : .white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(Color.scoreBinBackground)
+                .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
     }
 }
 

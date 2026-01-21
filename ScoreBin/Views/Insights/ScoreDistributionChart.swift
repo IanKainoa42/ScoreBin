@@ -5,13 +5,14 @@ struct ScoreDistributionChart: View {
     let scoresheets: [Scoresheet]
 
     private var distributionData: [ScoreRange] {
+        // Use ranges that accommodate both standard (50 max) and Level 1 (46 max)
         let ranges: [(String, ClosedRange<Double>)] = [
             ("< 30", 0...29.99),
             ("30-34", 30...34.99),
             ("35-39", 35...39.99),
             ("40-44", 40...44.99),
-            ("45-50", 45...50.99),
-            ("50+", 51...100)
+            ("45-46", 45...46.99),
+            ("47-50", 47...100)
         ]
 
         return ranges.map { label, range in

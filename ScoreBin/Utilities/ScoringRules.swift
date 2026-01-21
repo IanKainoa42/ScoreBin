@@ -64,6 +64,10 @@ enum ScoringRules {
 
         // Grand total
         static let maxScore: Double = 50.0
+
+        // Level 1 specific (no tosses)
+        static let level1BuildingTotal: Double = 18.0  // No toss (22 - 4)
+        static let level1MaxScore: Double = 46.0       // 18 + 20 + 8
     }
 
     // MARK: - Score Minimums
@@ -152,4 +156,16 @@ enum ScoringRules {
 
     static let creativityRange = ScoreRange(min: 1.5, max: 2.0, step: 0.01)
     static let showmanshipRange = ScoreRange(min: 1.0, max: 2.0, step: 0.01)
+
+    // MARK: - Level-Aware Maximums
+
+    /// Returns the maximum building score for a given level
+    static func buildingMax(forLevel level: String?) -> Double {
+        level == "L1" ? Maximums.level1BuildingTotal : Maximums.buildingTotal
+    }
+
+    /// Returns the maximum total score for a given level
+    static func maxScore(forLevel level: String?) -> Double {
+        level == "L1" ? Maximums.level1MaxScore : Maximums.maxScore
+    }
 }

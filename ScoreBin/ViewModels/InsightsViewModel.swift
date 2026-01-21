@@ -89,12 +89,15 @@ class InsightsViewModel {
     }
 
     func categoryBreakdown(for scoresheet: Scoresheet) -> [CategoryBreakdown] {
-        [
+        let level = scoresheet.team?.level
+        let buildingMax = ScoringRules.buildingMax(forLevel: level)
+
+        return [
             CategoryBreakdown(
                 category: "Building",
                 score: scoresheet.buildingTotal.rounded2,
-                maxScore: ScoringRules.Maximums.buildingTotal,
-                percentage: (scoresheet.buildingTotal / ScoringRules.Maximums.buildingTotal * 100).rounded2
+                maxScore: buildingMax,
+                percentage: (scoresheet.buildingTotal / buildingMax * 100).rounded2
             ),
             CategoryBreakdown(
                 category: "Tumbling",
@@ -112,9 +115,11 @@ class InsightsViewModel {
     }
 
     func averageCategoryBreakdown(for team: Team) -> [CategoryBreakdown] {
+        let buildingMax = ScoringRules.buildingMax(forLevel: team.level)
+
         guard !team.scoresheets.isEmpty else {
             return [
-                CategoryBreakdown(category: "Building", score: 0, maxScore: ScoringRules.Maximums.buildingTotal, percentage: 0),
+                CategoryBreakdown(category: "Building", score: 0, maxScore: buildingMax, percentage: 0),
                 CategoryBreakdown(category: "Tumbling", score: 0, maxScore: ScoringRules.Maximums.tumblingTotal, percentage: 0),
                 CategoryBreakdown(category: "Overall", score: 0, maxScore: ScoringRules.Maximums.overallTotal, percentage: 0)
             ]
@@ -129,8 +134,8 @@ class InsightsViewModel {
             CategoryBreakdown(
                 category: "Building",
                 score: avgBuilding.rounded2,
-                maxScore: ScoringRules.Maximums.buildingTotal,
-                percentage: (avgBuilding / ScoringRules.Maximums.buildingTotal * 100).rounded2
+                maxScore: buildingMax,
+                percentage: (avgBuilding / buildingMax * 100).rounded2
             ),
             CategoryBreakdown(
                 category: "Tumbling",
