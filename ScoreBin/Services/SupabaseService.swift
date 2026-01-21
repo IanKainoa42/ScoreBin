@@ -10,6 +10,8 @@ class SupabaseService {
     private let supabaseURL = "YOUR_SUPABASE_URL"
     private let supabaseKey = "YOUR_SUPABASE_ANON_KEY"
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     private init() {
         // Initialize Supabase client here when SDK is added
         // client = SupabaseClient(supabaseURL: URL(string: supabaseURL)!, supabaseKey: supabaseKey)
@@ -45,7 +47,7 @@ class SupabaseService {
             "age_division": team.ageDivision,
             "tier": team.tier,
             "athlete_count": team.athleteCount,
-            "created_at": ISO8601DateFormatter().string(from: team.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: team.createdAt)
         ]
 
         // When Supabase SDK is integrated:
@@ -68,10 +70,10 @@ class SupabaseService {
         let data: [String: Any] = [
             "id": competition.id.uuidString,
             "name": competition.name,
-            "date": ISO8601DateFormatter().string(from: competition.date),
+            "date": Self.iso8601Formatter.string(from: competition.date),
             "location": competition.location,
             "notes": competition.notes,
-            "created_at": ISO8601DateFormatter().string(from: competition.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: competition.createdAt)
         ]
 
         // When Supabase SDK is integrated:
@@ -95,7 +97,7 @@ class SupabaseService {
             "id": gym.id.uuidString,
             "name": gym.name,
             "location": gym.location,
-            "created_at": ISO8601DateFormatter().string(from: gym.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: gym.createdAt)
         ]
 
         // When Supabase SDK is integrated:
