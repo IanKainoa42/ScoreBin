@@ -41,15 +41,15 @@ enum ScoringRules {
 
         static let runningDifficulty: Double = 3.0
         static let runningExecution: Double = 4.0
-        static let runningDrivers: Double = 1.0
-        static let runningDriverMaxPart: Double = 0.7
-        static let runningTotal: Double = 8.7
+        static let runningDrivers: Double = 0.5
+        static let runningDriverMaxPart: Double = 0.5
+        static let runningTotal: Double = 8.0
 
         static let jumpsDifficulty: Double = 2.0
         static let jumpsExecution: Double = 2.0
         static let jumpsTotal: Double = 4.0
 
-        static let tumblingTotal: Double = 20.7
+        static let tumblingTotal: Double = 20.0
 
         // Overall
         static let danceDifficulty: Double = 1.0
@@ -63,7 +63,7 @@ enum ScoringRules {
         static let overallTotal: Double = 8.0
 
         // Grand total
-        static let maxScore: Double = 50.7
+        static let maxScore: Double = 50.0
     }
 
     // MARK: - Score Minimums
@@ -140,8 +140,8 @@ enum ScoringRules {
 
     static let runningDifficultyRange = ScoreRange(min: 1.5, max: 3.0, step: 0.5)
     static let runningExecutionRange = ScoreRange(min: 2.8, max: 4.0, step: 0.1)
-    static let runningDriversRange = ScoreRange(min: 0, max: 1.0, step: 0.1)
-    static let runningDriverMaxPartRange = ScoreRange(min: 0, max: 0.7, step: 0.1)
+    static let runningDriversRange = ScoreRange(min: 0, max: 0.5, step: 0.1)
+    static let runningDriverMaxPartRange = ScoreRange(min: 0, max: 0.5, step: 0.1)
 
     static let jumpsDifficultyRange = ScoreRange(min: 0.5, max: 2.0, step: 0.5)
     static let jumpsExecutionRange = ScoreRange(min: 1.3, max: 2.0, step: 0.1)
