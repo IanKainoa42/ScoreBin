@@ -9,8 +9,7 @@ struct BuildingJudgeSection: View {
     }
 
     var pyramidTotal: Double {
-        (scoresheet.pyramidDifficulty + scoresheet.pyramidExecution +
-         scoresheet.pyramidDrivers).rounded2
+        (scoresheet.pyramidDifficulty + scoresheet.pyramidExecution).rounded2
     }
 
     var tossTotal: Double {
@@ -48,16 +47,15 @@ struct BuildingJudgeSection: View {
                         range: ScoringRules.stuntExecutionRange
                     )
                     ScoreInputRow(
-                        label: "Driver: Degree",
+                        label: "DoD",
                         value: $scoresheet.stuntDriverDegree,
                         range: ScoringRules.stuntDriverDegreeRange
                     )
                     ScoreInputRow(
-                        label: "Driver: Max Part",
+                        label: "MPD",
                         value: $scoresheet.stuntDriverMaxPart,
                         range: ScoringRules.stuntDriverMaxPartRange
                     )
-
                     SectionTotalRow(
                         label: "Stunt Total",
                         value: stuntTotal,
@@ -86,12 +84,6 @@ struct BuildingJudgeSection: View {
                         value: $scoresheet.pyramidExecution,
                         range: ScoringRules.pyramidExecutionRange
                     )
-                    ScoreInputRow(
-                        label: "Drivers",
-                        value: $scoresheet.pyramidDrivers,
-                        range: ScoringRules.pyramidDriversRange
-                    )
-
                     SectionTotalRow(
                         label: "Pyramid Total",
                         value: pyramidTotal,

@@ -42,6 +42,7 @@ final class Scoresheet {
     var runningDifficulty: Double
     var runningExecution: Double
     var runningDrivers: Double
+    var runningDriverMaxPart: Double
     var jumpsDifficulty: Double
     var jumpsExecution: Double
     var tumblingCreativity: Double
@@ -80,37 +81,38 @@ final class Scoresheet {
         self.competition = competition
         self.round = round
 
-        // Building defaults
-        self.stuntDifficulty = 3.0
-        self.stuntExecution = 4.0
-        self.stuntDriverDegree = 0
-        self.stuntDriverMaxPart = 0
-        self.pyramidDifficulty = 2.5
-        self.pyramidExecution = 4.0
-        self.pyramidDrivers = 0
-        self.tossDifficulty = 1.0
-        self.tossExecution = 2.0
-        self.buildingCreativity = 1.75
-        self.buildingShowmanship = 1.5
+        // Building defaults (start at max)
+        self.stuntDifficulty = ScoringRules.Maximums.stuntDifficulty
+        self.stuntExecution = ScoringRules.Maximums.stuntExecution
+        self.stuntDriverDegree = ScoringRules.Maximums.stuntDriverDegree
+        self.stuntDriverMaxPart = ScoringRules.Maximums.stuntDriverMaxPart
+        self.pyramidDifficulty = ScoringRules.Maximums.pyramidDifficulty
+        self.pyramidExecution = ScoringRules.Maximums.pyramidExecution
+        self.pyramidDrivers = 0  // Not used in scoring system
+        self.tossDifficulty = ScoringRules.Maximums.tossDifficulty
+        self.tossExecution = ScoringRules.Maximums.tossExecution
+        self.buildingCreativity = ScoringRules.Maximums.creativity
+        self.buildingShowmanship = ScoringRules.Maximums.showmanship
 
-        // Tumbling defaults
-        self.standingDifficulty = 1.5
-        self.standingExecution = 4.0
-        self.standingDrivers = 0
-        self.runningDifficulty = 1.5
-        self.runningExecution = 4.0
-        self.runningDrivers = 0
-        self.jumpsDifficulty = 1.0
-        self.jumpsExecution = 2.0
-        self.tumblingCreativity = 1.75
-        self.tumblingShowmanship = 1.5
+        // Tumbling defaults (start at max)
+        self.standingDifficulty = ScoringRules.Maximums.standingDifficulty
+        self.standingExecution = ScoringRules.Maximums.standingExecution
+        self.standingDrivers = ScoringRules.Maximums.standingDrivers
+        self.runningDifficulty = ScoringRules.Maximums.runningDifficulty
+        self.runningExecution = ScoringRules.Maximums.runningExecution
+        self.runningDrivers = ScoringRules.Maximums.runningDrivers
+        self.runningDriverMaxPart = ScoringRules.Maximums.runningDriverMaxPart
+        self.jumpsDifficulty = ScoringRules.Maximums.jumpsDifficulty
+        self.jumpsExecution = ScoringRules.Maximums.jumpsExecution
+        self.tumblingCreativity = ScoringRules.Maximums.creativity
+        self.tumblingShowmanship = ScoringRules.Maximums.showmanship
 
-        // Overall defaults
-        self.danceDifficulty = 0.75
-        self.danceExecution = 0.75
-        self.formations = 2.0
-        self.overallCreativity = 1.75
-        self.overallShowmanship = 1.5
+        // Overall defaults (start at max)
+        self.danceDifficulty = ScoringRules.Maximums.danceDifficulty
+        self.danceExecution = ScoringRules.Maximums.danceExecution
+        self.formations = ScoringRules.Maximums.formations
+        self.overallCreativity = ScoringRules.Maximums.creativity
+        self.overallShowmanship = ScoringRules.Maximums.showmanship
 
         // Deductions
         self.athleteFalls = 0
@@ -133,7 +135,7 @@ final class Scoresheet {
     }
 
     var pyramidTotal: Double {
-        pyramidDifficulty + pyramidExecution + pyramidDrivers
+        pyramidDifficulty + pyramidExecution
     }
 
     var tossTotal: Double {
@@ -149,7 +151,7 @@ final class Scoresheet {
     }
 
     var runningTotal: Double {
-        runningDifficulty + runningExecution + runningDrivers
+        runningDifficulty + runningExecution + runningDrivers + runningDriverMaxPart
     }
 
     var jumpsTotal: Double {
@@ -233,6 +235,7 @@ final class Scoresheet {
                 "running_difficulty": runningDifficulty,
                 "running_execution": runningExecution,
                 "running_drivers": runningDrivers,
+                "running_driver_max_part": runningDriverMaxPart,
                 "jumps_difficulty": jumpsDifficulty,
                 "jumps_execution": jumpsExecution,
                 "creativity_score": tumblingCreativity,

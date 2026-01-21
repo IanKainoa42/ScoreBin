@@ -4,13 +4,13 @@ struct TumblingJudgeSection: View {
     @Binding var scoresheet: Scoresheet
 
     var standingTotal: Double {
-        (scoresheet.standingDifficulty + scoresheet.standingExecution +
-         scoresheet.standingDrivers).rounded2
+        (scoresheet.standingDifficulty + scoresheet.standingExecution + scoresheet.standingDrivers)
+            .rounded2
     }
 
     var runningTotal: Double {
-        (scoresheet.runningDifficulty + scoresheet.runningExecution +
-         scoresheet.runningDrivers).rounded2
+        (scoresheet.runningDifficulty + scoresheet.runningExecution + scoresheet.runningDrivers + scoresheet.runningDriverMaxPart)
+            .rounded2
     }
 
     var jumpsTotal: Double {
@@ -48,7 +48,7 @@ struct TumblingJudgeSection: View {
                         range: ScoringRules.standingExecutionRange
                     )
                     ScoreInputRow(
-                        label: "Drivers",
+                        label: "DoD",
                         value: $scoresheet.standingDrivers,
                         range: ScoringRules.standingDriversRange
                     )
@@ -82,11 +82,15 @@ struct TumblingJudgeSection: View {
                         range: ScoringRules.runningExecutionRange
                     )
                     ScoreInputRow(
-                        label: "Drivers",
+                        label: "DoD",
                         value: $scoresheet.runningDrivers,
                         range: ScoringRules.runningDriversRange
                     )
-
+                    ScoreInputRow(
+                        label: "MPD",
+                        value: $scoresheet.runningDriverMaxPart,
+                        range: ScoringRules.runningDriverMaxPartRange
+                    )
                     SectionTotalRow(
                         label: "Running Total",
                         value: runningTotal,

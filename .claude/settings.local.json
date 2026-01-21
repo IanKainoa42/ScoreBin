@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate CLAUDE.md with iOS app documentation\n\nAdd comprehensive documentation for the iOS SwiftUI app including project\nstructure, architecture details, SwiftData models, and Supabase integration.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(xcodebuild:*)"
     ]
   }
 }
