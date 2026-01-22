@@ -46,7 +46,7 @@ class SupabaseService {
             "age_division": team.ageDivision,
             "tier": team.tier,
             "athlete_count": team.athleteCount,
-            "created_at": Self.iso8601Formatter.string(from: team.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: team.createdAt),
         ]
 
         // When Supabase SDK is integrated:
@@ -72,7 +72,7 @@ class SupabaseService {
             "date": Self.iso8601Formatter.string(from: competition.date),
             "location": competition.location,
             "notes": competition.notes,
-            "created_at": Self.iso8601Formatter.string(from: competition.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: competition.createdAt),
         ]
 
         // When Supabase SDK is integrated:
@@ -96,7 +96,7 @@ class SupabaseService {
             "id": gym.id.uuidString,
             "name": gym.name,
             "location": gym.location,
-            "created_at": Self.iso8601Formatter.string(from: gym.createdAt)
+            "created_at": Self.iso8601Formatter.string(from: gym.createdAt),
         ]
 
         // When Supabase SDK is integrated:

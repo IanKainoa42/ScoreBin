@@ -8,6 +8,14 @@ enum RoundType: String, Codable, CaseIterable {
     case exhibition = "Exhibition"
 }
 
+// Local, unambiguous sync status for Scoresheet
+enum ScoresheetSyncStatus: String, Codable {
+    case pending
+    case syncing
+    case synced
+    case failed
+}
+
 @Model
 final class Scoresheet {
     var id: UUID
@@ -59,7 +67,7 @@ final class Scoresheet {
     var timeLimitViolations: Int
 
     // MARK: - Sync
-    var syncStatus: SyncStatus
+    var syncStatus: ScoresheetSyncStatus
     var supabaseId: String?
 
     init(
@@ -118,7 +126,7 @@ final class Scoresheet {
         self.timeLimitViolations = 0
 
         // Sync
-        self.syncStatus = .pending
+        self.syncStatus = ScoresheetSyncStatus.pending
         self.supabaseId = nil
     }
 
@@ -173,13 +181,13 @@ final class Scoresheet {
     }
 
     var totalDeductions: Double {
-        Double(athleteFalls) * ScoringRules.Deductions.athleteFall +
-        Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall +
-        Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble +
-        Double(buildingFalls) * ScoringRules.Deductions.buildingFall +
-        Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall +
-        Double(boundaryViolations) * ScoringRules.Deductions.boundaryViolation +
-        Double(timeLimitViolations) * ScoringRules.Deductions.timeLimitViolation
+        Double(athleteFalls) * ScoringRules.Deductions.athleteFall + Double(majorAthleteFalls)
+            * ScoringRules.Deductions.majorAthleteFall + Double(buildingBobbles)
+            * ScoringRules.Deductions.buildingBobble + Double(buildingFalls)
+            * ScoringRules.Deductions.buildingFall + Double(majorBuildingFalls)
+            * ScoringRules.Deductions.majorBuildingFall + Double(boundaryViolations)
+            * ScoringRules.Deductions.boundaryViolation + Double(timeLimitViolations)
+            * ScoringRules.Deductions.timeLimitViolation
     }
 
     var rawScore: Double {
@@ -200,14 +208,14 @@ final class Scoresheet {
                 "level": team?.level ?? "",
                 "age_division": team?.ageDivision ?? "",
                 "tier": team?.tier ?? "",
-                "athlete_count": team?.athleteCount ?? 0
+                "athlete_count": team?.athleteCount ?? 0,
             ],
             "performance": [
                 "competition_name": competition?.name ?? "",
                 "round": round,
                 "raw_score": rawScore.rounded2,
                 "total_deductions": totalDeductions.rounded2,
-                "final_score": finalScore.rounded2
+                "final_score": finalScore.rounded2,
             ],
             "scores_building": [
                 "stunt_difficulty": stuntDifficulty,
@@ -220,7 +228,7 @@ final class Scoresheet {
                 "toss_difficulty": tossDifficulty,
                 "toss_execution": tossExecution,
                 "creativity_score": buildingCreativity,
-                "showmanship_score": buildingShowmanship
+                "showmanship_score": buildingShowmanship,
             ],
             "scores_tumbling": [
                 "standing_difficulty": standingDifficulty,
@@ -233,16 +241,16 @@ final class Scoresheet {
                 "jumps_difficulty": jumpsDifficulty,
                 "jumps_execution": jumpsExecution,
                 "creativity_score": tumblingCreativity,
-                "showmanship_score": tumblingShowmanship
+                "showmanship_score": tumblingShowmanship,
             ],
             "scores_overall": [
                 "dance_difficulty": danceDifficulty,
                 "dance_execution": danceExecution,
                 "formations_score": formations,
                 "creativity_score": overallCreativity,
-                "showmanship_score": overallShowmanship
+                "showmanship_score": overallShowmanship,
             ],
-            "deductions": buildDeductionsArray()
+            "deductions": buildDeductionsArray(),
         ]
     }
 

@@ -7,7 +7,7 @@ final class Gym {
     var name: String
     var location: String
     var createdAt: Date
-    var syncStatus: SyncStatus = .pending
+    var syncStatus: SyncStatus
 
     @Relationship(deleteRule: .cascade, inverse: \Team.gym)
     var teams: [Team]

@@ -6,12 +6,12 @@ final class Team {
     var id: UUID
     var name: String
     var gym: Gym?
-    var level: String          // L1-L7
-    var ageDivision: String    // youth, junior, senior
-    var tier: String           // elite, etc.
+    var level: String  // L1-L7
+    var ageDivision: String  // youth, junior, senior
+    var tier: String  // elite, etc.
     var athleteCount: Int
     var createdAt: Date
-    var syncStatus: SyncStatus = .pending
+    var syncStatus: SyncStatus
 
     @Relationship(deleteRule: .cascade, inverse: \Scoresheet.team)
     var scoresheets: [Scoresheet]
