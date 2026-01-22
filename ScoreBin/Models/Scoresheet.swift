@@ -201,55 +201,65 @@ final class Scoresheet {
     // MARK: - Export for Database
 
     func exportForDatabase() -> [String: Any] {
+        let teamInfo: [String: Any] = [
+            "name": team?.name ?? "",
+            "program": team?.gym?.name ?? "",
+            "level": team?.level ?? "",
+            "age_division": team?.ageDivision ?? "",
+            "tier": team?.tier ?? "",
+            "athlete_count": team?.athleteCount ?? 0,
+        ]
+
+        let performance: [String: Any] = [
+            "competition_name": competition?.name ?? "",
+            "round": round,
+            "raw_score": rawScore.rounded2,
+            "total_deductions": totalDeductions.rounded2,
+            "final_score": finalScore.rounded2,
+        ]
+
+        let buildingScores: [String: Any] = [
+            "stunt_difficulty": stuntDifficulty,
+            "stunt_execution": stuntExecution,
+            "stunt_driver_degree": stuntDriverDegree,
+            "stunt_driver_max_part": stuntDriverMaxPart,
+            "pyramid_difficulty": pyramidDifficulty,
+            "pyramid_execution": pyramidExecution,
+            "pyramid_drivers": pyramidDrivers,
+            "toss_difficulty": tossDifficulty,
+            "toss_execution": tossExecution,
+            "creativity_score": buildingCreativity,
+            "showmanship_score": buildingShowmanship,
+        ]
+
+        let tumblingScores: [String: Any] = [
+            "standing_difficulty": standingDifficulty,
+            "standing_execution": standingExecution,
+            "standing_drivers": standingDrivers,
+            "running_difficulty": runningDifficulty,
+            "running_execution": runningExecution,
+            "running_drivers": runningDrivers,
+            "running_driver_max_part": runningDriverMaxPart,
+            "jumps_difficulty": jumpsDifficulty,
+            "jumps_execution": jumpsExecution,
+            "creativity_score": tumblingCreativity,
+            "showmanship_score": tumblingShowmanship,
+        ]
+
+        let overallScores: [String: Any] = [
+            "dance_difficulty": danceDifficulty,
+            "dance_execution": danceExecution,
+            "formations_score": formations,
+            "creativity_score": overallCreativity,
+            "showmanship_score": overallShowmanship,
+        ]
+
         return [
-            "team_info": [
-                "name": team?.name ?? "",
-                "program": team?.gym?.name ?? "",
-                "level": team?.level ?? "",
-                "age_division": team?.ageDivision ?? "",
-                "tier": team?.tier ?? "",
-                "athlete_count": team?.athleteCount ?? 0,
-            ],
-            "performance": [
-                "competition_name": competition?.name ?? "",
-                "round": round,
-                "raw_score": rawScore.rounded2,
-                "total_deductions": totalDeductions.rounded2,
-                "final_score": finalScore.rounded2,
-            ],
-            "scores_building": [
-                "stunt_difficulty": stuntDifficulty,
-                "stunt_execution": stuntExecution,
-                "stunt_driver_degree": stuntDriverDegree,
-                "stunt_driver_max_part": stuntDriverMaxPart,
-                "pyramid_difficulty": pyramidDifficulty,
-                "pyramid_execution": pyramidExecution,
-                "pyramid_drivers": pyramidDrivers,
-                "toss_difficulty": tossDifficulty,
-                "toss_execution": tossExecution,
-                "creativity_score": buildingCreativity,
-                "showmanship_score": buildingShowmanship,
-            ],
-            "scores_tumbling": [
-                "standing_difficulty": standingDifficulty,
-                "standing_execution": standingExecution,
-                "standing_drivers": standingDrivers,
-                "running_difficulty": runningDifficulty,
-                "running_execution": runningExecution,
-                "running_drivers": runningDrivers,
-                "running_driver_max_part": runningDriverMaxPart,
-                "jumps_difficulty": jumpsDifficulty,
-                "jumps_execution": jumpsExecution,
-                "creativity_score": tumblingCreativity,
-                "showmanship_score": tumblingShowmanship,
-            ],
-            "scores_overall": [
-                "dance_difficulty": danceDifficulty,
-                "dance_execution": danceExecution,
-                "formations_score": formations,
-                "creativity_score": overallCreativity,
-                "showmanship_score": overallShowmanship,
-            ],
+            "team_info": teamInfo,
+            "performance": performance,
+            "scores_building": buildingScores,
+            "scores_tumbling": tumblingScores,
+            "scores_overall": overallScores,
             "deductions": buildDeductionsArray(),
         ]
     }
