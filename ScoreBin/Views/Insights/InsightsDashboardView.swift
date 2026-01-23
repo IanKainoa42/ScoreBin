@@ -90,8 +90,7 @@ struct InsightsDashboardView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                let recentSheets = scoresheets.sorted { $0.createdAt > $1.createdAt }.prefix(5)
-                ForEach(Array(recentSheets)) { sheet in
+                ForEach(viewModel.recentScoresheets(from: scoresheets)) { sheet in
                     RecentActivityRow(scoresheet: sheet)
                 }
             }
@@ -118,18 +117,20 @@ struct InsightsDashboardView: View {
     // MARK: - Team Performance Section
 
     private var teamPerformanceSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let activeTeams = viewModel.activeTeams(from: teams)
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Team Performance")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            ForEach(teams.filter { !$0.scoresheets.isEmpty }.prefix(5)) { team in
+            ForEach(activeTeams) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
                     TeamPerformanceRow(team: team, viewModel: viewModel)
                 }
             }
 
-            if teams.filter({ !$0.scoresheets.isEmpty }).isEmpty {
+            if activeTeams.isEmpty {
                 Text("Add scoresheets to teams to see performance data")
                     .font(.subheadline)
                     .foregroundColor(.gray)

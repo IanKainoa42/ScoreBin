@@ -211,4 +211,20 @@ class InsightsViewModel {
 
         return patterns.sorted { $0.totalPoints > $1.totalPoints }
     }
+
+    // MARK: - View Helpers
+
+    func recentScoresheets(from scoresheets: [Scoresheet], limit: Int = 5) -> [Scoresheet] {
+        scoresheets
+            .sorted { $0.createdAt > $1.createdAt }
+            .prefix(limit)
+            .map { $0 }
+    }
+
+    func activeTeams(from teams: [Team], limit: Int = 5) -> [Team] {
+        teams
+            .filter { !$0.scoresheets.isEmpty }
+            .prefix(limit)
+            .map { $0 }
+    }
 }
