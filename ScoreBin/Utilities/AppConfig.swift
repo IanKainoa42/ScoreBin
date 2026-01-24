@@ -3,9 +3,20 @@ import Foundation
 /// Configuration constants for the application
 public struct AppConfig {
     struct Supabase {
-        // TODO: Replace with your actual Supabase project URL and Anon Key
-        // For security, these should ideally be loaded from a secure source or environment variables in a real app.
-        static let url = "YOUR_SUPABASE_URL"
-        static let key = "YOUR_SUPABASE_ANON_KEY"
+        static var url: String {
+            if let url = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String, !url.isEmpty {
+                return url
+            }
+            // Fallback for development or if keys are missing
+            return "YOUR_SUPABASE_URL"
+        }
+
+        static var key: String {
+            if let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String, !key.isEmpty {
+                return key
+            }
+            // Fallback for development or if keys are missing
+            return "YOUR_SUPABASE_ANON_KEY"
+        }
     }
 }
