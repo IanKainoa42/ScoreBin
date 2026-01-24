@@ -19,6 +19,10 @@ class InsightsViewModel {
         let label: String
     }
 
+    func activeTeams(from teams: [Team]) -> [Team] {
+        teams.filter { !$0.scoresheets.isEmpty }
+    }
+
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
         team.scoresheets
             .sorted { $0.createdAt < $1.createdAt }

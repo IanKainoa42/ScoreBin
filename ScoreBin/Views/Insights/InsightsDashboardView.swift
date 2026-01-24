@@ -5,7 +5,7 @@ import Charts
 struct InsightsDashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var teams: [Team]
-    @Query private var scoresheets: [Scoresheet]
+    @Query(sort: \Scoresheet.createdAt, order: .reverse) private var scoresheets: [Scoresheet]
     @Query private var competitions: [Competition]
 
     @State private var viewModel = InsightsViewModel()
@@ -90,7 +90,7 @@ struct InsightsDashboardView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                ForEach(viewModel.recentScoresheets(from: scoresheets)) { sheet in
+                ForEach(scoresheets.prefix(5)) { sheet in
                     RecentActivityRow(scoresheet: sheet)
                 }
             }
@@ -124,7 +124,9 @@ struct InsightsDashboardView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
-            ForEach(activeTeams) { team in
+            let activeTeams = viewModel.activeTeams(from: teams)
+
+            ForEach(activeTeams.prefix(5)) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
                     TeamPerformanceRow(team: team, viewModel: viewModel)
                 }
