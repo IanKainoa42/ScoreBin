@@ -89,6 +89,7 @@ export default function ScoresheetForm() {
     creativityAvg: 0,
     showmanshipAvg: 0,
     rawScore: 0,
+    percentPerfection: 0,
     totalDeductions: 0,
     finalScore: 0,
   });
@@ -101,8 +102,7 @@ export default function ScoresheetForm() {
     // Building totals
     const stuntTotal = building.stuntDifficulty + building.stuntExecution + 
                        building.stuntDriverDegree + building.stuntDriverMaxPart;
-    const pyramidTotal = building.pyramidDifficulty + building.pyramidExecution + 
-                         building.pyramidDrivers;
+    const pyramidTotal = building.pyramidDifficulty + building.pyramidExecution;
     const tossTotal = building.tossDifficulty + building.tossExecution;
     
     // Tumbling totals
@@ -130,13 +130,15 @@ export default function ScoresheetForm() {
       (deductions.timeLimitViolation * 0.05);
     
     // Raw score (all categories)
-    const rawScore = stuntTotal + pyramidTotal + tossTotal + 
+    const rawScore = stuntTotal + pyramidTotal + tossTotal +
                      standingTotal + runningTotal + jumpsTotal +
-                     danceTotal + overall.formations + 
+                     danceTotal + overall.formations +
                      creativityAvg + showmanshipAvg;
-    
-    const finalScore = rawScore - totalDeductions;
-    
+
+    const maxScore = 50.0; // Use 46.0 for L1 if implementing level-aware
+    const percentPerfection = (rawScore / maxScore) * 100;
+    const finalScore = Math.max(0, percentPerfection - totalDeductions);
+
     setTotals({
       stuntTotal: round2(stuntTotal),
       pyramidTotal: round2(pyramidTotal),
@@ -148,6 +150,7 @@ export default function ScoresheetForm() {
       creativityAvg: round2(creativityAvg),
       showmanshipAvg: round2(showmanshipAvg),
       rawScore: round2(rawScore),
+      percentPerfection: round2(percentPerfection),
       totalDeductions: round2(totalDeductions),
       finalScore: round2(finalScore),
     });
@@ -188,6 +191,7 @@ export default function ScoresheetForm() {
         competition_name: teamInfo.competitionName,
         round: teamInfo.round,
         raw_score: totals.rawScore,
+        percent_perfection: totals.percentPerfection,
         total_deductions: totals.totalDeductions,
         final_score: totals.finalScore,
       },
@@ -390,10 +394,12 @@ export default function ScoresheetForm() {
                 <ScoreInput label="Execution" value={building.pyramidExecution} 
                   onChange={(v) => setBuilding({...building, pyramidExecution: v})} 
                   min={0} max={4.0} step={0.1} />
-                <ScoreInput label="Drivers" value={building.pyramidDrivers} 
-                  onChange={(v) => setBuilding({...building, pyramidDrivers: v})} 
+                {/* Pyramid Drivers not used in United Scoring System
+                <ScoreInput label="Drivers" value={building.pyramidDrivers}
+                  onChange={(v) => setBuilding({...building, pyramidDrivers: v})}
                   min={0} max={1.0} step={0.1} />
-                <SectionTotal label="Pyramid Total" value={totals.pyramidTotal} max="9.0" />
+                */}
+                <SectionTotal label="Pyramid Total" value={totals.pyramidTotal} max="8.0" />
               </div>
               
               {/* Tosses */}
@@ -570,7 +576,7 @@ export default function ScoresheetForm() {
               <div className="text-2xl font-bold text-red-400">
                 {round2(totals.stuntTotal + totals.pyramidTotal + totals.tossTotal)}
               </div>
-              <div className="text-xs text-gray-500">/ 23.0</div>
+              <div className="text-xs text-gray-500">/ 22.0</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Tumbling Total</div>
@@ -594,23 +600,34 @@ export default function ScoresheetForm() {
             </div>
           </div>
           
-          <div className="mt-6 pt-4 border-t border-gray-700 flex items-center justify-between">
-            <div>
-              <div className="text-gray-400 text-sm">Raw Score</div>
-              <div className="text-xl font-bold text-gray-300">{totals.rawScore}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-gray-400 text-sm">FINAL SCORE</div>
-              <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                {totals.finalScore}
+          <div className="mt-6 pt-4 border-t border-gray-700">
+            <div className="grid grid-cols-3 gap-4 text-center mb-6">
+              <div>
+                <div className="text-gray-400 text-sm">Raw Score</div>
+                <div className="text-xl font-bold">{totals.rawScore}</div>
+                <div className="text-xs text-gray-500">/ 50.0</div>
+              </div>
+              <div>
+                <div className="text-gray-400 text-sm">Percent Perfection</div>
+                <div className="text-2xl font-bold text-cyan-400">
+                  {totals.percentPerfection}%
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-400 text-sm">FINAL SCORE</div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+                  {totals.finalScore}
+                </div>
               </div>
             </div>
-            <button
-              onClick={exportForDatabase}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-lg font-bold hover:opacity-90 transition-opacity"
-            >
-              Export Data
-            </button>
+            <div className="text-center">
+              <button
+                onClick={exportForDatabase}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-lg font-bold hover:opacity-90 transition-opacity"
+              >
+                Export Data
+              </button>
+            </div>
           </div>
         </div>
 

@@ -61,7 +61,7 @@ struct ScoreInputRow: View {
                 range: range,
                 isPresented: $showingPad
             )
-            .presentationDetents([.height(350)])
+            .presentationDetents([.height(550)])
             .presentationDragIndicator(.visible)
         }
     }
@@ -79,7 +79,7 @@ struct DecimalPadView: View {
         ["1", "2", "3"],
         ["4", "5", "6"],
         ["7", "8", "9"],
-        [".", "0", "⌫"]
+        [".", "0", "⌫"],
     ]
 
     var displayText: String {
@@ -152,7 +152,8 @@ struct DecimalPadView: View {
             if inputText.count < 5 {
                 // Don't allow more than 2 decimal places
                 if let dotIndex = inputText.firstIndex(of: ".") {
-                    let decimalPlaces = inputText.distance(from: dotIndex, to: inputText.endIndex) - 1
+                    let decimalPlaces =
+                        inputText.distance(from: dotIndex, to: inputText.endIndex) - 1
                     if decimalPlaces >= 2 {
                         return
                     }

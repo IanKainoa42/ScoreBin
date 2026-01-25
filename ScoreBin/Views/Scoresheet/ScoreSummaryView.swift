@@ -41,44 +41,63 @@ struct ScoreSummaryView: View {
                 .background(Color.scoreBinBorder)
 
             // Final Score Section
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Raw Score")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text(viewModel.rawScore.scoreFormatted)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                }
-
-                Spacer()
-
-                VStack(alignment: .center, spacing: 4) {
-                    Text("FINAL SCORE")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.gray)
-                    Text(viewModel.finalScore.scoreFormatted)
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundStyle(Color.scoreBinGradient)
-                }
-
-                Spacer()
-
-                Button {
-                    viewModel.copyToClipboard()
-                } label: {
-                    HStack {
-                        Image(systemName: "doc.on.doc")
-                        Text("Copy")
+            VStack(spacing: 12) {
+                // Raw Score and Percent Perfection row
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Raw Score")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Text("\(viewModel.rawScore.scoreFormatted) / \(viewModel.maxTotalScore.scoreFormatted)")
+                            .font(.title3)
+                            .fontWeight(.semibold)
                     }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(Color.scoreBinGradient)
-                    .cornerRadius(10)
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Percent Perfection")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Text(viewModel.percentPerfection.scoreFormatted + "%")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.scoreBinCyan)
+                    }
+                }
+
+                Divider()
+
+                // Final Score (prominent) with Copy button
+                HStack {
+                    Spacer()
+
+                    VStack(spacing: 4) {
+                        Text("FINAL SCORE")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray)
+                        Text(viewModel.finalScore.scoreFormatted)
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundStyle(Color.scoreBinGradient)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        viewModel.copyToClipboard()
+                    } label: {
+                        HStack {
+                            Image(systemName: "doc.on.doc")
+                            Text("Copy")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.scoreBinGradient)
+                        .cornerRadius(10)
+                    }
                 }
             }
         }

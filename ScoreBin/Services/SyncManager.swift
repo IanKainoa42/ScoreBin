@@ -131,14 +131,14 @@ class SyncManager {
     }
 
     private func syncScoresheets(context: ModelContext) async throws {
-        let pending = SyncStatus.pending
+        let pending = ScoresheetSyncStatus.pending
         let descriptor = FetchDescriptor<Scoresheet>(
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
         for scoresheet in pendingScoresheets {
             try await supabase.uploadScoresheet(scoresheet)
-            scoresheet.syncStatus = SyncStatus.synced
+            scoresheet.syncStatus = .synced
         }
 
         try context.save()
@@ -186,7 +186,7 @@ class SyncManager {
     // MARK: - Mark for Sync
 
     func markForSync(_ scoresheet: Scoresheet) {
-        scoresheet.syncStatus = SyncStatus.pending
+        scoresheet.syncStatus = .pending
         pendingChanges += 1
     }
 }

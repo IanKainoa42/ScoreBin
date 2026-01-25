@@ -164,7 +164,10 @@ struct TeamDetailView: View {
                         .foregroundColor(.scoreBinCyan)
                 }
 
-                ProgressView(value: category.score, total: category.maxScore)
+                // Clamp progress to 0...total and avoid zero total
+                let safeTotal = max(category.maxScore, 0)
+                let clampedValue = min(max(category.score, 0), safeTotal)
+                ProgressView(value: clampedValue, total: safeTotal)
                     .tint(colorForCategory(category.category))
             }
         }

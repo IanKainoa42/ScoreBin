@@ -1,10 +1,8 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ScoresheetEntryView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var teams: [Team]
-    @Query private var competitions: [Competition]
 
     @State private var viewModel = ScoresheetViewModel()
     @State private var showingExportAlert = false
@@ -15,7 +13,7 @@ struct ScoresheetEntryView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     // Header Info Bar
-                    headerSection
+                    ScoresheetHeaderView(viewModel: viewModel)
 
                     // Judge Panels
                     judgeGridSection
@@ -54,7 +52,7 @@ struct ScoresheetEntryView: View {
                 Text("Scoresheet saved successfully!")
             }
             .alert("Copied", isPresented: $showingExportAlert) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) {}
             } message: {
                 Text("Data copied to clipboard!")
             }
@@ -64,9 +62,26 @@ struct ScoresheetEntryView: View {
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - Judge Grid Section
 
-    private var headerSection: some View {
+    private var judgeGridSection: some View {
+        VStack(spacing: 12) {
+            BuildingJudgeSection(scoresheet: $viewModel.scoresheet)
+            TumblingJudgeSection(scoresheet: $viewModel.scoresheet)
+            OverallJudgeSection(scoresheet: $viewModel.scoresheet, viewModel: viewModel)
+        }
+    }
+}
+
+// MARK: - Header Subview
+
+struct ScoresheetHeaderView: View {
+    @Bindable var viewModel: ScoresheetViewModel
+
+    @Query(sort: \Team.name) private var teams: [Team]
+    @Query(sort: \Competition.date, order: .reverse) private var competitions: [Competition]
+
+    var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
                 // Team Picker
@@ -164,19 +179,10 @@ struct ScoresheetEntryView: View {
         .cardStyle()
         .padding(.horizontal, 4)
     }
-
-    // MARK: - Judge Grid Section
-
-    private var judgeGridSection: some View {
-        VStack(spacing: 12) {
-            BuildingJudgeSection(scoresheet: $viewModel.scoresheet)
-            TumblingJudgeSection(scoresheet: $viewModel.scoresheet)
-            OverallJudgeSection(scoresheet: $viewModel.scoresheet, viewModel: viewModel)
-        }
-    }
 }
 
 #Preview {
     ScoresheetEntryView()
-        .modelContainer(for: [Scoresheet.self, Team.self, Competition.self, Gym.self], inMemory: true)
+        .modelContainer(
+            for: [Scoresheet.self, Team.self, Competition.self, Gym.self], inMemory: true)
 }

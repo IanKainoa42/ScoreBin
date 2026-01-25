@@ -126,6 +126,10 @@ class ScoresheetViewModel {
         scoresheet.rawScore.rounded2
     }
 
+    var percentPerfection: Double {
+        scoresheet.percentPerfection.rounded2
+    }
+
     var finalScore: Double {
         scoresheet.finalScore.rounded2
     }

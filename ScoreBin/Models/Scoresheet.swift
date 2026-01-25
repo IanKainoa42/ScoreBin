@@ -194,8 +194,17 @@ final class Scoresheet {
         buildingTotal + tumblingTotal + overallTotal
     }
 
+    var maxScore: Double {
+        team?.level == "L1" ? ScoringRules.Maximums.level1MaxScore : ScoringRules.Maximums.maxScore
+    }
+
+    var percentPerfection: Double {
+        guard maxScore > 0 else { return 0 }
+        return (rawScore / maxScore) * 100.0
+    }
+
     var finalScore: Double {
-        rawScore - totalDeductions
+        max(0, percentPerfection - totalDeductions)
     }
 
     // MARK: - Export for Database
@@ -214,6 +223,7 @@ final class Scoresheet {
             "competition_name": competition?.name ?? "",
             "round": round,
             "raw_score": rawScore.rounded2,
+            "percent_perfection": percentPerfection.rounded2,
             "total_deductions": totalDeductions.rounded2,
             "final_score": finalScore.rounded2,
         ]
