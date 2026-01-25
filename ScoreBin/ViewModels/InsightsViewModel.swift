@@ -47,12 +47,11 @@ class InsightsViewModel {
 
     func scoreImprovement(for team: Team) -> Double {
         let sorted = team.scoresheets.sorted { $0.createdAt < $1.createdAt }
-        guard sorted.count >= 2 else { return 0 }
+        guard let first = sorted.first, let last = sorted.last, sorted.count >= 2 else {
+            return 0
+        }
 
-        let firstScore = sorted.first!.finalScore
-        let lastScore = sorted.last!.finalScore
-
-        return (lastScore - firstScore).rounded2
+        return (last.finalScore - first.finalScore).rounded2
     }
 
     // MARK: - Gym Analytics
@@ -69,15 +68,23 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams) { $0.level }
 
         return teamsByLevel.map { level, teams in
-            let allScoresheets = teams.flatMap { $0.scoresheets }
-            let avgScore = allScoresheets.isEmpty ? 0 :
-                allScoresheets.reduce(0) { $0 + $1.finalScore } / Double(allScoresheets.count)
+            var totalScore: Double = 0
+            var scoresheetCount: Int = 0
+
+            for team in teams {
+                for scoresheet in team.scoresheets {
+                    totalScore += scoresheet.finalScore
+                    scoresheetCount += 1
+                }
+            }
+
+            let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
                 teamCount: teams.count,
-                scoresheetCount: allScoresheets.count
+                scoresheetCount: scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
@@ -130,9 +137,13 @@ class InsightsViewModel {
         }
 
         let count = Double(team.scoresheets.count)
-        let avgBuilding = team.scoresheets.reduce(0) { $0 + $1.buildingTotal } / count
-        let avgTumbling = team.scoresheets.reduce(0) { $0 + $1.tumblingTotal } / count
-        let avgOverall = team.scoresheets.reduce(0) { $0 + $1.overallTotal } / count
+        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
+            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
+        }
+
+        let avgBuilding = totalBuilding / count
+        let avgTumbling = totalTumbling / count
+        let avgOverall = totalOverall / count
 
         return [
             CategoryBreakdown(
