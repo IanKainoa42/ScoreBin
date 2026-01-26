@@ -117,16 +117,14 @@ struct InsightsDashboardView: View {
     // MARK: - Team Performance Section
 
     private var teamPerformanceSection: some View {
-        let activeTeams = viewModel.activeTeams(from: teams)
+        let activeTeams = viewModel.activeTeams(from: teams, limit: 5)
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Team Performance")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let activeTeams = viewModel.activeTeams(from: teams)
-
-            ForEach(activeTeams.prefix(5)) { team in
+            ForEach(activeTeams) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
                     TeamPerformanceRow(team: team, viewModel: viewModel)
                 }
