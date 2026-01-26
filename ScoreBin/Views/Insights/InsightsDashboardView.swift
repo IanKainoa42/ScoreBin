@@ -124,7 +124,7 @@ struct InsightsDashboardView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let activeTeams = viewModel.activeTeams(from: teams)
+
 
             ForEach(activeTeams.prefix(5)) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
