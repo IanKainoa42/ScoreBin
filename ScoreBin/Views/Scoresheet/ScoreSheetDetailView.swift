@@ -1,4 +1,7 @@
+import SwiftData
 import SwiftUI
+
+// Detail view for viewing a specific scoresheet
 
 struct ScoreSheetDetailView: View {
     let scoresheet: Scoresheet
