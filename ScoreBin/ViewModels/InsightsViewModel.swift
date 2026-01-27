@@ -43,12 +43,11 @@ class InsightsViewModel {
 
     func scoreImprovement(for team: Team) -> Double {
         let sorted = team.scoresheets.sorted { $0.createdAt < $1.createdAt }
-        guard sorted.count >= 2 else { return 0 }
+        guard let first = sorted.first,
+              let last = sorted.last,
+              sorted.count >= 2 else { return 0 }
 
-        let firstScore = sorted.first!.finalScore
-        let lastScore = sorted.last!.finalScore
-
-        return (lastScore - firstScore).rounded2
+        return (last.finalScore - first.finalScore).rounded2
     }
 
     // MARK: - Gym Analytics

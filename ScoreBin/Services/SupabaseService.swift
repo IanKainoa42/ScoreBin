@@ -13,7 +13,6 @@ class SupabaseService {
 
     private init() {
         // Initialize Supabase client here when SDK is added
-        // client = SupabaseClient(supabaseURL: URL(string: supabaseURL)!, supabaseKey: supabaseKey)
     }
 
     // MARK: - Scoresheet Operations
