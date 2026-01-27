@@ -32,6 +32,9 @@ struct ScoreBinApp: App {
         WindowGroup {
             MainTabView()
                 .preferredColorScheme(.dark)
+                .onAppear {
+                    SyncManager.shared.configure(container: modelContainer)
+                }
         }
         .modelContainer(modelContainer)
     }

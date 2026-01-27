@@ -16,8 +16,14 @@ class SyncManager {
     var lastSyncDate: Date?
     var pendingChanges: Int = 0
 
+    private var modelContainer: ModelContainer?
+
     private init() {
         setupNetworkMonitoring()
+    }
+
+    func configure(container: ModelContainer) {
+        self.modelContainer = container
     }
 
     // MARK: - Network Monitoring
@@ -72,9 +78,10 @@ class SyncManager {
         }
     }
 
+    @MainActor
     func syncPendingChanges() async {
-        // Sync any items marked as pending
-        // This would be called when coming back online
+        guard let container = modelContainer else { return }
+        await syncAll(context: container.mainContext)
     }
 
     // MARK: - Individual Sync Methods
