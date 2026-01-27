@@ -146,6 +146,7 @@ class ScoresheetViewModel {
             scoresheet.competition = selectedCompetition
         }
 
+        scoresheet.syncStatus = .pending
         context.insert(scoresheet)
 
         do {

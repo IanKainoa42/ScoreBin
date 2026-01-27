@@ -117,7 +117,7 @@ struct InsightsDashboardView: View {
     // MARK: - Team Performance Section
 
     private var teamPerformanceSection: some View {
-        let activeTeams = viewModel.activeTeams(from: teams)
+        let activeTeams = viewModel.activeTeams(from: teams, limit: 5)
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Team Performance")

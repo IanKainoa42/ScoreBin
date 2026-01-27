@@ -40,18 +40,15 @@ class SyncManager {
 
     // MARK: - Sync Operations
 
+    @MainActor
     func syncAll(context: ModelContext) async {
         guard isOnline && !isSyncing else { return }
 
-        await MainActor.run {
-            isSyncing = true
-        }
+        isSyncing = true
 
         defer {
-            Task { @MainActor in
-                isSyncing = false
-                lastSyncDate = Date()
-            }
+            isSyncing = false
+            lastSyncDate = Date()
         }
 
         do {
@@ -82,6 +79,7 @@ class SyncManager {
 
     // MARK: - Individual Sync Methods
 
+    @MainActor
     private func syncGyms(context: ModelContext) async throws {
         let pending = SyncStatus.pending
         let descriptor = FetchDescriptor<Gym>(
@@ -98,6 +96,7 @@ class SyncManager {
         }
     }
 
+    @MainActor
     private func syncTeams(context: ModelContext) async throws {
         let pending = SyncStatus.pending
         let descriptor = FetchDescriptor<Team>(
@@ -114,6 +113,7 @@ class SyncManager {
         }
     }
 
+    @MainActor
     private func syncCompetitions(context: ModelContext) async throws {
         let pending = SyncStatus.pending
         let descriptor = FetchDescriptor<Competition>(
@@ -130,6 +130,7 @@ class SyncManager {
         }
     }
 
+    @MainActor
     private func syncScoresheets(context: ModelContext) async throws {
         let pending = ScoresheetSyncStatus.pending
         let descriptor = FetchDescriptor<Scoresheet>(
@@ -146,6 +147,7 @@ class SyncManager {
 
     // MARK: - Pull from Remote
 
+    @MainActor
     func pullRemoteChanges(context: ModelContext) async {
         guard isOnline else { return }
 
