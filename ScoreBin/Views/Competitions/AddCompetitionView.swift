@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct AddCompetitionView: View {
     @Environment(\.dismiss) private var dismiss
