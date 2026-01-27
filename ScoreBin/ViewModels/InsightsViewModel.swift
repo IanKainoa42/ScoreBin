@@ -42,12 +42,16 @@ class InsightsViewModel {
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.map { $0.finalScore }.max() ?? 0
+        team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
     }
 
     func scoreImprovement(for team: Team) -> Double {
-        let sorted = team.scoresheets.sorted { $0.createdAt < $1.createdAt }
-        guard let first = sorted.first, let last = sorted.last, sorted.count >= 2 else {
+        guard team.scoresheets.count >= 2 else { return 0 }
+
+        // Find earliest and latest scoresheets without sorting the entire array (O(N) vs O(N log N))
+        guard let first = team.scoresheets.min(by: { $0.createdAt < $1.createdAt }),
+              let last = team.scoresheets.max(by: { $0.createdAt < $1.createdAt })
+        else {
             return 0
         }
 
