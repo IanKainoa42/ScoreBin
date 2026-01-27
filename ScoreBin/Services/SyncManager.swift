@@ -1,6 +1,6 @@
 import Foundation
-import SwiftData
 import Network
+import SwiftData
 
 /// Manages offline-first sync between local SwiftData and Supabase
 @Observable
@@ -16,8 +16,14 @@ class SyncManager {
     var lastSyncDate: Date?
     var pendingChanges: Int = 0
 
+    private var modelContainer: ModelContainer?
+
     private init() {
         setupNetworkMonitoring()
+    }
+
+    func configure(container: ModelContainer) {
+        self.modelContainer = container
     }
 
     // MARK: - Network Monitoring
@@ -40,18 +46,15 @@ class SyncManager {
 
     // MARK: - Sync Operations
 
+    @MainActor
     func syncAll(context: ModelContext) async {
         guard isOnline && !isSyncing else { return }
 
-        await MainActor.run {
-            isSyncing = true
-        }
+        isSyncing = true
 
         defer {
-            Task { @MainActor in
-                isSyncing = false
-                lastSyncDate = Date()
-            }
+            isSyncing = false
+            lastSyncDate = Date()
         }
 
         do {
@@ -75,49 +78,75 @@ class SyncManager {
         }
     }
 
+    @MainActor
     func syncPendingChanges() async {
-        // Sync any items marked as pending
-        // This would be called when coming back online
+        guard let container = modelContainer else { return }
+        await syncAll(context: container.mainContext)
     }
 
     // MARK: - Individual Sync Methods
 
+    @MainActor
     private func syncGyms(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Gym>()
-        let gyms = try context.fetch(descriptor)
+        let pending = SyncStatus.pending
+        let descriptor = FetchDescriptor<Gym>(
+            predicate: #Predicate { $0.syncStatus == pending })
+        let pendingGyms = try context.fetch(descriptor)
 
-        for gym in gyms {
+        for gym in pendingGyms {
             try await supabase.uploadGym(gym)
+            gym.syncStatus = .synced
+        }
+
+        if !pendingGyms.isEmpty {
+            try context.save()
         }
     }
 
+    @MainActor
     private func syncTeams(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Team>()
-        let teams = try context.fetch(descriptor)
+        let pending = SyncStatus.pending
+        let descriptor = FetchDescriptor<Team>(
+            predicate: #Predicate { $0.syncStatus == pending })
+        let pendingTeams = try context.fetch(descriptor)
 
-        for team in teams {
+        for team in pendingTeams {
             try await supabase.uploadTeam(team)
+            team.syncStatus = .synced
+        }
+
+        if !pendingTeams.isEmpty {
+            try context.save()
         }
     }
 
+    @MainActor
     private func syncCompetitions(context: ModelContext) async throws {
-        let descriptor = FetchDescriptor<Competition>()
-        let competitions = try context.fetch(descriptor)
+        let pending = SyncStatus.pending
+        let descriptor = FetchDescriptor<Competition>(
+            predicate: #Predicate { $0.syncStatus == pending })
+        let pendingCompetitions = try context.fetch(descriptor)
 
-        for competition in competitions {
+        for competition in pendingCompetitions {
             try await supabase.uploadCompetition(competition)
+            competition.syncStatus = .synced
+        }
+
+        if !pendingCompetitions.isEmpty {
+            try context.save()
         }
     }
 
+    @MainActor
     private func syncScoresheets(context: ModelContext) async throws {
-        // Fetch all scoresheets and filter for pending
-        let descriptor = FetchDescriptor<Scoresheet>()
-        let allScoresheets = try context.fetch(descriptor)
-        let pendingScoresheets = allScoresheets.filter { $0.syncStatus == SyncStatus.pending }
+        let pending = ScoresheetSyncStatus.pending
+        let descriptor = FetchDescriptor<Scoresheet>(
+            predicate: #Predicate { $0.syncStatus == pending })
+        let pendingScoresheets = try context.fetch(descriptor)
 
         for scoresheet in pendingScoresheets {
             try await supabase.uploadScoresheet(scoresheet)
-            scoresheet.syncStatus = SyncStatus.synced
+            scoresheet.syncStatus = .synced
         }
 
         try context.save()
@@ -125,6 +154,7 @@ class SyncManager {
 
     // MARK: - Pull from Remote
 
+    @MainActor
     func pullRemoteChanges(context: ModelContext) async {
         guard isOnline else { return }
 
@@ -145,7 +175,9 @@ class SyncManager {
             let remoteScoresheets = try await supabase.fetchScoresheets()
             // Process and merge with local data...
 
-            print("Pulled \(remoteGyms.count) gyms, \(remoteTeams.count) teams, \(remoteCompetitions.count) competitions, \(remoteScoresheets.count) scoresheets")
+            print(
+                "Pulled \(remoteGyms.count) gyms, \(remoteTeams.count) teams, \(remoteCompetitions.count) competitions, \(remoteScoresheets.count) scoresheets"
+            )
         } catch {
             print("Failed to pull remote changes: \(error)")
         }
@@ -154,14 +186,16 @@ class SyncManager {
     // MARK: - Conflict Resolution
 
     /// Last-write-wins conflict resolution based on timestamp
-    private func resolveConflict<T>(local: T, remote: T, localTimestamp: Date, remoteTimestamp: Date) -> T {
+    private func resolveConflict<T>(
+        local: T, remote: T, localTimestamp: Date, remoteTimestamp: Date
+    ) -> T {
         return remoteTimestamp > localTimestamp ? remote : local
     }
 
     // MARK: - Mark for Sync
 
     func markForSync(_ scoresheet: Scoresheet) {
-        scoresheet.syncStatus = SyncStatus.pending
+        scoresheet.syncStatus = .pending
         pendingChanges += 1
     }
 }

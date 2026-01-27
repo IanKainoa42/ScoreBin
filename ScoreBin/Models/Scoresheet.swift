@@ -1,17 +1,19 @@
 import Foundation
 import SwiftData
 
-enum SyncStatus: String, Codable {
-    case pending
-    case synced
-    case failed
-}
-
 enum RoundType: String, Codable, CaseIterable {
     case day1 = "Day 1"
     case day2 = "Day 2"
     case finals = "Finals"
     case exhibition = "Exhibition"
+}
+
+// Local, unambiguous sync status for Scoresheet
+enum ScoresheetSyncStatus: String, Codable {
+    case pending
+    case syncing
+    case synced
+    case failed
 }
 
 @Model
@@ -65,7 +67,7 @@ final class Scoresheet {
     var timeLimitViolations: Int
 
     // MARK: - Sync
-    var syncStatus: SyncStatus
+    var syncStatus: ScoresheetSyncStatus
     var supabaseId: String?
 
     init(
@@ -124,7 +126,7 @@ final class Scoresheet {
         self.timeLimitViolations = 0
 
         // Sync
-        self.syncStatus = .pending
+        self.syncStatus = ScoresheetSyncStatus.pending
         self.supabaseId = nil
     }
 
@@ -179,76 +181,96 @@ final class Scoresheet {
     }
 
     var totalDeductions: Double {
-        Double(athleteFalls) * ScoringRules.Deductions.athleteFall +
-        Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall +
-        Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble +
-        Double(buildingFalls) * ScoringRules.Deductions.buildingFall +
-        Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall +
-        Double(boundaryViolations) * ScoringRules.Deductions.boundaryViolation +
-        Double(timeLimitViolations) * ScoringRules.Deductions.timeLimitViolation
+        Double(athleteFalls) * ScoringRules.Deductions.athleteFall + Double(majorAthleteFalls)
+            * ScoringRules.Deductions.majorAthleteFall + Double(buildingBobbles)
+            * ScoringRules.Deductions.buildingBobble + Double(buildingFalls)
+            * ScoringRules.Deductions.buildingFall + Double(majorBuildingFalls)
+            * ScoringRules.Deductions.majorBuildingFall + Double(boundaryViolations)
+            * ScoringRules.Deductions.boundaryViolation + Double(timeLimitViolations)
+            * ScoringRules.Deductions.timeLimitViolation
     }
 
     var rawScore: Double {
         buildingTotal + tumblingTotal + overallTotal
     }
 
+    var maxScore: Double {
+        team?.level == "L1" ? ScoringRules.Maximums.level1MaxScore : ScoringRules.Maximums.maxScore
+    }
+
+    var percentPerfection: Double {
+        guard maxScore > 0 else { return 0 }
+        return (rawScore / maxScore) * 100.0
+    }
+
     var finalScore: Double {
-        rawScore - totalDeductions
+        max(0, percentPerfection - totalDeductions)
     }
 
     // MARK: - Export for Database
 
     func exportForDatabase() -> [String: Any] {
+        let teamInfo: [String: Any] = [
+            "name": team?.name ?? "",
+            "program": team?.gym?.name ?? "",
+            "level": team?.level ?? "",
+            "age_division": team?.ageDivision ?? "",
+            "tier": team?.tier ?? "",
+            "athlete_count": team?.athleteCount ?? 0,
+        ]
+
+        let performance: [String: Any] = [
+            "competition_name": competition?.name ?? "",
+            "round": round,
+            "raw_score": rawScore.rounded2,
+            "percent_perfection": percentPerfection.rounded2,
+            "total_deductions": totalDeductions.rounded2,
+            "final_score": finalScore.rounded2,
+        ]
+
+        let buildingScores: [String: Any] = [
+            "stunt_difficulty": stuntDifficulty,
+            "stunt_execution": stuntExecution,
+            "stunt_driver_degree": stuntDriverDegree,
+            "stunt_driver_max_part": stuntDriverMaxPart,
+            "pyramid_difficulty": pyramidDifficulty,
+            "pyramid_execution": pyramidExecution,
+            "pyramid_drivers": pyramidDrivers,
+            "toss_difficulty": tossDifficulty,
+            "toss_execution": tossExecution,
+            "creativity_score": buildingCreativity,
+            "showmanship_score": buildingShowmanship,
+        ]
+
+        let tumblingScores: [String: Any] = [
+            "standing_difficulty": standingDifficulty,
+            "standing_execution": standingExecution,
+            "standing_drivers": standingDrivers,
+            "running_difficulty": runningDifficulty,
+            "running_execution": runningExecution,
+            "running_drivers": runningDrivers,
+            "running_driver_max_part": runningDriverMaxPart,
+            "jumps_difficulty": jumpsDifficulty,
+            "jumps_execution": jumpsExecution,
+            "creativity_score": tumblingCreativity,
+            "showmanship_score": tumblingShowmanship,
+        ]
+
+        let overallScores: [String: Any] = [
+            "dance_difficulty": danceDifficulty,
+            "dance_execution": danceExecution,
+            "formations_score": formations,
+            "creativity_score": overallCreativity,
+            "showmanship_score": overallShowmanship,
+        ]
+
         return [
-            "team_info": [
-                "name": team?.name ?? "",
-                "program": team?.gym?.name ?? "",
-                "level": team?.level ?? "",
-                "age_division": team?.ageDivision ?? "",
-                "tier": team?.tier ?? "",
-                "athlete_count": team?.athleteCount ?? 0
-            ],
-            "performance": [
-                "competition_name": competition?.name ?? "",
-                "round": round,
-                "raw_score": rawScore.rounded2,
-                "total_deductions": totalDeductions.rounded2,
-                "final_score": finalScore.rounded2
-            ],
-            "scores_building": [
-                "stunt_difficulty": stuntDifficulty,
-                "stunt_execution": stuntExecution,
-                "stunt_driver_degree": stuntDriverDegree,
-                "stunt_driver_max_part": stuntDriverMaxPart,
-                "pyramid_difficulty": pyramidDifficulty,
-                "pyramid_execution": pyramidExecution,
-                "pyramid_drivers": pyramidDrivers,
-                "toss_difficulty": tossDifficulty,
-                "toss_execution": tossExecution,
-                "creativity_score": buildingCreativity,
-                "showmanship_score": buildingShowmanship
-            ],
-            "scores_tumbling": [
-                "standing_difficulty": standingDifficulty,
-                "standing_execution": standingExecution,
-                "standing_drivers": standingDrivers,
-                "running_difficulty": runningDifficulty,
-                "running_execution": runningExecution,
-                "running_drivers": runningDrivers,
-                "running_driver_max_part": runningDriverMaxPart,
-                "jumps_difficulty": jumpsDifficulty,
-                "jumps_execution": jumpsExecution,
-                "creativity_score": tumblingCreativity,
-                "showmanship_score": tumblingShowmanship
-            ],
-            "scores_overall": [
-                "dance_difficulty": danceDifficulty,
-                "dance_execution": danceExecution,
-                "formations_score": formations,
-                "creativity_score": overallCreativity,
-                "showmanship_score": overallShowmanship
-            ],
-            "deductions": buildDeductionsArray()
+            "team_info": teamInfo,
+            "performance": performance,
+            "scores_building": buildingScores,
+            "scores_tumbling": tumblingScores,
+            "scores_overall": overallScores,
+            "deductions": buildDeductionsArray(),
         ]
     }
 

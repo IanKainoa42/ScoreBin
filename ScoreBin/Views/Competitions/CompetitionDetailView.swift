@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CompetitionDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -7,6 +7,7 @@ struct CompetitionDetailView: View {
 
     @State private var viewModel = CompetitionViewModel()
     @State private var showingEditSheet = false
+    @State private var selectedScoresheet: Scoresheet?
 
     var body: some View {
         ScrollView {
@@ -36,6 +37,9 @@ struct CompetitionDetailView: View {
         }
         .sheet(isPresented: $showingEditSheet) {
             EditCompetitionView(competition: competition)
+        }
+        .sheet(item: $selectedScoresheet) { scoresheet in
+            ScoreSheetDetailView(scoresheet: scoresheet)
         }
         .onAppear {
             viewModel.modelContext = modelContext
@@ -82,9 +86,13 @@ struct CompetitionDetailView: View {
 
             HStack(spacing: 20) {
                 StatItem(title: "Total", value: "\(competition.scoresheets.count)")
-                StatItem(title: "Average", value: viewModel.averageScore(for: competition).scoreFormatted)
-                StatItem(title: "High", value: viewModel.highestScore(for: competition).scoreFormatted)
-                StatItem(title: "Low", value: viewModel.lowestScore(for: competition).scoreFormatted)
+                StatItem(
+                    title: "Average", value: viewModel.averageScore(for: competition).scoreFormatted
+                )
+                StatItem(
+                    title: "High", value: viewModel.highestScore(for: competition).scoreFormatted)
+                StatItem(
+                    title: "Low", value: viewModel.lowestScore(for: competition).scoreFormatted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,7 +122,11 @@ struct CompetitionDetailView: View {
                             .foregroundColor(.scoreBinCyan)
 
                         ForEach(byRound[round] ?? []) { sheet in
-                            ScoresheetRowView(scoresheet: sheet)
+                            Button {
+                                selectedScoresheet = sheet
+                            } label: {
+                                ScoresheetRowView(scoresheet: sheet)
+                            }
                         }
                     }
                 }
@@ -214,7 +226,8 @@ struct EditCompetitionView: View {
 
 #Preview {
     NavigationStack {
-        CompetitionDetailView(competition: Competition(name: "NCA All-Star", date: Date(), location: "Dallas, TX"))
+        CompetitionDetailView(
+            competition: Competition(name: "NCA All-Star", date: Date(), location: "Dallas, TX"))
     }
     .modelContainer(for: [Competition.self, Scoresheet.self, Team.self], inMemory: true)
 }

@@ -11,7 +11,13 @@ class ScoresheetViewModel {
     var selectedTeam: Team? {
         didSet {
             scoresheet.team = selectedTeam
+            applyLevelRestrictions()
         }
+    }
+
+    /// Returns true if the current team is Level 1 (no tosses allowed)
+    var isLevel1: Bool {
+        selectedTeam?.level == "L1"
     }
 
     // Competition selection
@@ -32,6 +38,28 @@ class ScoresheetViewModel {
 
     var quantityChart: ScoringRules.QuantityChart {
         ScoringRules.QuantityChart.forAthleteCount(selectedTeam?.athleteCount ?? 20)
+    }
+
+    // MARK: - Level-Aware Maximums
+
+    /// Maximum building score for current team's level (18 for L1, 22 for others)
+    var maxBuildingScore: Double {
+        ScoringRules.buildingMax(forLevel: selectedTeam?.level)
+    }
+
+    /// Maximum tumbling score (always 20)
+    var maxTumblingScore: Double {
+        ScoringRules.Maximums.tumblingTotal
+    }
+
+    /// Maximum overall score (always 8)
+    var maxOverallScore: Double {
+        ScoringRules.Maximums.overallTotal
+    }
+
+    /// Maximum total score for current team's level (46 for L1, 50 for others)
+    var maxTotalScore: Double {
+        ScoringRules.maxScore(forLevel: selectedTeam?.level)
     }
 
     // MARK: - Building Judge Totals
@@ -98,6 +126,10 @@ class ScoresheetViewModel {
         scoresheet.rawScore.rounded2
     }
 
+    var percentPerfection: Double {
+        scoresheet.percentPerfection.rounded2
+    }
+
     var finalScore: Double {
         scoresheet.finalScore.rounded2
     }
@@ -114,6 +146,7 @@ class ScoresheetViewModel {
             scoresheet.competition = selectedCompetition
         }
 
+        scoresheet.syncStatus = .pending
         context.insert(scoresheet)
 
         do {
@@ -127,6 +160,15 @@ class ScoresheetViewModel {
         scoresheet = Scoresheet()
         scoresheet.team = selectedTeam
         scoresheet.competition = selectedCompetition
+        applyLevelRestrictions()
+    }
+
+    /// Applies level-specific restrictions (e.g., no tosses for L1)
+    func applyLevelRestrictions() {
+        if isLevel1 {
+            scoresheet.tossDifficulty = 0
+            scoresheet.tossExecution = 0
+        }
     }
 
     // MARK: - Export

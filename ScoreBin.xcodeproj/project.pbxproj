@@ -38,6 +38,8 @@
 		A10000000000000000000029 /* ScoreDistributionChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* ScoreDistributionChart.swift */; };
 		A10000000000000000000030 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* SupabaseService.swift */; };
 		A10000000000000000000031 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SyncManager.swift */; };
+		A10000000000000000000032 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* SyncStatus.swift */; };
+		A10000000000000000000033 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* AppConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +74,8 @@
 		A20000000000000000000029 /* ScoreDistributionChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreDistributionChart.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		A20000000000000000000031 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		A20000000000000000000032 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* ScoreBin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScoreBin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -123,6 +127,7 @@
 				A20000000000000000000004 /* Team.swift */,
 				A20000000000000000000005 /* Competition.swift */,
 				A20000000000000000000006 /* Scoresheet.swift */,
+				A20000000000000000000032 /* SyncStatus.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -163,6 +168,7 @@
 			children = (
 				A20000000000000000000007 /* ScoringRules.swift */,
 				A20000000000000000000008 /* Extensions.swift */,
+				A20000000000000000000033 /* AppConfig.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -311,6 +317,8 @@
 				A10000000000000000000029 /* ScoreDistributionChart.swift in Sources */,
 				A10000000000000000000030 /* SupabaseService.swift in Sources */,
 				A10000000000000000000031 /* SyncManager.swift in Sources */,
+				A10000000000000000000032 /* SyncStatus.swift in Sources */,
+				A10000000000000000000033 /* AppConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

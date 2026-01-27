@@ -19,6 +19,10 @@ class InsightsViewModel {
         let label: String
     }
 
+    func activeTeams(from teams: [Team]) -> [Team] {
+        teams.filter { !$0.scoresheets.isEmpty }
+    }
+
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
         team.scoresheets
             .sorted { $0.createdAt < $1.createdAt }
@@ -38,17 +42,20 @@ class InsightsViewModel {
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.map { $0.finalScore }.max() ?? 0
+        team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
     }
 
     func scoreImprovement(for team: Team) -> Double {
-        let sorted = team.scoresheets.sorted { $0.createdAt < $1.createdAt }
-        guard sorted.count >= 2 else { return 0 }
+        guard team.scoresheets.count >= 2 else { return 0 }
 
-        let firstScore = sorted.first!.finalScore
-        let lastScore = sorted.last!.finalScore
+        // Find earliest and latest scoresheets without sorting the entire array (O(N) vs O(N log N))
+        guard let first = team.scoresheets.min(by: { $0.createdAt < $1.createdAt }),
+              let last = team.scoresheets.max(by: { $0.createdAt < $1.createdAt })
+        else {
+            return 0
+        }
 
-        return (lastScore - firstScore).rounded2
+        return (last.finalScore - first.finalScore).rounded2
     }
 
     // MARK: - Gym Analytics
@@ -65,15 +72,23 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams) { $0.level }
 
         return teamsByLevel.map { level, teams in
-            let allScoresheets = teams.flatMap { $0.scoresheets }
-            let avgScore = allScoresheets.isEmpty ? 0 :
-                allScoresheets.reduce(0) { $0 + $1.finalScore } / Double(allScoresheets.count)
+            var totalScore: Double = 0
+            var scoresheetCount: Int = 0
+
+            for team in teams {
+                for scoresheet in team.scoresheets {
+                    totalScore += scoresheet.finalScore
+                    scoresheetCount += 1
+                }
+            }
+
+            let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
                 teamCount: teams.count,
-                scoresheetCount: allScoresheets.count
+                scoresheetCount: scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
@@ -89,12 +104,15 @@ class InsightsViewModel {
     }
 
     func categoryBreakdown(for scoresheet: Scoresheet) -> [CategoryBreakdown] {
-        [
+        let level = scoresheet.team?.level
+        let buildingMax = ScoringRules.buildingMax(forLevel: level)
+
+        return [
             CategoryBreakdown(
                 category: "Building",
                 score: scoresheet.buildingTotal.rounded2,
-                maxScore: ScoringRules.Maximums.buildingTotal,
-                percentage: (scoresheet.buildingTotal / ScoringRules.Maximums.buildingTotal * 100).rounded2
+                maxScore: buildingMax,
+                percentage: (scoresheet.buildingTotal / buildingMax * 100).rounded2
             ),
             CategoryBreakdown(
                 category: "Tumbling",
@@ -112,25 +130,31 @@ class InsightsViewModel {
     }
 
     func averageCategoryBreakdown(for team: Team) -> [CategoryBreakdown] {
+        let buildingMax = ScoringRules.buildingMax(forLevel: team.level)
+
         guard !team.scoresheets.isEmpty else {
             return [
-                CategoryBreakdown(category: "Building", score: 0, maxScore: ScoringRules.Maximums.buildingTotal, percentage: 0),
+                CategoryBreakdown(category: "Building", score: 0, maxScore: buildingMax, percentage: 0),
                 CategoryBreakdown(category: "Tumbling", score: 0, maxScore: ScoringRules.Maximums.tumblingTotal, percentage: 0),
                 CategoryBreakdown(category: "Overall", score: 0, maxScore: ScoringRules.Maximums.overallTotal, percentage: 0)
             ]
         }
 
         let count = Double(team.scoresheets.count)
-        let avgBuilding = team.scoresheets.reduce(0) { $0 + $1.buildingTotal } / count
-        let avgTumbling = team.scoresheets.reduce(0) { $0 + $1.tumblingTotal } / count
-        let avgOverall = team.scoresheets.reduce(0) { $0 + $1.overallTotal } / count
+        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
+            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
+        }
+
+        let avgBuilding = totalBuilding / count
+        let avgTumbling = totalTumbling / count
+        let avgOverall = totalOverall / count
 
         return [
             CategoryBreakdown(
                 category: "Building",
                 score: avgBuilding.rounded2,
-                maxScore: ScoringRules.Maximums.buildingTotal,
-                percentage: (avgBuilding / ScoringRules.Maximums.buildingTotal * 100).rounded2
+                maxScore: buildingMax,
+                percentage: (avgBuilding / buildingMax * 100).rounded2
             ),
             CategoryBreakdown(
                 category: "Tumbling",
@@ -205,5 +229,21 @@ class InsightsViewModel {
         }
 
         return patterns.sorted { $0.totalPoints > $1.totalPoints }
+    }
+
+    // MARK: - View Helpers
+
+    func recentScoresheets(from scoresheets: [Scoresheet], limit: Int = 5) -> [Scoresheet] {
+        scoresheets
+            .sorted { $0.createdAt > $1.createdAt }
+            .prefix(limit)
+            .map { $0 }
+    }
+
+    func activeTeams(from teams: [Team], limit: Int = 5) -> [Team] {
+        teams
+            .filter { !$0.scoresheets.isEmpty }
+            .prefix(limit)
+            .map { $0 }
     }
 }
