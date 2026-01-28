@@ -181,9 +181,22 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
+        var athleteFalls = 0
+        var majorAthleteFalls = 0
+        var buildingBobbles = 0
+        var buildingFalls = 0
+        var majorBuildingFalls = 0
+
+        for sheet in team.scoresheets {
+            athleteFalls += sheet.athleteFalls
+            majorAthleteFalls += sheet.majorAthleteFalls
+            buildingBobbles += sheet.buildingBobbles
+            buildingFalls += sheet.buildingFalls
+            majorBuildingFalls += sheet.majorBuildingFalls
+        }
+
         var patterns: [DeductionPattern] = []
 
-        let athleteFalls = team.scoresheets.reduce(0) { $0 + $1.athleteFalls }
         if athleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Athlete Falls",
@@ -192,7 +205,6 @@ class InsightsViewModel {
             ))
         }
 
-        let majorAthleteFalls = team.scoresheets.reduce(0) { $0 + $1.majorAthleteFalls }
         if majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Major Athlete Falls",
@@ -201,7 +213,6 @@ class InsightsViewModel {
             ))
         }
 
-        let buildingBobbles = team.scoresheets.reduce(0) { $0 + $1.buildingBobbles }
         if buildingBobbles > 0 {
             patterns.append(DeductionPattern(
                 category: "Building Bobbles",
@@ -210,7 +221,6 @@ class InsightsViewModel {
             ))
         }
 
-        let buildingFalls = team.scoresheets.reduce(0) { $0 + $1.buildingFalls }
         if buildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Building Falls",
@@ -219,7 +229,6 @@ class InsightsViewModel {
             ))
         }
 
-        let majorBuildingFalls = team.scoresheets.reduce(0) { $0 + $1.majorBuildingFalls }
         if majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Major Building Falls",
