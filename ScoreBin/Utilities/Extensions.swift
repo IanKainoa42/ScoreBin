@@ -75,28 +75,38 @@ extension Double {
 
 // MARK: - Date Extensions
 extension Date {
-    /// Format date for competition display
-    var competitionFormatted: String {
+    private static let competitionFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: self)
+        return formatter
+    }()
+
+    private static let shortFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d/yy"
+        return formatter
+    }()
+
+    /// Format date for competition display
+    var competitionFormatted: String {
+        Self.competitionFormatter.string(from: self)
     }
 
     /// Format date for short display
     var shortFormatted: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d/yy"
-        return formatter.string(from: self)
+        Self.shortFormatter.string(from: self)
     }
 }
 
 // MARK: - String Extensions
 extension String {
+    private static let snakeCaseRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
+    }()
+
     /// Convert camelCase to snake_case
     var snakeCase: String {
-        let pattern = "([a-z0-9])([A-Z])"
-        let regex = try? NSRegularExpression(pattern: pattern, options: [])
         let range = NSRange(location: 0, length: self.count)
-        return regex?.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1_$2").lowercased() ?? self.lowercased()
+        return Self.snakeCaseRegex?.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1_$2").lowercased() ?? self.lowercased()
     }
 }
