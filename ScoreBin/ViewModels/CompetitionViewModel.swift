@@ -50,11 +50,11 @@ class CompetitionViewModel {
     }
 
     func highestScore(for competition: Competition) -> Double {
-        competition.scoresheets.map { $0.finalScore }.max() ?? 0
+        competition.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
     }
 
     func lowestScore(for competition: Competition) -> Double {
-        competition.scoresheets.map { $0.finalScore }.min() ?? 0
+        competition.scoresheets.min(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
     }
 
     func scoresheetsByRound(for competition: Competition) -> [String: [Scoresheet]] {
