@@ -48,11 +48,17 @@ class InsightsViewModel {
     func scoreImprovement(for team: Team) -> Double {
         guard team.scoresheets.count >= 2 else { return 0 }
 
-        // Find earliest and latest scoresheets without sorting the entire array (O(N) vs O(N log N))
-        guard let first = team.scoresheets.min(by: { $0.createdAt < $1.createdAt }),
-              let last = team.scoresheets.max(by: { $0.createdAt < $1.createdAt })
-        else {
-            return 0
+        // Find earliest and latest scoresheets in a single pass
+        var first = team.scoresheets[0]
+        var last = team.scoresheets[0]
+
+        for sheet in team.scoresheets.dropFirst() {
+            if sheet.createdAt < first.createdAt {
+                first = sheet
+            }
+            if sheet.createdAt > last.createdAt {
+                last = sheet
+            }
         }
 
         return (last.finalScore - first.finalScore).rounded2
@@ -181,9 +187,23 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
+        var athleteFalls = 0
+        var majorAthleteFalls = 0
+        var buildingBobbles = 0
+        var buildingFalls = 0
+        var majorBuildingFalls = 0
+
+        // Single pass aggregation
+        for sheet in team.scoresheets {
+            athleteFalls += sheet.athleteFalls
+            majorAthleteFalls += sheet.majorAthleteFalls
+            buildingBobbles += sheet.buildingBobbles
+            buildingFalls += sheet.buildingFalls
+            majorBuildingFalls += sheet.majorBuildingFalls
+        }
+
         var patterns: [DeductionPattern] = []
 
-        let athleteFalls = team.scoresheets.reduce(0) { $0 + $1.athleteFalls }
         if athleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Athlete Falls",
@@ -192,7 +212,6 @@ class InsightsViewModel {
             ))
         }
 
-        let majorAthleteFalls = team.scoresheets.reduce(0) { $0 + $1.majorAthleteFalls }
         if majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Major Athlete Falls",
@@ -201,7 +220,6 @@ class InsightsViewModel {
             ))
         }
 
-        let buildingBobbles = team.scoresheets.reduce(0) { $0 + $1.buildingBobbles }
         if buildingBobbles > 0 {
             patterns.append(DeductionPattern(
                 category: "Building Bobbles",
@@ -210,7 +228,6 @@ class InsightsViewModel {
             ))
         }
 
-        let buildingFalls = team.scoresheets.reduce(0) { $0 + $1.buildingFalls }
         if buildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Building Falls",
@@ -219,7 +236,6 @@ class InsightsViewModel {
             ))
         }
 
-        let majorBuildingFalls = team.scoresheets.reduce(0) { $0 + $1.majorBuildingFalls }
         if majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: "Major Building Falls",

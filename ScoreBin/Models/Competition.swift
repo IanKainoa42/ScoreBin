@@ -33,10 +33,15 @@ final class Competition {
         self.scoresheets = []
     }
 
-    // Format date for display
-    var formattedDate: String {
+    // Static formatter for reuse
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    // Format date for display
+    var formattedDate: String {
+        return Self.dateFormatter.string(from: date)
     }
 }
