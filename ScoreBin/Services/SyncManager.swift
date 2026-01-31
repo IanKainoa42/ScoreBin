@@ -93,12 +93,41 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingGyms = try context.fetch(descriptor)
 
-        for gym in pendingGyms {
-            try await supabase.uploadGym(gym)
-            gym.syncStatus = .synced
+        guard !pendingGyms.isEmpty else { return }
+
+        // Extract data on MainActor to avoid threading issues with managed objects
+        let items = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
+
+        let uploadedIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in items {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadGym(data: data)
+                        return id
+                    } catch {
+                        print("Failed to upload gym \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingGyms.isEmpty {
+        let uploadedIDSet = Set(uploadedIDs)
+        for gym in pendingGyms {
+            if uploadedIDSet.contains(gym.id) {
+                gym.syncStatus = .synced
+            }
+        }
+
+        if !uploadedIDSet.isEmpty {
             try context.save()
         }
     }
@@ -110,12 +139,40 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
 
-        for team in pendingTeams {
-            try await supabase.uploadTeam(team)
-            team.syncStatus = .synced
+        guard !pendingTeams.isEmpty else { return }
+
+        let items = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
+
+        let uploadedIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in items {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadTeam(data: data)
+                        return id
+                    } catch {
+                        print("Failed to upload team \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingTeams.isEmpty {
+        let uploadedIDSet = Set(uploadedIDs)
+        for team in pendingTeams {
+            if uploadedIDSet.contains(team.id) {
+                team.syncStatus = .synced
+            }
+        }
+
+        if !uploadedIDSet.isEmpty {
             try context.save()
         }
     }
@@ -127,12 +184,40 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
 
-        for competition in pendingCompetitions {
-            try await supabase.uploadCompetition(competition)
-            competition.syncStatus = .synced
+        guard !pendingCompetitions.isEmpty else { return }
+
+        let items = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
+
+        let uploadedIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in items {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadCompetition(data: data)
+                        return id
+                    } catch {
+                        print("Failed to upload competition \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingCompetitions.isEmpty {
+        let uploadedIDSet = Set(uploadedIDs)
+        for competition in pendingCompetitions {
+            if uploadedIDSet.contains(competition.id) {
+                competition.syncStatus = .synced
+            }
+        }
+
+        if !uploadedIDSet.isEmpty {
             try context.save()
         }
     }
@@ -144,12 +229,42 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
-        for scoresheet in pendingScoresheets {
-            try await supabase.uploadScoresheet(scoresheet)
-            scoresheet.syncStatus = .synced
+        guard !pendingScoresheets.isEmpty else { return }
+
+        let items = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
+
+        let uploadedIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in items {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadScoresheet(data: data)
+                        return id
+                    } catch {
+                        print("Failed to upload scoresheet \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        try context.save()
+        let uploadedIDSet = Set(uploadedIDs)
+        for scoresheet in pendingScoresheets {
+            if uploadedIDSet.contains(scoresheet.id) {
+                scoresheet.syncStatus = .synced
+            }
+        }
+
+        if !uploadedIDSet.isEmpty {
+            try context.save()
+        }
     }
 
     // MARK: - Pull from Remote

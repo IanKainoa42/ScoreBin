@@ -46,4 +46,19 @@ final class Team {
 
     // Available tiers
     static let tiers = ["elite", "premier", "recreation"]
+
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func exportForDatabase() -> [String: Any] {
+        [
+            "id": id.uuidString,
+            "name": name,
+            "gym_id": gym?.id.uuidString ?? NSNull(),
+            "level": level,
+            "age_division": ageDivision,
+            "tier": tier,
+            "athlete_count": athleteCount,
+            "created_at": Self.iso8601Formatter.string(from: createdAt)
+        ]
+    }
 }

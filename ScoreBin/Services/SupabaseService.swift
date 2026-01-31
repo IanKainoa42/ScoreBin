@@ -17,13 +17,14 @@ class SupabaseService {
 
     // MARK: - Scoresheet Operations
 
-    func uploadScoresheet(_ scoresheet: Scoresheet) async throws {
-        let data = scoresheet.exportForDatabase()
-
+    func uploadScoresheet(data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("scoresheets").insert(data).execute()
-
         print("Would upload scoresheet: \(data)")
+    }
+
+    func uploadScoresheet(_ scoresheet: Scoresheet) async throws {
+        try await uploadScoresheet(data: scoresheet.exportForDatabase())
     }
 
     func fetchScoresheets() async throws -> [[String: Any]] {
@@ -36,22 +37,14 @@ class SupabaseService {
 
     // MARK: - Team Operations
 
-    func uploadTeam(_ team: Team) async throws {
-        let data: [String: Any] = [
-            "id": team.id.uuidString,
-            "name": team.name,
-            "gym_id": team.gym?.id.uuidString ?? NSNull(),
-            "level": team.level,
-            "age_division": team.ageDivision,
-            "tier": team.tier,
-            "athlete_count": team.athleteCount,
-            "created_at": Self.iso8601Formatter.string(from: team.createdAt),
-        ]
-
+    func uploadTeam(data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("teams").insert(data).execute()
-
         print("Would upload team: \(data)")
+    }
+
+    func uploadTeam(_ team: Team) async throws {
+        try await uploadTeam(data: team.exportForDatabase())
     }
 
     func fetchTeams() async throws -> [[String: Any]] {
@@ -64,20 +57,14 @@ class SupabaseService {
 
     // MARK: - Competition Operations
 
-    func uploadCompetition(_ competition: Competition) async throws {
-        let data: [String: Any] = [
-            "id": competition.id.uuidString,
-            "name": competition.name,
-            "date": Self.iso8601Formatter.string(from: competition.date),
-            "location": competition.location,
-            "notes": competition.notes,
-            "created_at": Self.iso8601Formatter.string(from: competition.createdAt),
-        ]
-
+    func uploadCompetition(data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("competitions").insert(data).execute()
-
         print("Would upload competition: \(data)")
+    }
+
+    func uploadCompetition(_ competition: Competition) async throws {
+        try await uploadCompetition(data: competition.exportForDatabase())
     }
 
     func fetchCompetitions() async throws -> [[String: Any]] {
@@ -90,18 +77,14 @@ class SupabaseService {
 
     // MARK: - Gym Operations
 
-    func uploadGym(_ gym: Gym) async throws {
-        let data: [String: Any] = [
-            "id": gym.id.uuidString,
-            "name": gym.name,
-            "location": gym.location,
-            "created_at": Self.iso8601Formatter.string(from: gym.createdAt),
-        ]
-
+    func uploadGym(data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("gyms").insert(data).execute()
-
         print("Would upload gym: \(data)")
+    }
+
+    func uploadGym(_ gym: Gym) async throws {
+        try await uploadGym(data: gym.exportForDatabase())
     }
 
     func fetchGyms() async throws -> [[String: Any]] {
