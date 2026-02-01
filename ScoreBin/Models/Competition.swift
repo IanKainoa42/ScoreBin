@@ -40,8 +40,21 @@ final class Competition {
         return formatter
     }()
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     // Format date for display
     var formattedDate: String {
         return Self.dateFormatter.string(from: date)
+    }
+
+    func exportForDatabase() -> [String: Any] {
+        return [
+            "id": id.uuidString,
+            "name": name,
+            "date": Self.iso8601Formatter.string(from: date),
+            "location": location,
+            "notes": notes,
+            "created_at": Self.iso8601Formatter.string(from: createdAt)
+        ]
     }
 }

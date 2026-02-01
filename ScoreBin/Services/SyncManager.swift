@@ -93,12 +93,38 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingGyms = try context.fetch(descriptor)
 
-        for gym in pendingGyms {
-            try await supabase.uploadGym(gym)
-            gym.syncStatus = .synced
+        guard !pendingGyms.isEmpty else { return }
+
+        // Extract data for thread safety
+        let itemsToSync = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
+
+        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in itemsToSync {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadGym(data)
+                        return id
+                    } catch {
+                        print("Failed to sync gym \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingGyms.isEmpty {
+        // Update local status
+        if !successfulIDs.isEmpty {
+            for gym in pendingGyms where successfulIDs.contains(gym.id) {
+                gym.syncStatus = .synced
+            }
             try context.save()
         }
     }
@@ -110,12 +136,36 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
 
-        for team in pendingTeams {
-            try await supabase.uploadTeam(team)
-            team.syncStatus = .synced
+        guard !pendingTeams.isEmpty else { return }
+
+        let itemsToSync = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
+
+        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in itemsToSync {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadTeam(data)
+                        return id
+                    } catch {
+                        print("Failed to sync team \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingTeams.isEmpty {
+        if !successfulIDs.isEmpty {
+            for team in pendingTeams where successfulIDs.contains(team.id) {
+                team.syncStatus = .synced
+            }
             try context.save()
         }
     }
@@ -127,12 +177,36 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
 
-        for competition in pendingCompetitions {
-            try await supabase.uploadCompetition(competition)
-            competition.syncStatus = .synced
+        guard !pendingCompetitions.isEmpty else { return }
+
+        let itemsToSync = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
+
+        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in itemsToSync {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadCompetition(data)
+                        return id
+                    } catch {
+                        print("Failed to sync competition \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingCompetitions.isEmpty {
+        if !successfulIDs.isEmpty {
+            for competition in pendingCompetitions where successfulIDs.contains(competition.id) {
+                competition.syncStatus = .synced
+            }
             try context.save()
         }
     }
@@ -144,12 +218,38 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
-        for scoresheet in pendingScoresheets {
-            try await supabase.uploadScoresheet(scoresheet)
-            scoresheet.syncStatus = .synced
+        guard !pendingScoresheets.isEmpty else { return }
+
+        let itemsToSync = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
+
+        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in itemsToSync {
+                group.addTask {
+                    do {
+                        try await SupabaseService.shared.uploadScoresheet(data)
+                        return id
+                    } catch {
+                        print("Failed to sync scoresheet \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        try context.save()
+        if !successfulIDs.isEmpty {
+            for scoresheet in pendingScoresheets where successfulIDs.contains(scoresheet.id) {
+                scoresheet.syncStatus = .synced
+            }
+            try context.save()
+        }
     }
 
     // MARK: - Pull from Remote

@@ -25,4 +25,15 @@ final class Gym {
         self.syncStatus = .pending
         self.teams = []
     }
+
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func exportForDatabase() -> [String: Any] {
+        return [
+            "id": id.uuidString,
+            "name": name,
+            "location": location,
+            "created_at": Self.iso8601Formatter.string(from: createdAt)
+        ]
+    }
 }
