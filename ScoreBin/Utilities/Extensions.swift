@@ -71,6 +71,11 @@ extension Double {
     var deductionFormatted: String {
         String(format: "-%.2f", self)
     }
+
+    /// Round to 2 decimal places
+    var rounded2: Double {
+        (self * 100).rounded() / 100
+    }
 }
 
 // MARK: - Date Extensions

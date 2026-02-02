@@ -257,9 +257,10 @@ class InsightsViewModel {
     }
 
     func activeTeams(from teams: [Team], limit: Int = 5) -> [Team] {
-        teams
-            .filter { !$0.scoresheets.isEmpty }
-            .prefix(limit)
-            .map { $0 }
+        Array(
+            teams.lazy
+                .filter { !$0.scoresheets.isEmpty }
+                .prefix(limit)
+        )
     }
 }
