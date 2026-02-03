@@ -9,8 +9,6 @@ class SupabaseService {
     private let supabaseURL = AppConfig.Supabase.url
     private let supabaseKey = AppConfig.Supabase.key
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     private init() {
         // Initialize Supabase client here when SDK is added
     }

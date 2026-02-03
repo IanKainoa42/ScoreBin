@@ -40,6 +40,8 @@ final class Competition {
         return formatter
     }()
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     // Format date for display
     var formattedDate: String {
         return Self.dateFormatter.string(from: date)

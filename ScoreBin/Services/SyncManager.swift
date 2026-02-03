@@ -263,7 +263,12 @@ class SyncManager {
             }
         }
 
-        try context.save()
+        if !successfulIDs.isEmpty {
+            for scoresheet in pendingScoresheets where successfulIDs.contains(scoresheet.id) {
+                scoresheet.syncStatus = .synced
+            }
+            try context.save()
+        }
     }
 
     // MARK: - Pull from Remote
