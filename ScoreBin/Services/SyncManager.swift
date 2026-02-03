@@ -84,29 +84,28 @@ class SyncManager {
         await syncAll(context: container.mainContext)
     }
 
-    // MARK: - Individual Sync Methods
+    // MARK: - Sync Batch Helper
 
     @MainActor
-    private func syncGyms(context: ModelContext) async throws {
-        let pending = SyncStatus.pending
-        let descriptor = FetchDescriptor<Gym>(
-            predicate: #Predicate { $0.syncStatus == pending })
-        let pendingGyms = try context.fetch(descriptor)
+    private func syncBatch<T: PersistentModel>(
+        items: [T],
+        idProvider: (T) -> UUID,
+        dataProvider: (T) -> [String: Any],
+        uploadAction: @escaping ([String: Any]) async throws -> Void,
+        updateStatus: (T) -> Void
+    ) async {
+        guard !items.isEmpty else { return }
 
-        guard !pendingGyms.isEmpty else { return }
-
-        // Extract data for parallel upload
-        let uploadData = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
+        let uploadData = items.map { (idProvider($0), dataProvider($0)) }
 
         let successIDs = await withTaskGroup(of: UUID?.self) { group in
             for (id, data) in uploadData {
                 group.addTask {
                     do {
-                        try await supabase.uploadGym(data)
+                        try await uploadAction(data)
                         return id
                     } catch {
-                        print("Failed to upload gym \(id): \(error)")
+                        print("Failed to upload item \(id): \(error)")
                         return nil
                     }
                 }
@@ -122,11 +121,26 @@ class SyncManager {
         }
 
         let successSet = Set(successIDs)
-        for gym in pendingGyms {
-            if successSet.contains(gym.id) {
-                gym.syncStatus = .synced
-            }
-        }
+        items.filter { successSet.contains(idProvider($0)) }
+             .forEach { updateStatus($0) }
+    }
+
+    // MARK: - Individual Sync Methods
+
+    @MainActor
+    private func syncGyms(context: ModelContext) async throws {
+        let pending = SyncStatus.pending
+        let descriptor = FetchDescriptor<Gym>(
+            predicate: #Predicate { $0.syncStatus == pending })
+        let pendingGyms = try context.fetch(descriptor)
+
+        await syncBatch(
+            items: pendingGyms,
+            idProvider: { $0.id },
+            dataProvider: { $0.exportForDatabase() },
+            uploadAction: { [supabase] data in try await supabase.uploadGym(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         try context.save()
     }
@@ -138,40 +152,13 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
 
-        guard !pendingTeams.isEmpty else { return }
-
-        // Extract data for parallel upload
-        let uploadData = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadTeam(data)
-                        return id
-                    } catch {
-                        print("Failed to upload team \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
-        }
-
-        let successSet = Set(successIDs)
-        for team in pendingTeams {
-            if successSet.contains(team.id) {
-                team.syncStatus = .synced
-            }
-        }
+        await syncBatch(
+            items: pendingTeams,
+            idProvider: { $0.id },
+            dataProvider: { $0.exportForDatabase() },
+            uploadAction: { [supabase] data in try await supabase.uploadTeam(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         try context.save()
     }
@@ -183,40 +170,13 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
 
-        guard !pendingCompetitions.isEmpty else { return }
-
-        // Extract data for parallel upload
-        let uploadData = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadCompetition(data)
-                        return id
-                    } catch {
-                        print("Failed to upload competition \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
-        }
-
-        let successSet = Set(successIDs)
-        for competition in pendingCompetitions {
-            if successSet.contains(competition.id) {
-                competition.syncStatus = .synced
-            }
-        }
+        await syncBatch(
+            items: pendingCompetitions,
+            idProvider: { $0.id },
+            dataProvider: { $0.exportForDatabase() },
+            uploadAction: { [supabase] data in try await supabase.uploadCompetition(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         try context.save()
     }
@@ -228,47 +188,15 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
-        guard !pendingScoresheets.isEmpty else { return }
+        await syncBatch(
+            items: pendingScoresheets,
+            idProvider: { $0.id },
+            dataProvider: { $0.exportForDatabase() },
+            uploadAction: { [supabase] data in try await supabase.uploadScoresheet(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
-        // Extract data for parallel upload
-        let uploadData = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadScoresheet(data)
-                        return id
-                    } catch {
-                        print("Failed to upload scoresheet \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
-        }
-
-        let successSet = Set(successIDs)
-        for scoresheet in pendingScoresheets {
-            if successSet.contains(scoresheet.id) {
-                scoresheet.syncStatus = .synced
-            }
-        }
-
-        if !successfulIDs.isEmpty {
-            for scoresheet in pendingScoresheets where successfulIDs.contains(scoresheet.id) {
-                scoresheet.syncStatus = .synced
-            }
-            try context.save()
-        }
+        try context.save()
     }
 
     // MARK: - Pull from Remote
