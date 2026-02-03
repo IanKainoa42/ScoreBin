@@ -93,14 +93,42 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingGyms = try context.fetch(descriptor)
 
-        for gym in pendingGyms {
-            try await supabase.uploadGym(gym)
-            gym.syncStatus = .synced
+        guard !pendingGyms.isEmpty else { return }
+
+        // Extract data for parallel upload
+        let uploadData = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
+
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
+                group.addTask {
+                    do {
+                        try await supabase.uploadGym(data)
+                        return id
+                    } catch {
+                        print("Failed to upload gym \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingGyms.isEmpty {
-            try context.save()
+        let successSet = Set(successIDs)
+        for gym in pendingGyms {
+            if successSet.contains(gym.id) {
+                gym.syncStatus = .synced
+            }
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -110,14 +138,42 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
 
-        for team in pendingTeams {
-            try await supabase.uploadTeam(team)
-            team.syncStatus = .synced
+        guard !pendingTeams.isEmpty else { return }
+
+        // Extract data for parallel upload
+        let uploadData = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
+
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
+                group.addTask {
+                    do {
+                        try await supabase.uploadTeam(data)
+                        return id
+                    } catch {
+                        print("Failed to upload team \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingTeams.isEmpty {
-            try context.save()
+        let successSet = Set(successIDs)
+        for team in pendingTeams {
+            if successSet.contains(team.id) {
+                team.syncStatus = .synced
+            }
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -127,14 +183,42 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
 
-        for competition in pendingCompetitions {
-            try await supabase.uploadCompetition(competition)
-            competition.syncStatus = .synced
+        guard !pendingCompetitions.isEmpty else { return }
+
+        // Extract data for parallel upload
+        let uploadData = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
+
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
+                group.addTask {
+                    do {
+                        try await supabase.uploadCompetition(data)
+                        return id
+                    } catch {
+                        print("Failed to upload competition \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
         }
 
-        if !pendingCompetitions.isEmpty {
-            try context.save()
+        let successSet = Set(successIDs)
+        for competition in pendingCompetitions {
+            if successSet.contains(competition.id) {
+                competition.syncStatus = .synced
+            }
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -144,9 +228,39 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
+        guard !pendingScoresheets.isEmpty else { return }
+
+        // Extract data for parallel upload
+        let uploadData = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
+
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
+                group.addTask {
+                    do {
+                        try await supabase.uploadScoresheet(data)
+                        return id
+                    } catch {
+                        print("Failed to upload scoresheet \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result {
+                    results.append(id)
+                }
+            }
+            return results
+        }
+
+        let successSet = Set(successIDs)
         for scoresheet in pendingScoresheets {
-            try await supabase.uploadScoresheet(scoresheet)
-            scoresheet.syncStatus = .synced
+            if successSet.contains(scoresheet.id) {
+                scoresheet.syncStatus = .synced
+            }
         }
 
         try context.save()
