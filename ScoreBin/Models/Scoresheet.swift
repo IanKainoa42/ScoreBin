@@ -302,11 +302,3 @@ final class Scoresheet {
         return result
     }
 }
-
-// MARK: - Double Extension for Rounding
-
-extension Double {
-    var rounded2: Double {
-        (self * 100).rounded() / 100
-    }
-}

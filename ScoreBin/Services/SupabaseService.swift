@@ -9,15 +9,17 @@ class SupabaseService {
     private let supabaseURL = AppConfig.Supabase.url
     private let supabaseKey = AppConfig.Supabase.key
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     private init() {
         // Initialize Supabase client here when SDK is added
     }
 
     // MARK: - Scoresheet Operations
 
-    func uploadScoresheet(data: [String: Any]) async throws {
+    func uploadScoresheet(_ scoresheet: Scoresheet) async throws {
+        try await uploadScoresheet(scoresheet.exportForDatabase())
+    }
+
+    func uploadScoresheet(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("scoresheets").insert(data).execute()
         print("Would upload scoresheet: \(data)")
@@ -37,7 +39,11 @@ class SupabaseService {
 
     // MARK: - Team Operations
 
-    func uploadTeam(data: [String: Any]) async throws {
+    func uploadTeam(_ team: Team) async throws {
+        try await uploadTeam(team.exportForDatabase())
+    }
+
+    func uploadTeam(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("teams").insert(data).execute()
         print("Would upload team: \(data)")
@@ -57,7 +63,11 @@ class SupabaseService {
 
     // MARK: - Competition Operations
 
-    func uploadCompetition(data: [String: Any]) async throws {
+    func uploadCompetition(_ competition: Competition) async throws {
+        try await uploadCompetition(competition.exportForDatabase())
+    }
+
+    func uploadCompetition(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("competitions").insert(data).execute()
         print("Would upload competition: \(data)")
@@ -77,7 +87,11 @@ class SupabaseService {
 
     // MARK: - Gym Operations
 
-    func uploadGym(data: [String: Any]) async throws {
+    func uploadGym(_ gym: Gym) async throws {
+        try await uploadGym(gym.exportForDatabase())
+    }
+
+    func uploadGym(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("gyms").insert(data).execute()
         print("Would upload gym: \(data)")

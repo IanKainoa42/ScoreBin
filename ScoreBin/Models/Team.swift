@@ -47,6 +47,8 @@ final class Team {
     // Available tiers
     static let tiers = ["elite", "premier", "recreation"]
 
+    // MARK: - Export
+
     private static let iso8601Formatter = ISO8601DateFormatter()
 
     func exportForDatabase() -> [String: Any] {
