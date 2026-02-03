@@ -22,8 +22,11 @@ class SupabaseService {
     func uploadScoresheet(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("scoresheets").insert(data).execute()
-
         print("Would upload scoresheet: \(data)")
+    }
+
+    func uploadScoresheet(_ scoresheet: Scoresheet) async throws {
+        try await uploadScoresheet(data: scoresheet.exportForDatabase())
     }
 
     func fetchScoresheets() async throws -> [[String: Any]] {
@@ -43,8 +46,11 @@ class SupabaseService {
     func uploadTeam(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("teams").insert(data).execute()
-
         print("Would upload team: \(data)")
+    }
+
+    func uploadTeam(_ team: Team) async throws {
+        try await uploadTeam(data: team.exportForDatabase())
     }
 
     func fetchTeams() async throws -> [[String: Any]] {
@@ -64,8 +70,11 @@ class SupabaseService {
     func uploadCompetition(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("competitions").insert(data).execute()
-
         print("Would upload competition: \(data)")
+    }
+
+    func uploadCompetition(_ competition: Competition) async throws {
+        try await uploadCompetition(data: competition.exportForDatabase())
     }
 
     func fetchCompetitions() async throws -> [[String: Any]] {
@@ -85,8 +94,11 @@ class SupabaseService {
     func uploadGym(_ data: [String: Any]) async throws {
         // When Supabase SDK is integrated:
         // try await client.from("gyms").insert(data).execute()
-
         print("Would upload gym: \(data)")
+    }
+
+    func uploadGym(_ gym: Gym) async throws {
+        try await uploadGym(data: gym.exportForDatabase())
     }
 
     func fetchGyms() async throws -> [[String: Any]] {
