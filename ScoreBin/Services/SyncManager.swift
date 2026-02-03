@@ -95,17 +95,18 @@ class SyncManager {
 
         guard !pendingGyms.isEmpty else { return }
 
-        // Extract data for thread safety
-        let itemsToSync = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
+        // Extract data for parallel upload
+        let uploadData = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
 
-        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in itemsToSync {
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
                 group.addTask {
                     do {
-                        try await SupabaseService.shared.uploadGym(data)
+                        try await supabase.uploadGym(data)
                         return id
                     } catch {
-                        print("Failed to sync gym \(id): \(error)")
+                        print("Failed to upload gym \(id): \(error)")
                         return nil
                     }
                 }
@@ -120,13 +121,14 @@ class SyncManager {
             return results
         }
 
-        // Update local status
-        if !successfulIDs.isEmpty {
-            for gym in pendingGyms where successfulIDs.contains(gym.id) {
+        let successSet = Set(successIDs)
+        for gym in pendingGyms {
+            if successSet.contains(gym.id) {
                 gym.syncStatus = .synced
             }
-            try context.save()
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -138,16 +140,18 @@ class SyncManager {
 
         guard !pendingTeams.isEmpty else { return }
 
-        let itemsToSync = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
+        // Extract data for parallel upload
+        let uploadData = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
 
-        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in itemsToSync {
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
                 group.addTask {
                     do {
-                        try await SupabaseService.shared.uploadTeam(data)
+                        try await supabase.uploadTeam(data)
                         return id
                     } catch {
-                        print("Failed to sync team \(id): \(error)")
+                        print("Failed to upload team \(id): \(error)")
                         return nil
                     }
                 }
@@ -162,12 +166,14 @@ class SyncManager {
             return results
         }
 
-        if !successfulIDs.isEmpty {
-            for team in pendingTeams where successfulIDs.contains(team.id) {
+        let successSet = Set(successIDs)
+        for team in pendingTeams {
+            if successSet.contains(team.id) {
                 team.syncStatus = .synced
             }
-            try context.save()
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -179,16 +185,18 @@ class SyncManager {
 
         guard !pendingCompetitions.isEmpty else { return }
 
-        let itemsToSync = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
+        // Extract data for parallel upload
+        let uploadData = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
 
-        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in itemsToSync {
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
                 group.addTask {
                     do {
-                        try await SupabaseService.shared.uploadCompetition(data)
+                        try await supabase.uploadCompetition(data)
                         return id
                     } catch {
-                        print("Failed to sync competition \(id): \(error)")
+                        print("Failed to upload competition \(id): \(error)")
                         return nil
                     }
                 }
@@ -203,12 +211,14 @@ class SyncManager {
             return results
         }
 
-        if !successfulIDs.isEmpty {
-            for competition in pendingCompetitions where successfulIDs.contains(competition.id) {
+        let successSet = Set(successIDs)
+        for competition in pendingCompetitions {
+            if successSet.contains(competition.id) {
                 competition.syncStatus = .synced
             }
-            try context.save()
         }
+
+        try context.save()
     }
 
     @MainActor
@@ -220,16 +230,18 @@ class SyncManager {
 
         guard !pendingScoresheets.isEmpty else { return }
 
-        let itemsToSync = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
+        // Extract data for parallel upload
+        let uploadData = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
+        let supabase = self.supabase
 
-        let successfulIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in itemsToSync {
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, data) in uploadData {
                 group.addTask {
                     do {
-                        try await SupabaseService.shared.uploadScoresheet(data)
+                        try await supabase.uploadScoresheet(data)
                         return id
                     } catch {
-                        print("Failed to sync scoresheet \(id): \(error)")
+                        print("Failed to upload scoresheet \(id): \(error)")
                         return nil
                     }
                 }
@@ -242,6 +254,13 @@ class SyncManager {
                 }
             }
             return results
+        }
+
+        let successSet = Set(successIDs)
+        for scoresheet in pendingScoresheets {
+            if successSet.contains(scoresheet.id) {
+                scoresheet.syncStatus = .synced
+            }
         }
 
         if !successfulIDs.isEmpty {

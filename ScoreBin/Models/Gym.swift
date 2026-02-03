@@ -26,10 +26,12 @@ final class Gym {
         self.teams = []
     }
 
+    // MARK: - Export
+
     private static let iso8601Formatter = ISO8601DateFormatter()
 
     func exportForDatabase() -> [String: Any] {
-        return [
+        [
             "id": id.uuidString,
             "name": name,
             "location": location,
