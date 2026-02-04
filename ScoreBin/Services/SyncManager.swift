@@ -84,6 +84,35 @@ class SyncManager {
         await syncAll(context: container.mainContext)
     }
 
+    // MARK: - Helper
+
+    private func performUploads(
+        data: [(UUID, [String: Any])],
+        type: String,
+        uploadAction: @escaping ([String: Any]) async throws -> Void
+    ) async -> Set<UUID> {
+        let successIDs = await withTaskGroup(of: UUID?.self) { group in
+            for (id, itemData) in data {
+                group.addTask {
+                    do {
+                        try await uploadAction(itemData)
+                        return id
+                    } catch {
+                        print("Failed to upload \(type) \(id): \(error)")
+                        return nil
+                    }
+                }
+            }
+
+            var results: [UUID] = []
+            for await result in group {
+                if let id = result { results.append(id) }
+            }
+            return results
+        }
+        return Set(successIDs)
+    }
+
     // MARK: - Individual Sync Methods
 
     @MainActor
@@ -95,40 +124,22 @@ class SyncManager {
 
         guard !pendingGyms.isEmpty else { return }
 
-        // Extract data for parallel upload
         let uploadData = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
         let supabase = self.supabase
 
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadGym(data)
-                        return id
-                    } catch {
-                        print("Failed to upload gym \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
+        let successSet = await performUploads(data: uploadData, type: "gym") { data in
+            try await supabase.uploadGym(data)
         }
 
-        let successSet = Set(successIDs)
         for gym in pendingGyms {
             if successSet.contains(gym.id) {
                 gym.syncStatus = .synced
             }
         }
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -140,40 +151,22 @@ class SyncManager {
 
         guard !pendingTeams.isEmpty else { return }
 
-        // Extract data for parallel upload
         let uploadData = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
         let supabase = self.supabase
 
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadTeam(data)
-                        return id
-                    } catch {
-                        print("Failed to upload team \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
+        let successSet = await performUploads(data: uploadData, type: "team") { data in
+            try await supabase.uploadTeam(data)
         }
 
-        let successSet = Set(successIDs)
         for team in pendingTeams {
             if successSet.contains(team.id) {
                 team.syncStatus = .synced
             }
         }
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -185,40 +178,22 @@ class SyncManager {
 
         guard !pendingCompetitions.isEmpty else { return }
 
-        // Extract data for parallel upload
         let uploadData = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
         let supabase = self.supabase
 
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadCompetition(data)
-                        return id
-                    } catch {
-                        print("Failed to upload competition \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
+        let successSet = await performUploads(data: uploadData, type: "competition") { data in
+            try await supabase.uploadCompetition(data)
         }
 
-        let successSet = Set(successIDs)
         for competition in pendingCompetitions {
             if successSet.contains(competition.id) {
                 competition.syncStatus = .synced
             }
         }
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -230,43 +205,20 @@ class SyncManager {
 
         guard !pendingScoresheets.isEmpty else { return }
 
-        // Extract data for parallel upload
         let uploadData = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
         let supabase = self.supabase
 
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await supabase.uploadScoresheet(data)
-                        return id
-                    } catch {
-                        print("Failed to upload scoresheet \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
+        let successSet = await performUploads(data: uploadData, type: "scoresheet") { data in
+            try await supabase.uploadScoresheet(data)
         }
 
-        let successSet = Set(successIDs)
         for scoresheet in pendingScoresheets {
             if successSet.contains(scoresheet.id) {
                 scoresheet.syncStatus = .synced
             }
         }
 
-        if !successfulIDs.isEmpty {
-            for scoresheet in pendingScoresheets where successfulIDs.contains(scoresheet.id) {
-                scoresheet.syncStatus = .synced
-            }
+        if !successSet.isEmpty {
             try context.save()
         }
     }
