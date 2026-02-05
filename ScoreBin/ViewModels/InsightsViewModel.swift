@@ -78,10 +78,16 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams) { $0.level }
 
         return teamsByLevel.map { level, teams in
-            let allScoresheets = teams.flatMap { $0.scoresheets }
-            let scoresheetCount = allScoresheets.count
+            var totalScore = 0.0
+            var scoresheetCount = 0
 
-            let totalScore = allScoresheets.reduce(0.0) { $0 + $1.finalScore }
+            for team in teams {
+                for sheet in team.scoresheets {
+                    totalScore += sheet.finalScore
+                    scoresheetCount += 1
+                }
+            }
+
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
             return GymLevelStats(
@@ -141,8 +147,14 @@ class InsightsViewModel {
         }
 
         let count = Double(team.scoresheets.count)
-        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
-            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
+        var totalBuilding = 0.0
+        var totalTumbling = 0.0
+        var totalOverall = 0.0
+
+        for sheet in team.scoresheets {
+            totalBuilding += sheet.buildingTotal
+            totalTumbling += sheet.tumblingTotal
+            totalOverall += sheet.overallTotal
         }
 
         let avgBuilding = totalBuilding / count

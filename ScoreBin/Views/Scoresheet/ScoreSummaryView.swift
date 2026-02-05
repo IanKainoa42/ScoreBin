@@ -126,7 +126,7 @@ struct CategoryTotalCard: View {
                 .font(.caption)
                 .foregroundColor(.gray)
 
-            Text(isDeduction ? score.scoreFormatted : score.scoreFormatted)
+            Text(score.scoreFormatted)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(color)
