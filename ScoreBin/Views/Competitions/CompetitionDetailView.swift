@@ -11,7 +11,7 @@ struct CompetitionDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            LazyVStack(alignment: .center, spacing: 16) {
                 // Competition Info Card
                 infoCard
 

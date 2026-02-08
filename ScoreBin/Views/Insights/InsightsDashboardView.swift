@@ -13,7 +13,7 @@ struct InsightsDashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                LazyVStack(alignment: .center, spacing: 16) {
                     // Overview Stats
                     overviewSection
 

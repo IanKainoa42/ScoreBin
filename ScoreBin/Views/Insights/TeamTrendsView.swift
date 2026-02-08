@@ -10,7 +10,7 @@ struct TeamTrendsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            LazyVStack(alignment: .center, spacing: 16) {
                 // Score Over Time Chart
                 scoreOverTimeSection
 
