@@ -146,7 +146,7 @@ class ScoresheetViewModel {
             scoresheet.competition = selectedCompetition
         }
 
-        scoresheet.syncStatus = .pending
+        SyncManager.shared.markForSync(scoresheet)
         context.insert(scoresheet)
 
         do {
