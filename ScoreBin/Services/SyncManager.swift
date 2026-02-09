@@ -14,7 +14,7 @@ class SyncManager {
     var isOnline: Bool = true
     var isSyncing: Bool = false
     var lastSyncDate: Date?
-    var pendingChanges: Int = 0
+    private(set) var pendingChanges: Int = 0
 
     private var modelContainer: ModelContainer?
 
@@ -22,8 +22,10 @@ class SyncManager {
         setupNetworkMonitoring()
     }
 
+    @MainActor
     func configure(container: ModelContainer) {
         self.modelContainer = container
+        updatePendingCount()
     }
 
     // MARK: - Network Monitoring
@@ -44,6 +46,24 @@ class SyncManager {
         monitor.start(queue: monitorQueue)
     }
 
+    // MARK: - Pending Count
+
+    @MainActor
+    func updatePendingCount() {
+        guard let context = modelContainer?.mainContext else { return }
+
+        do {
+            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+
+            self.pendingChanges = pendingGyms + pendingTeams + pendingCompetitions + pendingScoresheets
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
+    }
+
     // MARK: - Sync Operations
 
     @MainActor
@@ -55,6 +75,7 @@ class SyncManager {
         defer {
             isSyncing = false
             lastSyncDate = Date()
+            updatePendingCount()
         }
 
         do {
@@ -70,9 +91,7 @@ class SyncManager {
             // Sync scoresheets
             try await syncScoresheets(context: context)
 
-            await MainActor.run {
-                pendingChanges = 0
-            }
+            // pendingChanges is updated in defer block
         } catch {
             print("Sync failed: \(error)")
         }
@@ -96,10 +115,25 @@ class SyncManager {
     ) async {
         guard !items.isEmpty else { return }
 
+        // Extract data on MainActor
         let uploadData = items.map { (idProvider($0), dataProvider($0)) }
+        let maxConcurrent = 5
 
         let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
+            var activeTasks = 0
+            var results: [UUID] = []
+            var dataIterator = uploadData.makeIterator()
+
+            // Helper to collect results
+            func collectResult() async {
+                if let result = await group.next() {
+                    if let id = result { results.append(id) }
+                    activeTasks -= 1
+                }
+            }
+
+            // Initial fill
+            while activeTasks < maxConcurrent, let (id, data) = dataIterator.next() {
                 group.addTask {
                     do {
                         try await uploadAction(data)
@@ -109,14 +143,30 @@ class SyncManager {
                         return nil
                     }
                 }
+                activeTasks += 1
             }
 
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
+            // Process remaining
+            while let (id, data) = dataIterator.next() {
+                await collectResult()
+
+                group.addTask {
+                    do {
+                        try await uploadAction(data)
+                        return id
+                    } catch {
+                        print("Failed to upload item \(id): \(error)")
+                        return nil
+                    }
                 }
+                activeTasks += 1
             }
+
+            // Drain
+            while activeTasks > 0 {
+                await collectResult()
+            }
+
             return results
         }
 
@@ -241,8 +291,10 @@ class SyncManager {
 
     // MARK: - Mark for Sync
 
+    @MainActor
     func markForSync(_ scoresheet: Scoresheet) {
         scoresheet.syncStatus = .pending
-        pendingChanges += 1
+        // Ensure changes are detected
+        updatePendingCount()
     }
 }

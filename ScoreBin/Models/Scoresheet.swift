@@ -209,26 +209,17 @@ final class Scoresheet {
 
     // MARK: - Export for Database
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     func exportForDatabase() -> [String: Any] {
-        let teamInfo: [String: Any] = [
-            "name": team?.name ?? "",
-            "program": team?.gym?.name ?? "",
-            "level": team?.level ?? "",
-            "age_division": team?.ageDivision ?? "",
-            "tier": team?.tier ?? "",
-            "athlete_count": team?.athleteCount ?? 0,
-        ]
-
-        let performance: [String: Any] = [
-            "competition_name": competition?.name ?? "",
+        return [
+            "id": id.uuidString,
+            "team_id": team?.id.uuidString ?? NSNull(),
+            "competition_id": competition?.id.uuidString ?? NSNull(),
             "round": round,
-            "raw_score": rawScore.rounded2,
-            "percent_perfection": percentPerfection.rounded2,
-            "total_deductions": totalDeductions.rounded2,
-            "final_score": finalScore.rounded2,
-        ]
+            "created_at": Self.iso8601Formatter.string(from: createdAt),
 
-        let buildingScores: [String: Any] = [
+            // Building scores
             "stunt_difficulty": stuntDifficulty,
             "stunt_execution": stuntExecution,
             "stunt_driver_degree": stuntDriverDegree,
@@ -238,67 +229,45 @@ final class Scoresheet {
             "pyramid_drivers": pyramidDrivers,
             "toss_difficulty": tossDifficulty,
             "toss_execution": tossExecution,
-            "creativity_score": buildingCreativity,
-            "showmanship_score": buildingShowmanship,
-        ]
+            "building_creativity": buildingCreativity,
+            "building_showmanship": buildingShowmanship,
 
-        let tumblingScores: [String: Any] = [
+            // Tumbling scores
             "standing_difficulty": standingDifficulty,
             "standing_execution": standingExecution,
             "standing_drivers": standingDrivers,
             "running_difficulty": runningDifficulty,
             "running_execution": runningExecution,
             "running_drivers": runningDrivers,
-            "running_driver_max_part": runningDriverMaxPart,
+            "running_driver_max_part": runningDriverMaxPart, // Note: Not in schema comment but likely needed if in model
             "jumps_difficulty": jumpsDifficulty,
             "jumps_execution": jumpsExecution,
-            "creativity_score": tumblingCreativity,
-            "showmanship_score": tumblingShowmanship,
-        ]
+            "tumbling_creativity": tumblingCreativity,
+            "tumbling_showmanship": tumblingShowmanship,
 
-        let overallScores: [String: Any] = [
+            // Overall scores
             "dance_difficulty": danceDifficulty,
             "dance_execution": danceExecution,
-            "formations_score": formations,
-            "creativity_score": overallCreativity,
-            "showmanship_score": overallShowmanship,
+            "formations": formations,
+            "overall_creativity": overallCreativity,
+            "overall_showmanship": overallShowmanship,
+
+            // Deductions
+            "athlete_falls": athleteFalls,
+            "major_athlete_falls": majorAthleteFalls,
+            "building_bobbles": buildingBobbles,
+            "building_falls": buildingFalls,
+            "major_building_falls": majorBuildingFalls,
+            "boundary_violations": boundaryViolations,
+            "time_limit_violations": timeLimitViolations,
+
+            // Computed scores
+            "raw_score": rawScore.rounded2,
+            "total_deductions": totalDeductions.rounded2,
+            "final_score": finalScore.rounded2,
+
+            // Sync
+            "sync_status": "synced" // We are exporting to sync, so status on remote should be synced? Or we just send data? Usually we send data.
         ]
-
-        return [
-            "team_info": teamInfo,
-            "performance": performance,
-            "scores_building": buildingScores,
-            "scores_tumbling": tumblingScores,
-            "scores_overall": overallScores,
-            "deductions": buildDeductionsArray(),
-        ]
-    }
-
-    private func buildDeductionsArray() -> [[String: Any]] {
-        var result: [[String: Any]] = []
-
-        if athleteFalls > 0 {
-            result.append(["category": "athlete_fall", "count": athleteFalls])
-        }
-        if majorAthleteFalls > 0 {
-            result.append(["category": "major_athlete_fall", "count": majorAthleteFalls])
-        }
-        if buildingBobbles > 0 {
-            result.append(["category": "building_bobble", "count": buildingBobbles])
-        }
-        if buildingFalls > 0 {
-            result.append(["category": "building_fall", "count": buildingFalls])
-        }
-        if majorBuildingFalls > 0 {
-            result.append(["category": "major_building_fall", "count": majorBuildingFalls])
-        }
-        if boundaryViolations > 0 {
-            result.append(["category": "boundary_violation", "count": boundaryViolations])
-        }
-        if timeLimitViolations > 0 {
-            result.append(["category": "time_limit_violation", "count": timeLimitViolations])
-        }
-
-        return result
     }
 }
