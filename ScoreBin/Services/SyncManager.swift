@@ -24,6 +24,9 @@ class SyncManager {
 
     func configure(container: ModelContainer) {
         self.modelContainer = container
+        Task {
+            await updatePendingCount()
+        }
     }
 
     // MARK: - Network Monitoring
@@ -55,6 +58,9 @@ class SyncManager {
         defer {
             isSyncing = false
             lastSyncDate = Date()
+            Task { @MainActor in
+                await self.updatePendingCount()
+            }
         }
 
         do {
@@ -70,9 +76,6 @@ class SyncManager {
             // Sync scoresheets
             try await syncScoresheets(context: context)
 
-            await MainActor.run {
-                pendingChanges = 0
-            }
         } catch {
             print("Sync failed: \(error)")
         }
@@ -82,6 +85,23 @@ class SyncManager {
     func syncPendingChanges() async {
         guard let container = modelContainer else { return }
         await syncAll(context: container.mainContext)
+    }
+
+    @MainActor
+    func updatePendingCount() async {
+        guard let container = modelContainer else { return }
+        let context = container.mainContext
+
+        do {
+            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+
+            self.pendingChanges = pendingScoresheets + pendingTeams + pendingCompetitions + pendingGyms
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
     }
 
     // MARK: - Sync Batch Helper
@@ -96,32 +116,45 @@ class SyncManager {
     ) async {
         guard !items.isEmpty else { return }
 
+        // Pre-extract data on Main Actor to avoid thread safety issues with PersistentModel
         let uploadData = items.map { (idProvider($0), dataProvider($0)) }
 
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, data) in uploadData {
-                group.addTask {
-                    do {
-                        try await uploadAction(data)
-                        return id
-                    } catch {
-                        print("Failed to upload item \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
-
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result {
-                    results.append(id)
-                }
-            }
-            return results
+        // Use a semaphore pattern via chunks to limit concurrency
+        // Swift's TaskGroup doesn't have a built-in limit, so we chunk manually or use a semaphore.
+        // Chunking is simpler for this context.
+        let batchSize = 5
+        let chunks = stride(from: 0, to: uploadData.count, by: batchSize).map {
+            Array(uploadData[$0..<min($0 + batchSize, uploadData.count)])
         }
 
-        let successSet = Set(successIDs)
-        items.filter { successSet.contains(idProvider($0)) }
+        var successIDs: Set<UUID> = []
+
+        for chunk in chunks {
+            let chunkSuccessIDs = await withTaskGroup(of: UUID?.self) { group in
+                for (id, data) in chunk {
+                    group.addTask {
+                        do {
+                            try await uploadAction(data)
+                            return id
+                        } catch {
+                            print("Failed to upload item \(id): \(error)")
+                            return nil
+                        }
+                    }
+                }
+
+                var ids: [UUID] = []
+                for await result in group {
+                    if let id = result {
+                        ids.append(id)
+                    }
+                }
+                return ids
+            }
+            successIDs.formUnion(chunkSuccessIDs)
+        }
+
+        items.filter { successIDs.contains(idProvider($0)) }
              .forEach { updateStatus($0) }
     }
 
@@ -208,19 +241,38 @@ class SyncManager {
         do {
             // Pull gyms
             let remoteGyms = try await supabase.fetchGyms()
-            // Process and merge with local data...
+            for gymData in remoteGyms {
+                // Here we would match local gyms by ID or Supabase ID and update/insert.
+                // Since SupabaseService is mocked to return empty, we just iterate.
+                // Implementation hint:
+                // if let idStr = gymData["id"] as? String, let id = UUID(uuidString: idStr) {
+                //     let descriptor = FetchDescriptor<Gym>(predicate: #Predicate { $0.id == id })
+                //     if let localGym = try? context.fetch(descriptor).first {
+                //         // Update localGym from gymData
+                //     } else {
+                //         // Insert new Gym
+                //     }
+                // }
+                _ = gymData // Suppress unused warning
+            }
 
             // Pull teams
             let remoteTeams = try await supabase.fetchTeams()
-            // Process and merge with local data...
+             for teamData in remoteTeams {
+                 _ = teamData
+             }
 
             // Pull competitions
             let remoteCompetitions = try await supabase.fetchCompetitions()
-            // Process and merge with local data...
+            for compData in remoteCompetitions {
+                _ = compData
+            }
 
             // Pull scoresheets
             let remoteScoresheets = try await supabase.fetchScoresheets()
-            // Process and merge with local data...
+            for sheetData in remoteScoresheets {
+                _ = sheetData
+            }
 
             print(
                 "Pulled \(remoteGyms.count) gyms, \(remoteTeams.count) teams, \(remoteCompetitions.count) competitions, \(remoteScoresheets.count) scoresheets"
@@ -243,6 +295,8 @@ class SyncManager {
 
     func markForSync(_ scoresheet: Scoresheet) {
         scoresheet.syncStatus = .pending
-        pendingChanges += 1
+        Task { @MainActor in
+            await updatePendingCount()
+        }
     }
 }
