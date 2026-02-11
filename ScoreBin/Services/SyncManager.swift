@@ -122,7 +122,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -139,7 +141,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -156,7 +160,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor

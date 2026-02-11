@@ -187,20 +187,17 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        var athleteFalls = 0
-        var majorAthleteFalls = 0
-        var buildingBobbles = 0
-        var buildingFalls = 0
-        var majorBuildingFalls = 0
-
-        // Single pass aggregation
-        for sheet in team.scoresheets {
-            athleteFalls += sheet.athleteFalls
-            majorAthleteFalls += sheet.majorAthleteFalls
-            buildingBobbles += sheet.buildingBobbles
-            buildingFalls += sheet.buildingFalls
-            majorBuildingFalls += sheet.majorBuildingFalls
+        let totals = team.scoresheets.reduce((0, 0, 0, 0, 0)) { partialResult, sheet in
+            (
+                partialResult.0 + sheet.athleteFalls,
+                partialResult.1 + sheet.majorAthleteFalls,
+                partialResult.2 + sheet.buildingBobbles,
+                partialResult.3 + sheet.buildingFalls,
+                partialResult.4 + sheet.majorBuildingFalls
+            )
         }
+
+        let (athleteFalls, majorAthleteFalls, buildingBobbles, buildingFalls, majorBuildingFalls) = totals
 
         var patterns: [DeductionPattern] = []
 
