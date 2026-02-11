@@ -18,7 +18,12 @@ struct AddCompetitionView: View {
         NavigationStack {
             Form {
                 Section("Competition Details") {
-                    TextField("Competition Name", text: $name)
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Competition Name", text: $name)
+                        Text("(required)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
                     DatePicker("Date", selection: $date, displayedComponents: .date)
 

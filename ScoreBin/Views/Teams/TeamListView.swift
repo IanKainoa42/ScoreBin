@@ -8,6 +8,15 @@ struct TeamListView: View {
 
     @State private var showingAddSheet = false
     @State private var showingAddGymSheet = false
+    @State private var searchText = ""
+
+    /// Teams filtered by search text (matches on team name, case-insensitive)
+    private var filteredTeams: [Team] {
+        if searchText.isEmpty {
+            return teams
+        }
+        return teams.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -20,6 +29,7 @@ struct TeamListView: View {
             }
             .background(Color.scoreBinBackground)
             .navigationTitle("Teams")
+            .searchable(text: $searchText, prompt: "Search teams")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
@@ -82,8 +92,8 @@ struct TeamListView: View {
 
     private var teamsList: some View {
         List {
-            // Teams grouped by Gym
-            let teamsByGym = Dictionary(grouping: teams) { $0.gym?.name ?? "No Gym" }
+            // Teams grouped by Gym, filtered by search
+            let teamsByGym = Dictionary(grouping: filteredTeams) { $0.gym?.name ?? "No Gym" }
             let sortedGyms = teamsByGym.keys.sorted()
 
             ForEach(sortedGyms, id: \.self) { gymName in
