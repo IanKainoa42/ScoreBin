@@ -24,6 +24,9 @@ class SyncManager {
 
     func configure(container: ModelContainer) {
         self.modelContainer = container
+        Task {
+            await updatePendingCount()
+        }
     }
 
     // MARK: - Network Monitoring
@@ -70,9 +73,7 @@ class SyncManager {
             // Sync scoresheets
             try await syncScoresheets(context: context)
 
-            await MainActor.run {
-                pendingChanges = 0
-            }
+            await updatePendingCount()
         } catch {
             print("Sync failed: \(error)")
         }
@@ -84,33 +85,25 @@ class SyncManager {
         await syncAll(context: container.mainContext)
     }
 
-    // MARK: - Helper
+    // MARK: - Sync Batch Helper
 
-    private func performUploads(
-        data: [(UUID, [String: Any])],
-        type: String,
-        uploadAction: @escaping ([String: Any]) async throws -> Void
-    ) async -> Set<UUID> {
-        let successIDs = await withTaskGroup(of: UUID?.self) { group in
-            for (id, itemData) in data {
-                group.addTask {
-                    do {
-                        try await uploadAction(itemData)
-                        return id
-                    } catch {
-                        print("Failed to upload \(type) \(id): \(error)")
-                        return nil
-                    }
-                }
-            }
+    @MainActor
+    private func syncBulk<T: PersistentModel>(
+        items: [T],
+        dataProvider: (T) -> [String: Any],
+        bulkUploadAction: @escaping ([[String: Any]]) async throws -> Void,
+        updateStatus: (T) -> Void
+    ) async {
+        guard !items.isEmpty else { return }
 
-            var results: [UUID] = []
-            for await result in group {
-                if let id = result { results.append(id) }
-            }
-            return results
+        let batchData = items.map { dataProvider($0) }
+
+        do {
+            try await bulkUploadAction(batchData)
+            items.forEach { updateStatus($0) }
+        } catch {
+            print("Bulk sync failed: \(error)")
         }
-        return Set(successIDs)
     }
 
     // MARK: - Individual Sync Methods
@@ -122,20 +115,12 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingGyms = try context.fetch(descriptor)
 
-        guard !pendingGyms.isEmpty else { return }
-
-        let uploadData = pendingGyms.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successSet = await performUploads(data: uploadData, type: "gym") { data in
-            try await supabase.uploadGym(data)
-        }
-
-        for gym in pendingGyms {
-            if successSet.contains(gym.id) {
-                gym.syncStatus = .synced
-            }
-        }
+        await syncBulk(
+            items: pendingGyms,
+            dataProvider: { $0.exportForDatabase() },
+            bulkUploadAction: { [supabase] data in try await supabase.uploadGyms(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         if !successSet.isEmpty {
             try context.save()
@@ -149,20 +134,12 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
 
-        guard !pendingTeams.isEmpty else { return }
-
-        let uploadData = pendingTeams.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successSet = await performUploads(data: uploadData, type: "team") { data in
-            try await supabase.uploadTeam(data)
-        }
-
-        for team in pendingTeams {
-            if successSet.contains(team.id) {
-                team.syncStatus = .synced
-            }
-        }
+        await syncBulk(
+            items: pendingTeams,
+            dataProvider: { $0.exportForDatabase() },
+            bulkUploadAction: { [supabase] data in try await supabase.uploadTeams(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         if !successSet.isEmpty {
             try context.save()
@@ -176,20 +153,12 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
 
-        guard !pendingCompetitions.isEmpty else { return }
-
-        let uploadData = pendingCompetitions.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successSet = await performUploads(data: uploadData, type: "competition") { data in
-            try await supabase.uploadCompetition(data)
-        }
-
-        for competition in pendingCompetitions {
-            if successSet.contains(competition.id) {
-                competition.syncStatus = .synced
-            }
-        }
+        await syncBulk(
+            items: pendingCompetitions,
+            dataProvider: { $0.exportForDatabase() },
+            bulkUploadAction: { [supabase] data in try await supabase.uploadCompetitions(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
         if !successSet.isEmpty {
             try context.save()
@@ -203,24 +172,14 @@ class SyncManager {
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
 
-        guard !pendingScoresheets.isEmpty else { return }
+        await syncBulk(
+            items: pendingScoresheets,
+            dataProvider: { $0.exportForDatabase() },
+            bulkUploadAction: { [supabase] data in try await supabase.uploadScoresheets(data) },
+            updateStatus: { $0.syncStatus = .synced }
+        )
 
-        let uploadData = pendingScoresheets.map { ($0.id, $0.exportForDatabase()) }
-        let supabase = self.supabase
-
-        let successSet = await performUploads(data: uploadData, type: "scoresheet") { data in
-            try await supabase.uploadScoresheet(data)
-        }
-
-        for scoresheet in pendingScoresheets {
-            if successSet.contains(scoresheet.id) {
-                scoresheet.syncStatus = .synced
-            }
-        }
-
-        if !successSet.isEmpty {
-            try context.save()
-        }
+        try context.save()
     }
 
     // MARK: - Pull from Remote
@@ -267,6 +226,33 @@ class SyncManager {
 
     func markForSync(_ scoresheet: Scoresheet) {
         scoresheet.syncStatus = .pending
-        pendingChanges += 1
+        Task {
+            await updatePendingCount()
+        }
+    }
+
+    @MainActor
+    func updatePendingCount() {
+        guard let container = modelContainer else { return }
+        let context = container.mainContext
+
+        let gymPending = SyncStatus.pending
+        let scorePending = ScoresheetSyncStatus.pending
+
+        let gymDescriptor = FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == gymPending })
+        let teamDescriptor = FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == gymPending })
+        let compDescriptor = FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == gymPending })
+        let scoreDescriptor = FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == scorePending })
+
+        do {
+            let gymCount = try context.fetchCount(gymDescriptor)
+            let teamCount = try context.fetchCount(teamDescriptor)
+            let compCount = try context.fetchCount(compDescriptor)
+            let scoreCount = try context.fetchCount(scoreDescriptor)
+
+            self.pendingChanges = gymCount + teamCount + compCount + scoreCount
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
     }
 }

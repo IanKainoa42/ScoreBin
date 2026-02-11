@@ -159,6 +159,11 @@ enum ScoringRules {
 
     // MARK: - Level-Aware Maximums
 
+    /// Returns whether tosses are allowed for a given level
+    static func isTossAllowed(forLevel level: String?) -> Bool {
+        level != "L1"
+    }
+
     /// Returns the maximum building score for a given level
     static func buildingMax(forLevel level: String?) -> Double {
         level == "L1" ? Maximums.level1BuildingTotal : Maximums.buildingTotal
