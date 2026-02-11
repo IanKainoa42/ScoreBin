@@ -15,7 +15,7 @@ class SyncManager {
     var isOnline: Bool = true
     var isSyncing: Bool = false
     var lastSyncDate: Date?
-    var pendingChanges: Int = 0
+    private(set) var pendingChanges: Int = 0
 
     private var modelContainer: ModelContainer?
 
@@ -23,6 +23,7 @@ class SyncManager {
         setupNetworkMonitoring()
     }
 
+    @MainActor
     func configure(container: ModelContainer) {
         self.modelContainer = container
         Task {
@@ -46,6 +47,24 @@ class SyncManager {
             }
         }
         monitor.start(queue: monitorQueue)
+    }
+
+    // MARK: - Pending Count
+
+    @MainActor
+    func updatePendingCount() {
+        guard let context = modelContainer?.mainContext else { return }
+
+        do {
+            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+
+            self.pendingChanges = pendingGyms + pendingTeams + pendingCompetitions + pendingScoresheets
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
     }
 
     // MARK: - Sync Operations
@@ -250,6 +269,7 @@ class SyncManager {
 
     // MARK: - Mark for Sync
 
+    @MainActor
     func markForSync(_ scoresheet: Scoresheet) {
         scoresheet.syncStatus = .pending
         Task {
