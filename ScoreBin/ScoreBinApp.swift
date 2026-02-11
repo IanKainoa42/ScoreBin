@@ -28,13 +28,20 @@ struct ScoreBinApp: App {
         }
     }
 
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .preferredColorScheme(.dark)
-                .onAppear {
-                    SyncManager.shared.configure(container: modelContainer)
-                }
+            if hasCompletedOnboarding {
+                MainTabView()
+                    .preferredColorScheme(.dark)
+                    .onAppear {
+                        SyncManager.shared.configure(container: modelContainer)
+                    }
+            } else {
+                OnboardingView()
+                    .preferredColorScheme(.dark)
+            }
         }
         .modelContainer(modelContainer)
     }

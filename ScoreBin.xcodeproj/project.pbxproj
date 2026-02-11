@@ -42,6 +42,8 @@
 		A10000000000000000000031 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* SyncManager.swift */; };
 		A10000000000000000000032 /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* SyncStatus.swift */; };
 		A10000000000000000000033 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* AppConfig.swift */; };
+		A10000000000000000000034 /* StickyScoreBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* StickyScoreBar.swift */; };
+		A10000000000000000000035 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -80,6 +82,8 @@
 		A20000000000000000000031 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		A20000000000000000000033 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* StickyScoreBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyScoreBar.swift; sourceTree = "<group>"; };
+		A20000000000000000000035 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* ScoreBin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScoreBin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -141,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000012 /* MainTabView.swift */,
+				A20000000000000000000035 /* OnboardingView.swift */,
 				A50000000000000000000009 /* Scoresheet */,
 				A50000000000000000000010 /* Competitions */,
 				A50000000000000000000011 /* Teams */,
@@ -189,6 +194,7 @@
 				A20000000000000000000017 /* OverallJudgeSection.swift */,
 				A20000000000000000000018 /* DeductionsSection.swift */,
 				A20000000000000000000019 /* ScoreSummaryView.swift */,
+				A20000000000000000000034 /* StickyScoreBar.swift */,
 			);
 			path = Scoresheet;
 			sourceTree = "<group>";
@@ -327,6 +333,8 @@
 				A10000000000000000000031 /* SyncManager.swift in Sources */,
 				A10000000000000000000032 /* SyncStatus.swift in Sources */,
 				A10000000000000000000033 /* AppConfig.swift in Sources */,
+				A10000000000000000000034 /* StickyScoreBar.swift in Sources */,
+				A10000000000000000000035 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
