@@ -18,7 +18,7 @@ struct BuildingJudgeSection: View {
 
     /// Level 1 teams cannot perform tosses
     var showTosses: Bool {
-        scoresheet.team?.level != "L1"
+        ScoringRules.isTossAllowed(forLevel: scoresheet.team?.level)
     }
 
     var body: some View {
