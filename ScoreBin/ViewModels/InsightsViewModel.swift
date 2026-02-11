@@ -147,8 +147,14 @@ class InsightsViewModel {
         }
 
         let count = Double(team.scoresheets.count)
-        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
-            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
+        var totalBuilding = 0.0
+        var totalTumbling = 0.0
+        var totalOverall = 0.0
+
+        for sheet in team.scoresheets {
+            totalBuilding += sheet.buildingTotal
+            totalTumbling += sheet.tumblingTotal
+            totalOverall += sheet.overallTotal
         }
 
         let avgBuilding = totalBuilding / count
