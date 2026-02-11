@@ -25,6 +25,12 @@ class SupabaseService {
         print("Would upload scoresheet: \(data)")
     }
 
+    func uploadScoresheets(_ data: [[String: Any]]) async throws {
+        // When Supabase SDK is integrated:
+        // try await client.from("scoresheets").insert(data).execute()
+        print("Would upload \(data.count) scoresheets")
+    }
+
     func fetchScoresheets() async throws -> [[String: Any]] {
         // When Supabase SDK is integrated:
         // let response = try await client.from("scoresheets").select().execute()
@@ -43,6 +49,12 @@ class SupabaseService {
         // When Supabase SDK is integrated:
         // try await client.from("teams").insert(data).execute()
         print("Would upload team: \(data)")
+    }
+
+    func uploadTeams(_ data: [[String: Any]]) async throws {
+        // When Supabase SDK is integrated:
+        // try await client.from("teams").insert(data).execute()
+        print("Would upload \(data.count) teams")
     }
 
     func fetchTeams() async throws -> [[String: Any]] {
@@ -65,6 +77,12 @@ class SupabaseService {
         print("Would upload competition: \(data)")
     }
 
+    func uploadCompetitions(_ data: [[String: Any]]) async throws {
+        // When Supabase SDK is integrated:
+        // try await client.from("competitions").insert(data).execute()
+        print("Would upload \(data.count) competitions")
+    }
+
     func fetchCompetitions() async throws -> [[String: Any]] {
         // When Supabase SDK is integrated:
         // let response = try await client.from("competitions").select().execute()
@@ -83,6 +101,12 @@ class SupabaseService {
         // When Supabase SDK is integrated:
         // try await client.from("gyms").insert(data).execute()
         print("Would upload gym: \(data)")
+    }
+
+    func uploadGyms(_ data: [[String: Any]]) async throws {
+        // When Supabase SDK is integrated:
+        // try await client.from("gyms").insert(data).execute()
+        print("Would upload \(data.count) gyms")
     }
 
     func fetchGyms() async throws -> [[String: Any]] {

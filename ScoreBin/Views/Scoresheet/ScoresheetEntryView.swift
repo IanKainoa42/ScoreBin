@@ -7,24 +7,54 @@ struct ScoresheetEntryView: View {
     @State private var viewModel = ScoresheetViewModel()
     @State private var showingExportAlert = false
     @State private var showingSaveAlert = false
+    @State private var showingResetConfirmation = false
+
+    /// Team must be selected before saving is allowed
+    private var canSave: Bool {
+        viewModel.selectedTeam != nil
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Header Info Bar
-                    ScoresheetHeaderView(viewModel: viewModel)
+            ZStack(alignment: .bottom) {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Header Info Bar
+                        ScoresheetHeaderView(viewModel: viewModel)
 
-                    // Judge Panels
-                    judgeGridSection
+                        // Validation: team required before scoring
+                        if viewModel.selectedTeam == nil {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.overallYellow)
+                                Text("Select a team above to enable saving")
+                                    .font(.subheadline)
+                                    .foregroundColor(.overallYellow)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .background(Color.overallYellow.opacity(0.1))
+                            .cornerRadius(8)
+                        }
 
-                    // Deductions
-                    DeductionsSection(scoresheet: $viewModel.scoresheet)
+                        // Judge Panels
+                        judgeGridSection
 
-                    // Score Summary
-                    ScoreSummaryView(viewModel: viewModel)
+                        // Deductions
+                        DeductionsSection(scoresheet: $viewModel.scoresheet)
+
+                        // Score Summary
+                        ScoreSummaryView(viewModel: viewModel)
+
+                        // Bottom spacer so content isn't hidden behind sticky bar
+                        Color.clear.frame(height: 60)
+                    }
+                    .padding()
                 }
-                .padding()
+
+                // Sticky score bar - always visible at bottom
+                StickyScoreBar(viewModel: viewModel)
             }
             .background(Color.scoreBinBackground)
             .navigationTitle("Scoresheet")
@@ -32,7 +62,7 @@ struct ScoresheetEntryView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Reset") {
-                        viewModel.reset()
+                        showingResetConfirmation = true
                     }
                     .foregroundColor(.red)
                 }
@@ -42,6 +72,7 @@ struct ScoresheetEntryView: View {
                         viewModel.save()
                         showingSaveAlert = true
                     }
+                    .disabled(!canSave)
                 }
             }
             .alert("Saved", isPresented: $showingSaveAlert) {
@@ -55,6 +86,14 @@ struct ScoresheetEntryView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Data copied to clipboard!")
+            }
+            .alert("Reset Scoresheet", isPresented: $showingResetConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Reset", role: .destructive) {
+                    viewModel.reset()
+                }
+            } message: {
+                Text("Are you sure you want to reset all scores?")
             }
             .onAppear {
                 viewModel.modelContext = modelContext
@@ -95,12 +134,19 @@ struct ScoresheetHeaderView: View {
                         }
                     }
                 } label: {
-                    HStack {
-                        Text(viewModel.selectedTeam?.name ?? "Select Team")
-                            .foregroundColor(viewModel.selectedTeam == nil ? .gray : .white)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text(viewModel.selectedTeam?.name ?? "Select Team")
+                                .foregroundColor(viewModel.selectedTeam == nil ? .gray : .white)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(.gray)
+                        }
+                        if viewModel.selectedTeam == nil {
+                            Text("(required)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)

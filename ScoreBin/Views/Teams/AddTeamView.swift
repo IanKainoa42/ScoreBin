@@ -22,7 +22,12 @@ struct AddTeamView: View {
         NavigationStack {
             Form {
                 Section("Team Info") {
-                    TextField("Team Name", text: $name)
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Team Name", text: $name)
+                        Text("(required)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
                     Picker("Gym (Optional)", selection: $selectedGym) {
                         Text("No Gym").tag(nil as Gym?)
