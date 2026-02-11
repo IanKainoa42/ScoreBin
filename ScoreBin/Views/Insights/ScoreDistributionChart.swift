@@ -5,20 +5,43 @@ struct ScoreDistributionChart: View {
     let scoresheets: [Scoresheet]
 
     private var distributionData: [ScoreRange] {
-        // Use ranges that accommodate both standard (50 max) and Level 1 (46 max)
-        let ranges: [(String, ClosedRange<Double>)] = [
-            ("< 30", 0...29.99),
-            ("30-34", 30...34.99),
-            ("35-39", 35...39.99),
-            ("40-44", 40...44.99),
-            ("45-46", 45...46.99),
-            ("47-50", 47...100)
-        ]
+        var counts = [Int](repeating: 0, count: 6)
 
-        return ranges.map { label, range in
-            let count = scoresheets.filter { range.contains($0.finalScore) }.count
-            return ScoreRange(label: label, count: count)
+        for sheet in scoresheets {
+            let score = sheet.finalScore
+            if score < 30 { counts[0] += 1 }
+            else if score < 35 { counts[1] += 1 }
+            else if score < 40 { counts[2] += 1 }
+            else if score < 45 { counts[3] += 1 }
+            else if score < 47 { counts[4] += 1 }
+            else { counts[5] += 1 }
         }
+
+        return [
+            ScoreRange(label: "< 30", count: counts[0]),
+            ScoreRange(label: "30-34", count: counts[1]),
+            ScoreRange(label: "35-39", count: counts[2]),
+            ScoreRange(label: "40-44", count: counts[3]),
+            ScoreRange(label: "45-46", count: counts[4]),
+            ScoreRange(label: "47-50", count: counts[5])
+        ]
+    }
+
+    private var stats: (avg: Double, high: Double, low: Double)? {
+        guard !scoresheets.isEmpty else { return nil }
+
+        var total = 0.0
+        var high = -Double.infinity
+        var low = Double.infinity
+
+        for sheet in scoresheets {
+            let score = sheet.finalScore
+            total += score
+            if score > high { high = score }
+            if score < low { low = score }
+        }
+
+        return (total / Double(scoresheets.count), high, low)
     }
 
     var body: some View {
@@ -60,14 +83,10 @@ struct ScoreDistributionChart: View {
 
             // Summary stats
             HStack(spacing: 20) {
-                if !scoresheets.isEmpty {
-                    let avg = scoresheets.reduce(0) { $0 + $1.finalScore } / Double(scoresheets.count)
-                    let high = scoresheets.map { $0.finalScore }.max() ?? 0
-                    let low = scoresheets.map { $0.finalScore }.min() ?? 0
-
-                    StatLabel(title: "Average", value: avg.scoreFormatted)
-                    StatLabel(title: "High", value: high.scoreFormatted)
-                    StatLabel(title: "Low", value: low.scoreFormatted)
+                if let stats = stats {
+                    StatLabel(title: "Average", value: stats.avg.scoreFormatted)
+                    StatLabel(title: "High", value: stats.high.scoreFormatted)
+                    StatLabel(title: "Low", value: stats.low.scoreFormatted)
                 }
             }
             .frame(maxWidth: .infinity)

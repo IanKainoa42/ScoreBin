@@ -10,11 +10,12 @@ class SyncManager {
     private let supabase = SupabaseService.shared
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor")
+    private let iso8601Formatter = ISO8601DateFormatter()
 
     var isOnline: Bool = true
     var isSyncing: Bool = false
     var lastSyncDate: Date?
-    var pendingChanges: Int = 0
+    private(set) var pendingChanges: Int = 0
 
     private var modelContainer: ModelContainer?
 
@@ -22,6 +23,7 @@ class SyncManager {
         setupNetworkMonitoring()
     }
 
+    @MainActor
     func configure(container: ModelContainer) {
         self.modelContainer = container
         Task {
@@ -47,7 +49,49 @@ class SyncManager {
         monitor.start(queue: monitorQueue)
     }
 
+    // MARK: - Pending Count
+
+    @MainActor
+    func updatePendingCount() {
+        guard let context = modelContainer?.mainContext else { return }
+
+        do {
+            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+
+            self.pendingChanges = pendingGyms + pendingTeams + pendingCompetitions + pendingScoresheets
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
+    }
+
     // MARK: - Sync Operations
+
+    @MainActor
+    private func updatePendingCount(context: ModelContext) {
+        do {
+            let gymDesc = FetchDescriptor<Gym>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let teamDesc = FetchDescriptor<Team>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let compDesc = FetchDescriptor<Competition>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let sheetDesc = FetchDescriptor<Scoresheet>(
+                predicate: #Predicate {
+                    $0.syncStatus == ScoresheetSyncStatus.pending
+                })
+
+            let count =
+                try context.fetchCount(gymDesc) + context.fetchCount(teamDesc)
+                + context.fetchCount(compDesc) + context.fetchCount(sheetDesc)
+
+            self.pendingChanges = count
+        } catch {
+            print("Failed to recount pending changes: \(error)")
+        }
+    }
 
     @MainActor
     func syncAll(context: ModelContext) async {
@@ -58,9 +102,7 @@ class SyncManager {
         defer {
             isSyncing = false
             lastSyncDate = Date()
-            Task { @MainActor in
-                await self.updatePendingCount()
-            }
+            updatePendingCount(context: context)
         }
 
         do {
@@ -142,7 +184,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -159,7 +203,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -176,7 +222,9 @@ class SyncManager {
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        try context.save()
+        if !successSet.isEmpty {
+            try context.save()
+        }
     }
 
     @MainActor
@@ -205,38 +253,19 @@ class SyncManager {
         do {
             // Pull gyms
             let remoteGyms = try await supabase.fetchGyms()
-            for gymData in remoteGyms {
-                // Here we would match local gyms by ID or Supabase ID and update/insert.
-                // Since SupabaseService is mocked to return empty, we just iterate.
-                // Implementation hint:
-                // if let idStr = gymData["id"] as? String, let id = UUID(uuidString: idStr) {
-                //     let descriptor = FetchDescriptor<Gym>(predicate: #Predicate { $0.id == id })
-                //     if let localGym = try? context.fetch(descriptor).first {
-                //         // Update localGym from gymData
-                //     } else {
-                //         // Insert new Gym
-                //     }
-                // }
-                _ = gymData // Suppress unused warning
-            }
+            try await mergeGyms(remoteGyms, context: context)
 
             // Pull teams
             let remoteTeams = try await supabase.fetchTeams()
-             for teamData in remoteTeams {
-                 _ = teamData
-             }
+            try await mergeTeams(remoteTeams, context: context)
 
             // Pull competitions
             let remoteCompetitions = try await supabase.fetchCompetitions()
-            for compData in remoteCompetitions {
-                _ = compData
-            }
+            try await mergeCompetitions(remoteCompetitions, context: context)
 
             // Pull scoresheets
             let remoteScoresheets = try await supabase.fetchScoresheets()
-            for sheetData in remoteScoresheets {
-                _ = sheetData
-            }
+            try await mergeScoresheets(remoteScoresheets, context: context)
 
             print(
                 "Pulled \(remoteGyms.count) gyms, \(remoteTeams.count) teams, \(remoteCompetitions.count) competitions, \(remoteScoresheets.count) scoresheets"
@@ -257,6 +286,7 @@ class SyncManager {
 
     // MARK: - Mark for Sync
 
+    @MainActor
     func markForSync(_ scoresheet: Scoresheet) {
         scoresheet.syncStatus = .pending
         Task {
@@ -286,6 +316,127 @@ class SyncManager {
             self.pendingChanges = gymCount + teamCount + compCount + scoreCount
         } catch {
             print("Failed to update pending count: \(error)")
+        }
+    }
+
+    // MARK: - Merge Helpers
+
+    @MainActor
+    private func mergeGyms(_ remoteData: [[String: Any]], context: ModelContext) async throws {
+        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        guard !remoteIDs.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<Gym>(predicate: #Predicate { remoteIDs.contains($0.id) })
+        let existingRecords = try context.fetch(descriptor)
+        let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
+
+        for data in remoteData {
+            guard let idString = data["id"] as? String,
+                let id = UUID(uuidString: idString)
+            else { continue }
+
+            if let existing = existingMap[id] {
+                if let name = data["name"] as? String { existing.name = name }
+                if let location = data["location"] as? String { existing.location = location }
+            } else {
+                if let name = data["name"] as? String {
+                    let gym = Gym(id: id, name: name)
+                    if let location = data["location"] as? String { gym.location = location }
+                    context.insert(gym)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func mergeTeams(_ remoteData: [[String: Any]], context: ModelContext) async throws {
+        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        guard !remoteIDs.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<Team>(predicate: #Predicate { remoteIDs.contains($0.id) })
+        let existingRecords = try context.fetch(descriptor)
+        let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
+
+        for data in remoteData {
+            guard let idString = data["id"] as? String,
+                let id = UUID(uuidString: idString)
+            else { continue }
+
+            if let existing = existingMap[id] {
+                if let name = data["name"] as? String { existing.name = name }
+                if let level = data["level"] as? String { existing.level = level }
+                if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
+            } else {
+                if let name = data["name"] as? String {
+                    let team = Team(id: id, name: name)
+                    if let level = data["level"] as? String { team.level = level }
+                    if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    context.insert(team)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func mergeCompetitions(_ remoteData: [[String: Any]], context: ModelContext) async throws
+    {
+        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        guard !remoteIDs.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<Competition>(predicate: #Predicate { remoteIDs.contains($0.id) })
+        let existingRecords = try context.fetch(descriptor)
+        let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
+
+        for data in remoteData {
+            guard let idString = data["id"] as? String,
+                let id = UUID(uuidString: idString)
+            else { continue }
+
+            let dateString = data["date"] as? String
+            let date = dateString.flatMap { iso8601Formatter.date(from: $0) } ?? Date()
+            let location = data["location"] as? String ?? ""
+            let notes = data["notes"] as? String ?? ""
+
+            if let existing = existingMap[id] {
+                if let name = data["name"] as? String { existing.name = name }
+                if let d = dateString.flatMap({ iso8601Formatter.date(from: $0) }) { existing.date = d }
+                if let loc = data["location"] as? String { existing.location = loc }
+                if let n = data["notes"] as? String { existing.notes = n }
+            } else {
+                if let name = data["name"] as? String {
+                    let competition = Competition(
+                        id: id, name: name, date: date, location: location, notes: notes)
+                    context.insert(competition)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func mergeScoresheets(_ remoteData: [[String: Any]], context: ModelContext) async throws
+    {
+        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        guard !remoteIDs.isEmpty else { return }
+
+        let descriptor = FetchDescriptor<Scoresheet>(predicate: #Predicate { remoteIDs.contains($0.id) })
+        let existingRecords = try context.fetch(descriptor)
+        let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
+
+        for data in remoteData {
+            guard let idString = data["id"] as? String,
+                let id = UUID(uuidString: idString)
+            else { continue }
+
+            if let existing = existingMap[id] {
+                if let round = data["round"] as? String { existing.round = round }
+                if let stuntDiff = data["stunt_difficulty"] as? Double { existing.stuntDifficulty = stuntDiff }
+            } else {
+                let scoresheet = Scoresheet(id: id)
+                scoresheet.syncStatus = .synced
+                if let round = data["round"] as? String { scoresheet.round = round }
+                if let stuntDiff = data["stunt_difficulty"] as? Double { scoresheet.stuntDifficulty = stuntDiff }
+                context.insert(scoresheet)
+            }
         }
     }
 }

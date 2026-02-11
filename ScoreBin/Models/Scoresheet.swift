@@ -213,14 +213,13 @@ final class Scoresheet {
 
     func exportForDatabase() -> [String: Any] {
         return [
-            // Identifiers
             "id": id.uuidString,
             "team_id": team?.id.uuidString ?? NSNull(),
             "competition_id": competition?.id.uuidString ?? NSNull(),
             "round": round,
             "created_at": Self.iso8601Formatter.string(from: createdAt),
 
-            // Building Scores
+            // Building scores
             "stunt_difficulty": stuntDifficulty,
             "stunt_execution": stuntExecution,
             "stunt_driver_degree": stuntDriverDegree,
@@ -233,20 +232,20 @@ final class Scoresheet {
             "building_creativity": buildingCreativity,
             "building_showmanship": buildingShowmanship,
 
-            // Tumbling Scores
+            // Tumbling scores
             "standing_difficulty": standingDifficulty,
             "standing_execution": standingExecution,
             "standing_drivers": standingDrivers,
             "running_difficulty": runningDifficulty,
             "running_execution": runningExecution,
             "running_drivers": runningDrivers,
-            "running_driver_max_part": runningDriverMaxPart,
+            "running_driver_max_part": runningDriverMaxPart, // Note: Not in schema comment but likely needed if in model
             "jumps_difficulty": jumpsDifficulty,
             "jumps_execution": jumpsExecution,
             "tumbling_creativity": tumblingCreativity,
             "tumbling_showmanship": tumblingShowmanship,
 
-            // Overall Scores
+            // Overall scores
             "dance_difficulty": danceDifficulty,
             "dance_execution": danceExecution,
             "formations": formations,
@@ -262,10 +261,13 @@ final class Scoresheet {
             "boundary_violations": boundaryViolations,
             "time_limit_violations": timeLimitViolations,
 
-            // Computed Scores (for querying/display)
+            // Computed scores
             "raw_score": rawScore.rounded2,
             "total_deductions": totalDeductions.rounded2,
-            "final_score": finalScore.rounded2
+            "final_score": finalScore.rounded2,
+
+            // Sync
+            "sync_status": "synced" // We are exporting to sync, so status on remote should be synced? Or we just send data? Usually we send data.
         ]
     }
 }
