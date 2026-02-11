@@ -50,6 +50,30 @@ class SyncManager {
     // MARK: - Sync Operations
 
     @MainActor
+    private func updatePendingCount(context: ModelContext) {
+        do {
+            let gymDesc = FetchDescriptor<Gym>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let teamDesc = FetchDescriptor<Team>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let compDesc = FetchDescriptor<Competition>(
+                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let sheetDesc = FetchDescriptor<Scoresheet>(
+                predicate: #Predicate {
+                    $0.syncStatus == ScoresheetSyncStatus.pending
+                })
+
+            let count =
+                try context.fetchCount(gymDesc) + context.fetchCount(teamDesc)
+                + context.fetchCount(compDesc) + context.fetchCount(sheetDesc)
+
+            self.pendingChanges = count
+        } catch {
+            print("Failed to recount pending changes: \(error)")
+        }
+    }
+
+    @MainActor
     func syncAll(context: ModelContext) async {
         guard isOnline && !isSyncing else { return }
 
@@ -58,6 +82,7 @@ class SyncManager {
         defer {
             isSyncing = false
             lastSyncDate = Date()
+            updatePendingCount(context: context)
         }
 
         do {

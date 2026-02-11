@@ -75,7 +75,7 @@ class InsightsViewModel {
     }
 
     func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
-        let teamsByLevel = Dictionary(grouping: gym.teams) { $0.level }
+        var statsByLevel: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)] = [:]
 
         return teamsByLevel.map { level, teams in
             var totalScore: Double = 0
@@ -90,11 +90,23 @@ class InsightsViewModel {
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
+            for scoresheet in team.scoresheets {
+                current.totalScore += scoresheet.finalScore
+                current.scoresheetCount += 1
+            }
+
+            statsByLevel[level] = current
+        }
+
+        return statsByLevel.map { level, stats in
+            let avgScore =
+                stats.scoresheetCount == 0
+                ? 0 : stats.totalScore / Double(stats.scoresheetCount)
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
-                teamCount: teams.count,
-                scoresheetCount: scoresheetCount
+                teamCount: stats.teamCount,
+                scoresheetCount: stats.scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
