@@ -130,6 +130,23 @@ class SyncManager {
         await syncAll(context: container.mainContext)
     }
 
+    @MainActor
+    func updatePendingCount() async {
+        guard let container = modelContainer else { return }
+        let context = container.mainContext
+
+        do {
+            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
+
+            self.pendingChanges = pendingScoresheets + pendingTeams + pendingCompetitions + pendingGyms
+        } catch {
+            print("Failed to update pending count: \(error)")
+        }
+    }
+
     // MARK: - Sync Batch Helper
 
     @MainActor

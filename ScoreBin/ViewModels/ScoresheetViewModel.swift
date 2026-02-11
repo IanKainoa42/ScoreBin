@@ -151,6 +151,9 @@ class ScoresheetViewModel {
 
         do {
             try context.save()
+            Task {
+                await SyncManager.shared.updatePendingCount()
+            }
         } catch {
             print("Failed to save scoresheet: \(error)")
         }
