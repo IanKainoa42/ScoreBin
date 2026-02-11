@@ -49,19 +49,19 @@ class InsightsViewModel {
         guard team.scoresheets.count >= 2 else { return 0 }
 
         // Find earliest and latest scoresheets in a single pass
-        var first = team.scoresheets[0]
-        var last = team.scoresheets[0]
+        var earliest = team.scoresheets[0]
+        var latest = team.scoresheets[0]
 
         for sheet in team.scoresheets.dropFirst() {
-            if sheet.createdAt < first.createdAt {
-                first = sheet
+            if sheet.createdAt < earliest.createdAt {
+                earliest = sheet
             }
-            if sheet.createdAt > last.createdAt {
-                last = sheet
+            if sheet.createdAt > latest.createdAt {
+                latest = sheet
             }
         }
 
-        return (last.finalScore - first.finalScore).rounded2
+        return (latest.finalScore - earliest.finalScore).rounded2
     }
 
     // MARK: - Gym Analytics
@@ -78,10 +78,16 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams) { $0.level }
 
         return teamsByLevel.map { level, teams in
-            let allScoresheets = teams.flatMap { $0.scoresheets }
-            let scoresheetCount = allScoresheets.count
+            var totalScore: Double = 0
+            var scoresheetCount = 0
 
-            let totalScore = allScoresheets.reduce(0.0) { $0 + $1.finalScore }
+            for team in teams {
+                scoresheetCount += team.scoresheets.count
+                for sheet in team.scoresheets {
+                    totalScore += sheet.finalScore
+                }
+            }
+
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
             return GymLevelStats(
@@ -242,13 +248,6 @@ class InsightsViewModel {
     }
 
     // MARK: - View Helpers
-
-    func recentScoresheets(from scoresheets: [Scoresheet], limit: Int = 5) -> [Scoresheet] {
-        scoresheets
-            .sorted { $0.createdAt > $1.createdAt }
-            .prefix(limit)
-            .map { $0 }
-    }
 
     func activeTeams(from teams: [Team], limit: Int = 5) -> [Team] {
         Array(
