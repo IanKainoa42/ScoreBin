@@ -15,9 +15,9 @@ class ScoresheetViewModel {
         }
     }
 
-    /// Returns true if the current team is Level 1 (no tosses allowed)
-    var isLevel1: Bool {
-        selectedTeam?.level == "L1"
+    /// Returns true if tosses are allowed for the current team
+    var areTossesAllowed: Bool {
+        ScoringRules.isTossAllowed(forLevel: selectedTeam?.level)
     }
 
     // Competition selection
@@ -146,7 +146,7 @@ class ScoresheetViewModel {
             scoresheet.competition = selectedCompetition
         }
 
-        scoresheet.syncStatus = .pending
+        SyncManager.shared.markForSync(scoresheet)
         context.insert(scoresheet)
 
         do {
@@ -168,7 +168,7 @@ class ScoresheetViewModel {
 
     /// Applies level-specific restrictions (e.g., no tosses for L1)
     func applyLevelRestrictions() {
-        if isLevel1 {
+        if !areTossesAllowed {
             scoresheet.tossDifficulty = 0
             scoresheet.tossExecution = 0
         }
