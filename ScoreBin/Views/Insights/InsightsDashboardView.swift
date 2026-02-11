@@ -84,11 +84,16 @@ struct InsightsDashboardView: View {
                 .foregroundColor(.white)
 
             if scoresheets.isEmpty {
-                Text("No scoresheets yet")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
+                VStack(spacing: 8) {
+                    Text("No scoresheets yet")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    Text("Go to the Scoresheet tab to enter your first scores")
+                        .font(.caption)
+                        .foregroundColor(.gray.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 20)
             } else {
                 ForEach(scoresheets.prefix(5)) { sheet in
                     RecentActivityRow(scoresheet: sheet)
@@ -133,11 +138,16 @@ struct InsightsDashboardView: View {
             }
 
             if activeTeams.isEmpty {
-                Text("Add scoresheets to teams to see performance data")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
+                VStack(spacing: 8) {
+                    Text("No team performance data yet")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    Text("Score a team's routine to see their performance trends here")
+                        .font(.caption)
+                        .foregroundColor(.gray.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 20)
             }
         }
         .padding()

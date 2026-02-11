@@ -3,6 +3,11 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
+            ScoresheetEntryView()
+                .tabItem {
+                    Label("Scoresheet", systemImage: "doc.text.fill")
+                }
+
             TeamListView()
                 .tabItem {
                     Label("Teams", systemImage: "person.3.fill")
@@ -16,11 +21,6 @@ struct MainTabView: View {
             InsightsDashboardView()
                 .tabItem {
                     Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
-                }
-
-            ScoresheetEntryView()
-                .tabItem {
-                    Label("Scoresheet", systemImage: "doc.text.fill")
                 }
         }
         .tint(.scoreBinCyan)
