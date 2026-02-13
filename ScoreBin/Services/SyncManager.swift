@@ -54,44 +54,29 @@ class SyncManager {
     @MainActor
     func updatePendingCount() {
         guard let context = modelContainer?.mainContext else { return }
+        updatePendingCount(context: context)
+    }
 
+    @MainActor
+    private func updatePendingCount(context: ModelContext) {
         do {
-            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
+            let gymDesc = FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let teamDesc = FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let compDesc = FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
+            let sheetDesc = FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending })
 
-            self.pendingChanges = pendingGyms + pendingTeams + pendingCompetitions + pendingScoresheets
+            let count = try context.fetchCount(gymDesc) +
+                        context.fetchCount(teamDesc) +
+                        context.fetchCount(compDesc) +
+                        context.fetchCount(sheetDesc)
+
+            self.pendingChanges = count
         } catch {
             print("Failed to update pending count: \(error)")
         }
     }
 
     // MARK: - Sync Operations
-
-    @MainActor
-    private func updatePendingCount(context: ModelContext) {
-        do {
-            let gymDesc = FetchDescriptor<Gym>(
-                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
-            let teamDesc = FetchDescriptor<Team>(
-                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
-            let compDesc = FetchDescriptor<Competition>(
-                predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
-            let sheetDesc = FetchDescriptor<Scoresheet>(
-                predicate: #Predicate {
-                    $0.syncStatus == ScoresheetSyncStatus.pending
-                })
-
-            let count =
-                try context.fetchCount(gymDesc) + context.fetchCount(teamDesc)
-                + context.fetchCount(compDesc) + context.fetchCount(sheetDesc)
-
-            self.pendingChanges = count
-        } catch {
-            print("Failed to recount pending changes: \(error)")
-        }
-    }
 
     @MainActor
     func syncAll(context: ModelContext) async {
@@ -130,22 +115,6 @@ class SyncManager {
         await syncAll(context: container.mainContext)
     }
 
-    @MainActor
-    func updatePendingCount() async {
-        guard let container = modelContainer else { return }
-        let context = container.mainContext
-
-        do {
-            let pendingScoresheets = try context.fetchCount(FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == ScoresheetSyncStatus.pending }))
-            let pendingTeams = try context.fetchCount(FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-            let pendingCompetitions = try context.fetchCount(FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-            let pendingGyms = try context.fetchCount(FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == SyncStatus.pending }))
-
-            self.pendingChanges = pendingScoresheets + pendingTeams + pendingCompetitions + pendingGyms
-        } catch {
-            print("Failed to update pending count: \(error)")
-        }
-    }
 
     // MARK: - Sync Batch Helper
 
@@ -294,54 +263,35 @@ class SyncManager {
         }
     }
 
-    @MainActor
-    func updatePendingCount() {
-        guard let container = modelContainer else { return }
-        let context = container.mainContext
-
-        let gymPending = SyncStatus.pending
-        let scorePending = ScoresheetSyncStatus.pending
-
-        let gymDescriptor = FetchDescriptor<Gym>(predicate: #Predicate { $0.syncStatus == gymPending })
-        let teamDescriptor = FetchDescriptor<Team>(predicate: #Predicate { $0.syncStatus == gymPending })
-        let compDescriptor = FetchDescriptor<Competition>(predicate: #Predicate { $0.syncStatus == gymPending })
-        let scoreDescriptor = FetchDescriptor<Scoresheet>(predicate: #Predicate { $0.syncStatus == scorePending })
-
-        do {
-            let gymCount = try context.fetchCount(gymDescriptor)
-            let teamCount = try context.fetchCount(teamDescriptor)
-            let compCount = try context.fetchCount(compDescriptor)
-            let scoreCount = try context.fetchCount(scoreDescriptor)
-
-            self.pendingChanges = gymCount + teamCount + compCount + scoreCount
-        } catch {
-            print("Failed to update pending count: \(error)")
-        }
-    }
 
     // MARK: - Merge Helpers
 
     @MainActor
     private func mergeGyms(_ remoteData: [[String: Any]], context: ModelContext) async throws {
-        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        var remoteMap: [UUID: [String: Any]] = [:]
+        for data in remoteData {
+            if let idString = data["id"] as? String, let id = UUID(uuidString: idString) {
+                remoteMap[id] = data
+            }
+        }
+
+        let remoteIDs = Array(remoteMap.keys)
         guard !remoteIDs.isEmpty else { return }
 
         let descriptor = FetchDescriptor<Gym>(predicate: #Predicate { remoteIDs.contains($0.id) })
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for data in remoteData {
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { continue }
-
+        for (id, data) in remoteMap {
             if let existing = existingMap[id] {
                 if let name = data["name"] as? String { existing.name = name }
                 if let location = data["location"] as? String { existing.location = location }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let gym = Gym(id: id, name: name)
                     if let location = data["location"] as? String { gym.location = location }
+                    gym.syncStatus = .synced
                     context.insert(gym)
                 }
             }
@@ -350,27 +300,32 @@ class SyncManager {
 
     @MainActor
     private func mergeTeams(_ remoteData: [[String: Any]], context: ModelContext) async throws {
-        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        var remoteMap: [UUID: [String: Any]] = [:]
+        for data in remoteData {
+            if let idString = data["id"] as? String, let id = UUID(uuidString: idString) {
+                remoteMap[id] = data
+            }
+        }
+
+        let remoteIDs = Array(remoteMap.keys)
         guard !remoteIDs.isEmpty else { return }
 
         let descriptor = FetchDescriptor<Team>(predicate: #Predicate { remoteIDs.contains($0.id) })
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for data in remoteData {
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { continue }
-
+        for (id, data) in remoteMap {
             if let existing = existingMap[id] {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
                     if let level = data["level"] as? String { team.level = level }
                     if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    team.syncStatus = .synced
                     context.insert(team)
                 }
             }
@@ -380,18 +335,21 @@ class SyncManager {
     @MainActor
     private func mergeCompetitions(_ remoteData: [[String: Any]], context: ModelContext) async throws
     {
-        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        var remoteMap: [UUID: [String: Any]] = [:]
+        for data in remoteData {
+            if let idString = data["id"] as? String, let id = UUID(uuidString: idString) {
+                remoteMap[id] = data
+            }
+        }
+
+        let remoteIDs = Array(remoteMap.keys)
         guard !remoteIDs.isEmpty else { return }
 
         let descriptor = FetchDescriptor<Competition>(predicate: #Predicate { remoteIDs.contains($0.id) })
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for data in remoteData {
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { continue }
-
+        for (id, data) in remoteMap {
             let dateString = data["date"] as? String
             let date = dateString.flatMap { iso8601Formatter.date(from: $0) } ?? Date()
             let location = data["location"] as? String ?? ""
@@ -402,10 +360,12 @@ class SyncManager {
                 if let d = dateString.flatMap({ iso8601Formatter.date(from: $0) }) { existing.date = d }
                 if let loc = data["location"] as? String { existing.location = loc }
                 if let n = data["notes"] as? String { existing.notes = n }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let competition = Competition(
                         id: id, name: name, date: date, location: location, notes: notes)
+                    competition.syncStatus = .synced
                     context.insert(competition)
                 }
             }
@@ -415,21 +375,25 @@ class SyncManager {
     @MainActor
     private func mergeScoresheets(_ remoteData: [[String: Any]], context: ModelContext) async throws
     {
-        let remoteIDs = remoteData.compactMap { $0["id"] as? String }.compactMap { UUID(uuidString: $0) }
+        var remoteMap: [UUID: [String: Any]] = [:]
+        for data in remoteData {
+            if let idString = data["id"] as? String, let id = UUID(uuidString: idString) {
+                remoteMap[id] = data
+            }
+        }
+
+        let remoteIDs = Array(remoteMap.keys)
         guard !remoteIDs.isEmpty else { return }
 
         let descriptor = FetchDescriptor<Scoresheet>(predicate: #Predicate { remoteIDs.contains($0.id) })
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for data in remoteData {
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { continue }
-
+        for (id, data) in remoteMap {
             if let existing = existingMap[id] {
                 if let round = data["round"] as? String { existing.round = round }
                 if let stuntDiff = data["stunt_difficulty"] as? Double { existing.stuntDifficulty = stuntDiff }
+                existing.syncStatus = .synced
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced
