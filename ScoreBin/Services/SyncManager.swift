@@ -54,6 +54,8 @@ class SyncManager {
     @MainActor
     func updatePendingCount(context: ModelContext? = nil) {
         guard let context = context ?? modelContainer?.mainContext else { return }
+        updatePendingCount(context: context)
+    }
 
     @MainActor
     private func updatePendingCount(context: ModelContext) {

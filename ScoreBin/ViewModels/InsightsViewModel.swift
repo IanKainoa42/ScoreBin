@@ -29,7 +29,6 @@ class InsightsViewModel {
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
         team.scoresheets
-            .sorted { $0.createdAt < $1.createdAt }
             .map { sheet in
                 ScoreDataPoint(
                     date: sheet.createdAt,
@@ -37,11 +36,12 @@ class InsightsViewModel {
                     label: sheet.competition?.name ?? "Practice"
                 )
             }
+            .sorted { $0.date < $1.date }
     }
 
     func averageScore(for team: Team) -> Double {
         guard !team.scoresheets.isEmpty else { return 0 }
-        let total = team.scoresheets.reduce(0) { $0 + $1.finalScore }
+        let total = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
         return (total / Double(team.scoresheets.count)).rounded2
     }
 
@@ -82,12 +82,11 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams, by: { $0.level })
 
         return teamsByLevel.map { level, teams in
-            var totalScore: Double = 0
-            var scoresheetCount = 0
-
-            for team in teams {
-                scoresheetCount += team.scoresheets.count
-                totalScore += team.scoresheets.reduce(0) { $0 + $1.finalScore }
+            let (totalScore, scoresheetCount) = teams.reduce((0.0, 0)) { partial, team in
+                (
+                    partial.0 + team.scoresheets.reduce(0.0) { $0 + $1.finalScore },
+                    partial.1 + team.scoresheets.count
+                )
             }
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
