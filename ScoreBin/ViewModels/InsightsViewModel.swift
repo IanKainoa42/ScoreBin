@@ -19,6 +19,14 @@ class InsightsViewModel {
         let label: String
     }
 
+    func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
+        let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
+        if let limit {
+            return Array(active.prefix(limit))
+        }
+        return Array(active)
+    }
+
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
         team.scoresheets
             .sorted { $0.createdAt < $1.createdAt }
@@ -247,12 +255,4 @@ class InsightsViewModel {
     }
 
     // MARK: - View Helpers
-
-    func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
-        let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
-        if let limit {
-            return Array(active.prefix(limit))
-        }
-        return Array(active)
-    }
 }
