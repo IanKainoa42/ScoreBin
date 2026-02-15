@@ -124,17 +124,13 @@ class SyncManager {
         dataProvider: (T) -> [String: Any],
         bulkUploadAction: @escaping ([[String: Any]]) async throws -> Void,
         updateStatus: (T) -> Void
-    ) async {
+    ) async throws {
         guard !items.isEmpty else { return }
 
         let batchData = items.map { dataProvider($0) }
 
-        do {
-            try await bulkUploadAction(batchData)
-            items.forEach { updateStatus($0) }
-        } catch {
-            print("Bulk sync failed: \(error)")
-        }
+        try await bulkUploadAction(batchData)
+        items.forEach { updateStatus($0) }
     }
 
     // MARK: - Individual Sync Methods
@@ -145,17 +141,16 @@ class SyncManager {
         let descriptor = FetchDescriptor<Gym>(
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingGyms = try context.fetch(descriptor)
+        guard !pendingGyms.isEmpty else { return }
 
-        await syncBulk(
+        try await syncBulk(
             items: pendingGyms,
             dataProvider: { $0.exportForDatabase() },
             bulkUploadAction: { [supabase] data in try await supabase.uploadGyms(data) },
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        if !successSet.isEmpty {
-            try context.save()
-        }
+        try context.save()
     }
 
     @MainActor
@@ -164,17 +159,16 @@ class SyncManager {
         let descriptor = FetchDescriptor<Team>(
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingTeams = try context.fetch(descriptor)
+        guard !pendingTeams.isEmpty else { return }
 
-        await syncBulk(
+        try await syncBulk(
             items: pendingTeams,
             dataProvider: { $0.exportForDatabase() },
             bulkUploadAction: { [supabase] data in try await supabase.uploadTeams(data) },
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        if !successSet.isEmpty {
-            try context.save()
-        }
+        try context.save()
     }
 
     @MainActor
@@ -183,17 +177,16 @@ class SyncManager {
         let descriptor = FetchDescriptor<Competition>(
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingCompetitions = try context.fetch(descriptor)
+        guard !pendingCompetitions.isEmpty else { return }
 
-        await syncBulk(
+        try await syncBulk(
             items: pendingCompetitions,
             dataProvider: { $0.exportForDatabase() },
             bulkUploadAction: { [supabase] data in try await supabase.uploadCompetitions(data) },
             updateStatus: { $0.syncStatus = .synced }
         )
 
-        if !successSet.isEmpty {
-            try context.save()
-        }
+        try context.save()
     }
 
     @MainActor
@@ -202,8 +195,9 @@ class SyncManager {
         let descriptor = FetchDescriptor<Scoresheet>(
             predicate: #Predicate { $0.syncStatus == pending })
         let pendingScoresheets = try context.fetch(descriptor)
+        guard !pendingScoresheets.isEmpty else { return }
 
-        await syncBulk(
+        try await syncBulk(
             items: pendingScoresheets,
             dataProvider: { $0.exportForDatabase() },
             bulkUploadAction: { [supabase] data in try await supabase.uploadScoresheets(data) },

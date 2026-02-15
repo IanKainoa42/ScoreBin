@@ -87,9 +87,7 @@ class InsightsViewModel {
 
             for team in teams {
                 scoresheetCount += team.scoresheets.count
-                for sheet in team.scoresheets {
-                    totalScore += sheet.finalScore
-                }
+                totalScore += team.scoresheets.reduce(0) { $0 + $1.finalScore }
             }
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
