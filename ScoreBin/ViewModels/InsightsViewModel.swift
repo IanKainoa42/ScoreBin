@@ -19,8 +19,12 @@ class InsightsViewModel {
         let label: String
     }
 
-    func activeTeams(from teams: [Team]) -> [Team] {
-        teams.filter { !$0.scoresheets.isEmpty }
+    func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
+        let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
+        if let limit {
+            return Array(active.prefix(limit))
+        }
+        return Array(active)
     }
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
@@ -75,7 +79,7 @@ class InsightsViewModel {
     }
 
     func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
-        var statsByLevel: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)] = [:]
+        let teamsByLevel = Dictionary(grouping: gym.teams, by: { $0.level })
 
         return teamsByLevel.map { level, teams in
             var totalScore: Double = 0
@@ -90,23 +94,11 @@ class InsightsViewModel {
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
-            for scoresheet in team.scoresheets {
-                current.totalScore += scoresheet.finalScore
-                current.scoresheetCount += 1
-            }
-
-            statsByLevel[level] = current
-        }
-
-        return statsByLevel.map { level, stats in
-            let avgScore =
-                stats.scoresheetCount == 0
-                ? 0 : stats.totalScore / Double(stats.scoresheetCount)
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
-                teamCount: stats.teamCount,
-                scoresheetCount: stats.scoresheetCount
+                teamCount: teams.count,
+                scoresheetCount: scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
@@ -263,12 +255,4 @@ class InsightsViewModel {
     }
 
     // MARK: - View Helpers
-
-    func activeTeams(from teams: [Team], limit: Int = 5) -> [Team] {
-        Array(
-            teams.lazy
-                .filter { !$0.scoresheets.isEmpty }
-                .prefix(limit)
-        )
-    }
 }
