@@ -55,6 +55,8 @@ class SyncManager {
     func updatePendingCount(context: ModelContext? = nil) {
         guard let context = context ?? modelContainer?.mainContext else { return }
 
+    @MainActor
+    private func updatePendingCount(context: ModelContext) {
         do {
             let gymDesc = FetchDescriptor<Gym>(
                 predicate: #Predicate { $0.syncStatus == SyncStatus.pending })
@@ -282,11 +284,13 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let name = data["name"] as? String { existing.name = name }
                 if let location = data["location"] as? String { existing.location = location }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let gym = Gym(id: id, name: name)
                     gym.syncStatus = .synced
                     if let location = data["location"] as? String { gym.location = location }
+                    gym.syncStatus = .synced
                     context.insert(gym)
                 }
             }
@@ -313,12 +317,14 @@ class SyncManager {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
                     team.syncStatus = .synced
                     if let level = data["level"] as? String { team.level = level }
                     if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    team.syncStatus = .synced
                     context.insert(team)
                 }
             }
@@ -352,6 +358,7 @@ class SyncManager {
                 if let d = dateString.flatMap({ iso8601Formatter.date(from: $0) }) { existing.date = d }
                 if let loc = data["location"] as? String { existing.location = loc }
                 if let n = data["notes"] as? String { existing.notes = n }
+                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let competition = Competition(
@@ -383,6 +390,7 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let round = data["round"] as? String { existing.round = round }
                 if let stuntDiff = data["stunt_difficulty"] as? Double { existing.stuntDifficulty = stuntDiff }
+                existing.syncStatus = .synced
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced
