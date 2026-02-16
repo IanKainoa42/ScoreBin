@@ -54,6 +54,8 @@ class SyncManager {
     @MainActor
     func updatePendingCount(context: ModelContext? = nil) {
         guard let context = context ?? modelContainer?.mainContext else { return }
+        updatePendingCount(context: context)
+    }
 
     @MainActor
     private func updatePendingCount(context: ModelContext) {
@@ -278,7 +280,6 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let name = data["name"] as? String { existing.name = name }
                 if let location = data["location"] as? String { existing.location = location }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let gym = Gym(id: id, name: name)
@@ -311,7 +312,6 @@ class SyncManager {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
@@ -352,7 +352,6 @@ class SyncManager {
                 if let d = dateString.flatMap({ iso8601Formatter.date(from: $0) }) { existing.date = d }
                 if let loc = data["location"] as? String { existing.location = loc }
                 if let n = data["notes"] as? String { existing.notes = n }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let competition = Competition(
@@ -384,7 +383,6 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let round = data["round"] as? String { existing.round = round }
                 if let stuntDiff = data["stunt_difficulty"] as? Double { existing.stuntDifficulty = stuntDiff }
-                existing.syncStatus = .synced
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced

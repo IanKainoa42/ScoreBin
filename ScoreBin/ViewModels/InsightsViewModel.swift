@@ -41,7 +41,7 @@ class InsightsViewModel {
 
     func averageScore(for team: Team) -> Double {
         guard !team.scoresheets.isEmpty else { return 0 }
-        let total = team.scoresheets.reduce(0) { $0 + $1.finalScore }
+        let total = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
         return (total / Double(team.scoresheets.count)).rounded2
     }
 
@@ -87,7 +87,7 @@ class InsightsViewModel {
 
             for team in teams {
                 scoresheetCount += team.scoresheets.count
-                totalScore += team.scoresheets.reduce(0) { $0 + $1.finalScore }
+                totalScore += team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
             }
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
