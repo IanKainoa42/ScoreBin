@@ -278,13 +278,11 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let name = data["name"] as? String { existing.name = name }
                 if let location = data["location"] as? String { existing.location = location }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let gym = Gym(id: id, name: name)
                     gym.syncStatus = .synced
                     if let location = data["location"] as? String { gym.location = location }
-                    gym.syncStatus = .synced
                     context.insert(gym)
                 }
             }
@@ -311,14 +309,12 @@ class SyncManager {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
                     team.syncStatus = .synced
                     if let level = data["level"] as? String { team.level = level }
                     if let count = data["athlete_count"] as? Int { team.athleteCount = count }
-                    team.syncStatus = .synced
                     context.insert(team)
                 }
             }
@@ -342,17 +338,17 @@ class SyncManager {
 
         for (id, data) in parsedData {
             let dateString = data["date"] as? String
-            let date = dateString.flatMap { iso8601Formatter.date(from: $0) } ?? Date()
+            let parsedDate = dateString.flatMap { iso8601Formatter.date(from: $0) }
+            let date = parsedDate ?? Date()
             let location = data["location"] as? String ?? ""
             let notes = data["notes"] as? String ?? ""
 
             if let existing = existingMap[id] {
                 existing.syncStatus = .synced
                 if let name = data["name"] as? String { existing.name = name }
-                if let d = dateString.flatMap({ iso8601Formatter.date(from: $0) }) { existing.date = d }
+                if let d = parsedDate { existing.date = d }
                 if let loc = data["location"] as? String { existing.location = loc }
                 if let n = data["notes"] as? String { existing.notes = n }
-                existing.syncStatus = .synced
             } else {
                 if let name = data["name"] as? String {
                     let competition = Competition(
@@ -384,7 +380,6 @@ class SyncManager {
                 existing.syncStatus = .synced
                 if let round = data["round"] as? String { existing.round = round }
                 if let stuntDiff = data["stunt_difficulty"] as? Double { existing.stuntDifficulty = stuntDiff }
-                existing.syncStatus = .synced
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced

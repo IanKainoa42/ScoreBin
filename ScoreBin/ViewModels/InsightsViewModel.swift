@@ -29,7 +29,6 @@ class InsightsViewModel {
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
         team.scoresheets
-            .sorted { $0.createdAt < $1.createdAt }
             .map { sheet in
                 ScoreDataPoint(
                     date: sheet.createdAt,
@@ -37,16 +36,17 @@ class InsightsViewModel {
                     label: sheet.competition?.name ?? "Practice"
                 )
             }
+            .sorted { $0.date < $1.date }
     }
 
     func averageScore(for team: Team) -> Double {
         guard !team.scoresheets.isEmpty else { return 0 }
-        let total = team.scoresheets.reduce(0) { $0 + $1.finalScore }
+        let total = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
         return (total / Double(team.scoresheets.count)).rounded2
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+        team.scoresheets.map(\.finalScore).max() ?? 0
     }
 
     func scoreImprovement(for team: Team) -> Double {
@@ -195,14 +195,12 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        let totals = team.scoresheets.reduce((0, 0, 0, 0, 0)) { partialResult, sheet in
-            (
-                partialResult.0 + sheet.athleteFalls,
-                partialResult.1 + sheet.majorAthleteFalls,
-                partialResult.2 + sheet.buildingBobbles,
-                partialResult.3 + sheet.buildingFalls,
-                partialResult.4 + sheet.majorBuildingFalls
-            )
+        let totals = team.scoresheets.reduce(into: (0, 0, 0, 0, 0)) { result, sheet in
+            result.0 += sheet.athleteFalls
+            result.1 += sheet.majorAthleteFalls
+            result.2 += sheet.buildingBobbles
+            result.3 += sheet.buildingFalls
+            result.4 += sheet.majorBuildingFalls
         }
 
         let (athleteFalls, majorAthleteFalls, buildingBobbles, buildingFalls, majorBuildingFalls) = totals
