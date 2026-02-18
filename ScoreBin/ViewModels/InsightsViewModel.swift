@@ -46,7 +46,7 @@ class InsightsViewModel {
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+        team.scoresheets.map(\.finalScore).max() ?? 0
     }
 
     func scoreImprovement(for team: Team) -> Double {
@@ -194,14 +194,12 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        let totals = team.scoresheets.reduce((0, 0, 0, 0, 0)) { partialResult, sheet in
-            (
-                partialResult.0 + sheet.athleteFalls,
-                partialResult.1 + sheet.majorAthleteFalls,
-                partialResult.2 + sheet.buildingBobbles,
-                partialResult.3 + sheet.buildingFalls,
-                partialResult.4 + sheet.majorBuildingFalls
-            )
+        let totals = team.scoresheets.reduce(into: (0, 0, 0, 0, 0)) { result, sheet in
+            result.0 += sheet.athleteFalls
+            result.1 += sheet.majorAthleteFalls
+            result.2 += sheet.buildingBobbles
+            result.3 += sheet.buildingFalls
+            result.4 += sheet.majorBuildingFalls
         }
 
         let (athleteFalls, majorAthleteFalls, buildingBobbles, buildingFalls, majorBuildingFalls) = totals
