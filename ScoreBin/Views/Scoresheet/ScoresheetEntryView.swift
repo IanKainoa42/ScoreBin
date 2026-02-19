@@ -9,9 +9,13 @@ struct ScoresheetEntryView: View {
     @State private var showingSaveAlert = false
     @State private var showingResetConfirmation = false
 
-    /// Team must be selected before saving is allowed
-    private var canSave: Bool {
+    /// Team must be selected before scoring and saving are allowed
+    private var canEnterScores: Bool {
         viewModel.selectedTeam != nil
+    }
+
+    private var canSave: Bool {
+        canEnterScores
     }
 
     var body: some View {
@@ -27,7 +31,7 @@ struct ScoresheetEntryView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.overallYellow)
-                                Text("Select a team above to enable saving")
+                                Text("Select a team above to enable score entry")
                                     .font(.subheadline)
                                     .foregroundColor(.overallYellow)
                             }
@@ -40,12 +44,17 @@ struct ScoresheetEntryView: View {
 
                         // Judge Panels
                         judgeGridSection
+                            .disabled(!canEnterScores)
+                            .opacity(canEnterScores ? 1 : 0.45)
 
                         // Deductions
                         DeductionsSection(scoresheet: $viewModel.scoresheet)
+                            .disabled(!canEnterScores)
+                            .opacity(canEnterScores ? 1 : 0.45)
 
                         // Score Summary
                         ScoreSummaryView(viewModel: viewModel)
+                            .opacity(canEnterScores ? 1 : 0.6)
 
                         // Bottom spacer so content isn't hidden behind sticky bar
                         Color.clear.frame(height: 60)
