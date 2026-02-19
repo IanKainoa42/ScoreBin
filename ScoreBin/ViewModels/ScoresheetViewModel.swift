@@ -1,6 +1,6 @@
 import Foundation
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Observable
 class ScoresheetViewModel {
@@ -146,13 +146,13 @@ class ScoresheetViewModel {
             scoresheet.competition = selectedCompetition
         }
 
-        SyncManager.shared.markForSync(scoresheet)
         context.insert(scoresheet)
 
         do {
             try context.save()
-            Task {
-                await SyncManager.shared.updatePendingCount()
+            Task { @MainActor in
+                SyncManager.shared.markForSync(scoresheet)
+                SyncManager.shared.updatePendingCount()
             }
         } catch {
             print("Failed to save scoresheet: \(error)")
