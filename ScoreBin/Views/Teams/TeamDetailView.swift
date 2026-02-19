@@ -10,7 +10,7 @@ struct TeamDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            LazyVStack(alignment: .center, spacing: 16) {
                 // Team Info Card
                 teamInfoCard
 

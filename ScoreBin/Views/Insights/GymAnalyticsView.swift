@@ -10,7 +10,7 @@ struct GymAnalyticsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            LazyVStack(alignment: .center, spacing: 16) {
                 // Gym Overview
                 gymOverviewSection
 
