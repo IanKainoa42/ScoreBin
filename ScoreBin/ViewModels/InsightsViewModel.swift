@@ -79,23 +79,29 @@ class InsightsViewModel {
     }
 
     func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
-        let teamsByLevel = Dictionary(grouping: gym.teams, by: { $0.level })
+        var statsByLevel: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)] = [:]
 
-        return teamsByLevel.map { level, teams in
-            let (totalScore, scoresheetCount) = teams.reduce((0.0, 0)) { partial, team in
-                (
-                    partial.0 + team.scoresheets.reduce(0.0) { $0 + $1.finalScore },
-                    partial.1 + team.scoresheets.count
-                )
+        for team in gym.teams {
+            let level = team.level
+            var current = statsByLevel[level] ?? (0, 0, 0)
+
+            current.teamCount += 1
+            current.scoresheetCount += team.scoresheets.count
+
+            for sheet in team.scoresheets {
+                current.totalScore += sheet.finalScore
             }
 
-            let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
+            statsByLevel[level] = current
+        }
 
+        return statsByLevel.map { level, stats in
+            let avgScore = stats.scoresheetCount == 0 ? 0 : stats.totalScore / Double(stats.scoresheetCount)
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
-                teamCount: teams.count,
-                scoresheetCount: scoresheetCount
+                teamCount: stats.teamCount,
+                scoresheetCount: stats.scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
@@ -194,15 +200,19 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        let totals = team.scoresheets.reduce(into: (0, 0, 0, 0, 0)) { result, sheet in
-            result.0 += sheet.athleteFalls
-            result.1 += sheet.majorAthleteFalls
-            result.2 += sheet.buildingBobbles
-            result.3 += sheet.buildingFalls
-            result.4 += sheet.majorBuildingFalls
-        }
+        var athleteFalls = 0
+        var majorAthleteFalls = 0
+        var buildingBobbles = 0
+        var buildingFalls = 0
+        var majorBuildingFalls = 0
 
-        let (athleteFalls, majorAthleteFalls, buildingBobbles, buildingFalls, majorBuildingFalls) = totals
+        for sheet in team.scoresheets {
+            athleteFalls += sheet.athleteFalls
+            majorAthleteFalls += sheet.majorAthleteFalls
+            buildingBobbles += sheet.buildingBobbles
+            buildingFalls += sheet.buildingFalls
+            majorBuildingFalls += sheet.majorBuildingFalls
+        }
 
         var patterns: [DeductionPattern] = []
 
