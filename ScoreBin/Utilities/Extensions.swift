@@ -103,16 +103,3 @@ extension Date {
     }
 }
 
-// MARK: - String Extensions
-extension String {
-    private static let camelCaseRegex: NSRegularExpression? = {
-        try? NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
-    }()
-
-    /// Convert camelCase to snake_case
-    var snakeCase: String {
-        guard let regex = Self.camelCaseRegex else { return self.lowercased() }
-        let range = NSRange(location: 0, length: self.count)
-        return regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1_$2").lowercased()
-    }
-}

@@ -50,20 +50,12 @@ class InsightsViewModel {
     }
 
     func scoreImprovement(for team: Team) -> Double {
-        guard team.scoresheets.count >= 2 else { return 0 }
+        let scoresheets = team.scoresheets
+        guard scoresheets.count >= 2 else { return 0 }
 
-        // Find earliest and latest scoresheets in a single pass
-        var earliest = team.scoresheets[0]
-        var latest = team.scoresheets[0]
-
-        for sheet in team.scoresheets.dropFirst() {
-            if sheet.createdAt < earliest.createdAt {
-                earliest = sheet
-            }
-            if sheet.createdAt > latest.createdAt {
-                latest = sheet
-            }
-        }
+        guard let earliest = scoresheets.min(by: { $0.createdAt < $1.createdAt }),
+              let latest = scoresheets.max(by: { $0.createdAt < $1.createdAt })
+        else { return 0 }
 
         return (latest.finalScore - earliest.finalScore).rounded2
     }
@@ -79,29 +71,24 @@ class InsightsViewModel {
     }
 
     func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
-        var statsByLevel: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)] = [:]
+        let teamsByLevel = Dictionary(grouping: gym.teams, by: { $0.level })
 
-        for team in gym.teams {
-            let level = team.level
-            var current = statsByLevel[level] ?? (0, 0, 0)
+        return teamsByLevel.map { level, teams in
+            var totalScore = 0.0
+            var scoresheetCount = 0
 
-            current.teamCount += 1
-            current.scoresheetCount += team.scoresheets.count
-
-            for sheet in team.scoresheets {
-                current.totalScore += sheet.finalScore
+            for team in teams {
+                scoresheetCount += team.scoresheets.count
+                totalScore += team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
             }
 
-            statsByLevel[level] = current
-        }
+            let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
 
-        return statsByLevel.map { level, stats in
-            let avgScore = stats.scoresheetCount == 0 ? 0 : stats.totalScore / Double(stats.scoresheetCount)
             return GymLevelStats(
                 level: level,
                 averageScore: avgScore.rounded2,
-                teamCount: stats.teamCount,
-                scoresheetCount: stats.scoresheetCount
+                teamCount: teams.count,
+                scoresheetCount: scoresheetCount
             )
         }.sorted { $0.level < $1.level }
     }
@@ -199,6 +186,14 @@ class InsightsViewModel {
         let totalPoints: Double
     }
 
+    private enum DeductionCategory: String {
+        case athleteFalls = "Athlete Falls"
+        case majorAthleteFalls = "Major Athlete Falls"
+        case buildingBobbles = "Building Bobbles"
+        case buildingFalls = "Building Falls"
+        case majorBuildingFalls = "Major Building Falls"
+    }
+
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
         var athleteFalls = 0
         var majorAthleteFalls = 0
@@ -218,7 +213,7 @@ class InsightsViewModel {
 
         if athleteFalls > 0 {
             patterns.append(DeductionPattern(
-                category: "Athlete Falls",
+                category: DeductionCategory.athleteFalls.rawValue,
                 totalCount: athleteFalls,
                 totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
             ))
@@ -226,7 +221,7 @@ class InsightsViewModel {
 
         if majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
-                category: "Major Athlete Falls",
+                category: DeductionCategory.majorAthleteFalls.rawValue,
                 totalCount: majorAthleteFalls,
                 totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
             ))
@@ -234,7 +229,7 @@ class InsightsViewModel {
 
         if buildingBobbles > 0 {
             patterns.append(DeductionPattern(
-                category: "Building Bobbles",
+                category: DeductionCategory.buildingBobbles.rawValue,
                 totalCount: buildingBobbles,
                 totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
             ))
@@ -242,7 +237,7 @@ class InsightsViewModel {
 
         if buildingFalls > 0 {
             patterns.append(DeductionPattern(
-                category: "Building Falls",
+                category: DeductionCategory.buildingFalls.rawValue,
                 totalCount: buildingFalls,
                 totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
             ))
@@ -250,7 +245,7 @@ class InsightsViewModel {
 
         if majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
-                category: "Major Building Falls",
+                category: DeductionCategory.majorBuildingFalls.rawValue,
                 totalCount: majorBuildingFalls,
                 totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
             ))
