@@ -195,7 +195,7 @@ final class Scoresheet {
     }
 
     var maxScore: Double {
-        team?.level == "L1" ? ScoringRules.Maximums.level1MaxScore : ScoringRules.Maximums.maxScore
+        ScoringRules.maxScore(forLevel: team?.level)
     }
 
     var percentPerfection: Double {
