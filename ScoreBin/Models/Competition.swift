@@ -40,8 +40,6 @@ final class Competition {
         return formatter
     }()
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     // Format date for display
     var formattedDate: String {
         return Self.dateFormatter.string(from: date)
@@ -51,12 +49,30 @@ final class Competition {
 
     func exportForDatabase() -> [String: Any] {
         [
-            "id": id.uuidString,
-            "name": name,
-            "date": Self.iso8601Formatter.string(from: date),
-            "location": location,
-            "notes": notes,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            DatabaseSchema.Competition.id: id.uuidString,
+            DatabaseSchema.Competition.name: name,
+            DatabaseSchema.Competition.date: ISO8601DateFormatter.shared.string(from: date),
+            DatabaseSchema.Competition.location: location,
+            DatabaseSchema.Competition.notes: notes,
+            DatabaseSchema.Competition.createdAt: ISO8601DateFormatter.shared.string(from: createdAt)
         ]
+    }
+
+    // MARK: - Import
+
+    func update(from dictionary: [String: Any]) {
+        if let name = dictionary[DatabaseSchema.Competition.name] as? String {
+            self.name = name
+        }
+        if let dateString = dictionary[DatabaseSchema.Competition.date] as? String,
+           let date = ISO8601DateFormatter.shared.date(from: dateString) {
+            self.date = date
+        }
+        if let location = dictionary[DatabaseSchema.Competition.location] as? String {
+            self.location = location
+        }
+        if let notes = dictionary[DatabaseSchema.Competition.notes] as? String {
+            self.notes = notes
+        }
     }
 }

@@ -10,7 +10,6 @@ class SyncManager {
     private let supabase = SupabaseService.shared
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor")
-    private let iso8601Formatter = ISO8601DateFormatter()
 
     var isOnline: Bool = true
     var isSyncing: Bool = false
@@ -267,7 +266,7 @@ class SyncManager {
     @MainActor
     private func mergeGyms(_ remoteData: [[String: Any]], context: ModelContext) async throws {
         let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
+            guard let idString = data[DatabaseSchema.Gym.id] as? String,
                 let id = UUID(uuidString: idString)
             else { return nil }
             return (id, data)
@@ -281,12 +280,11 @@ class SyncManager {
 
         for (id, data) in parsedData {
             if let existing = existingMap[id] {
-                if let name = data["name"] as? String { existing.name = name }
-                if let location = data["location"] as? String { existing.location = location }
+                existing.update(from: data)
             } else {
-                if let name = data["name"] as? String {
+                if let name = data[DatabaseSchema.Gym.name] as? String {
                     let gym = Gym(id: id, name: name)
-                    if let location = data["location"] as? String { gym.location = location }
+                    gym.update(from: data)
                     context.insert(gym)
                 }
             }
@@ -296,7 +294,7 @@ class SyncManager {
     @MainActor
     private func mergeTeams(_ remoteData: [[String: Any]], context: ModelContext) async throws {
         let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
+            guard let idString = data[DatabaseSchema.Team.id] as? String,
                 let id = UUID(uuidString: idString)
             else { return nil }
             return (id, data)
@@ -310,14 +308,11 @@ class SyncManager {
 
         for (id, data) in parsedData {
             if let existing = existingMap[id] {
-                if let name = data["name"] as? String { existing.name = name }
-                if let level = data["level"] as? String { existing.level = level }
-                if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
+                existing.update(from: data)
             } else {
-                if let name = data["name"] as? String {
+                if let name = data[DatabaseSchema.Team.name] as? String {
                     let team = Team(id: id, name: name)
-                    if let level = data["level"] as? String { team.level = level }
-                    if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    team.update(from: data)
                     context.insert(team)
                 }
             }
@@ -329,7 +324,7 @@ class SyncManager {
         async throws
     {
         let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
+            guard let idString = data[DatabaseSchema.Competition.id] as? String,
                 let id = UUID(uuidString: idString)
             else { return nil }
             return (id, data)
@@ -343,22 +338,13 @@ class SyncManager {
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
         for (id, data) in parsedData {
-            let dateString = data["date"] as? String
-            let parsedDate = dateString.flatMap { iso8601Formatter.date(from: $0) }
-            let date = parsedDate ?? Date()
-            let location = data["location"] as? String ?? ""
-            let notes = data["notes"] as? String ?? ""
-
             if let existing = existingMap[id] {
-                if let name = data["name"] as? String { existing.name = name }
-                if let d = parsedDate { existing.date = d }
-                if let loc = data["location"] as? String { existing.location = loc }
-                if let n = data["notes"] as? String { existing.notes = n }
+                existing.update(from: data)
             } else {
-                if let name = data["name"] as? String {
-                    let competition = Competition(
-                        id: id, name: name, date: date, location: location, notes: notes)
+                if let name = data[DatabaseSchema.Competition.name] as? String {
+                    let competition = Competition(id: id, name: name)
                     competition.syncStatus = .synced
+                    competition.update(from: data)
                     context.insert(competition)
                 }
             }
@@ -369,7 +355,7 @@ class SyncManager {
     private func mergeScoresheets(_ remoteData: [[String: Any]], context: ModelContext) async throws
     {
         let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
+            guard let idString = data[DatabaseSchema.Scoresheet.id] as? String,
                 let id = UUID(uuidString: idString)
             else { return nil }
             return (id, data)
@@ -384,17 +370,11 @@ class SyncManager {
 
         for (id, data) in parsedData {
             if let existing = existingMap[id] {
-                if let round = data["round"] as? String { existing.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    existing.stuntDifficulty = stuntDiff
-                }
+                existing.update(from: data)
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced
-                if let round = data["round"] as? String { scoresheet.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    scoresheet.stuntDifficulty = stuntDiff
-                }
+                scoresheet.update(from: data)
                 context.insert(scoresheet)
             }
         }

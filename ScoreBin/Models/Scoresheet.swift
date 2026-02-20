@@ -209,65 +209,111 @@ final class Scoresheet {
 
     // MARK: - Export for Database
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func exportForDatabase() -> [String: Any] {
         return [
-            "id": id.uuidString,
-            "team_id": team?.id.uuidString ?? NSNull(),
-            "competition_id": competition?.id.uuidString ?? NSNull(),
-            "round": round,
-            "created_at": Self.iso8601Formatter.string(from: createdAt),
+            DatabaseSchema.Scoresheet.id: id.uuidString,
+            DatabaseSchema.Scoresheet.teamId: team?.id.uuidString ?? NSNull(),
+            DatabaseSchema.Scoresheet.competitionId: competition?.id.uuidString ?? NSNull(),
+            DatabaseSchema.Scoresheet.round: round,
+            DatabaseSchema.Scoresheet.createdAt: ISO8601DateFormatter.shared.string(from: createdAt),
 
             // Building scores
-            "stunt_difficulty": stuntDifficulty,
-            "stunt_execution": stuntExecution,
-            "stunt_driver_degree": stuntDriverDegree,
-            "stunt_driver_max_part": stuntDriverMaxPart,
-            "pyramid_difficulty": pyramidDifficulty,
-            "pyramid_execution": pyramidExecution,
-            "pyramid_drivers": pyramidDrivers,
-            "toss_difficulty": tossDifficulty,
-            "toss_execution": tossExecution,
-            "building_creativity": buildingCreativity,
-            "building_showmanship": buildingShowmanship,
+            DatabaseSchema.Scoresheet.stuntDifficulty: stuntDifficulty,
+            DatabaseSchema.Scoresheet.stuntExecution: stuntExecution,
+            DatabaseSchema.Scoresheet.stuntDriverDegree: stuntDriverDegree,
+            DatabaseSchema.Scoresheet.stuntDriverMaxPart: stuntDriverMaxPart,
+            DatabaseSchema.Scoresheet.pyramidDifficulty: pyramidDifficulty,
+            DatabaseSchema.Scoresheet.pyramidExecution: pyramidExecution,
+            DatabaseSchema.Scoresheet.pyramidDrivers: pyramidDrivers,
+            DatabaseSchema.Scoresheet.tossDifficulty: tossDifficulty,
+            DatabaseSchema.Scoresheet.tossExecution: tossExecution,
+            DatabaseSchema.Scoresheet.buildingCreativity: buildingCreativity,
+            DatabaseSchema.Scoresheet.buildingShowmanship: buildingShowmanship,
 
             // Tumbling scores
-            "standing_difficulty": standingDifficulty,
-            "standing_execution": standingExecution,
-            "standing_drivers": standingDrivers,
-            "running_difficulty": runningDifficulty,
-            "running_execution": runningExecution,
-            "running_drivers": runningDrivers,
-            "running_driver_max_part": runningDriverMaxPart, // Note: Not in schema comment but likely needed if in model
-            "jumps_difficulty": jumpsDifficulty,
-            "jumps_execution": jumpsExecution,
-            "tumbling_creativity": tumblingCreativity,
-            "tumbling_showmanship": tumblingShowmanship,
+            DatabaseSchema.Scoresheet.standingDifficulty: standingDifficulty,
+            DatabaseSchema.Scoresheet.standingExecution: standingExecution,
+            DatabaseSchema.Scoresheet.standingDrivers: standingDrivers,
+            DatabaseSchema.Scoresheet.runningDifficulty: runningDifficulty,
+            DatabaseSchema.Scoresheet.runningExecution: runningExecution,
+            DatabaseSchema.Scoresheet.runningDrivers: runningDrivers,
+            DatabaseSchema.Scoresheet.runningDriverMaxPart: runningDriverMaxPart,
+            DatabaseSchema.Scoresheet.jumpsDifficulty: jumpsDifficulty,
+            DatabaseSchema.Scoresheet.jumpsExecution: jumpsExecution,
+            DatabaseSchema.Scoresheet.tumblingCreativity: tumblingCreativity,
+            DatabaseSchema.Scoresheet.tumblingShowmanship: tumblingShowmanship,
 
             // Overall scores
-            "dance_difficulty": danceDifficulty,
-            "dance_execution": danceExecution,
-            "formations": formations,
-            "overall_creativity": overallCreativity,
-            "overall_showmanship": overallShowmanship,
+            DatabaseSchema.Scoresheet.danceDifficulty: danceDifficulty,
+            DatabaseSchema.Scoresheet.danceExecution: danceExecution,
+            DatabaseSchema.Scoresheet.formations: formations,
+            DatabaseSchema.Scoresheet.overallCreativity: overallCreativity,
+            DatabaseSchema.Scoresheet.overallShowmanship: overallShowmanship,
 
             // Deductions
-            "athlete_falls": athleteFalls,
-            "major_athlete_falls": majorAthleteFalls,
-            "building_bobbles": buildingBobbles,
-            "building_falls": buildingFalls,
-            "major_building_falls": majorBuildingFalls,
-            "boundary_violations": boundaryViolations,
-            "time_limit_violations": timeLimitViolations,
+            DatabaseSchema.Scoresheet.athleteFalls: athleteFalls,
+            DatabaseSchema.Scoresheet.majorAthleteFalls: majorAthleteFalls,
+            DatabaseSchema.Scoresheet.buildingBobbles: buildingBobbles,
+            DatabaseSchema.Scoresheet.buildingFalls: buildingFalls,
+            DatabaseSchema.Scoresheet.majorBuildingFalls: majorBuildingFalls,
+            DatabaseSchema.Scoresheet.boundaryViolations: boundaryViolations,
+            DatabaseSchema.Scoresheet.timeLimitViolations: timeLimitViolations,
 
             // Computed scores
-            "raw_score": rawScore.rounded2,
-            "total_deductions": totalDeductions.rounded2,
-            "final_score": finalScore.rounded2,
+            DatabaseSchema.Scoresheet.rawScore: rawScore.rounded2,
+            DatabaseSchema.Scoresheet.totalDeductions: totalDeductions.rounded2,
+            DatabaseSchema.Scoresheet.finalScore: finalScore.rounded2,
 
             // Sync
-            "sync_status": "synced" // We are exporting to sync, so status on remote should be synced? Or we just send data? Usually we send data.
+            DatabaseSchema.Scoresheet.syncStatus: "synced"
         ]
+    }
+
+    // MARK: - Import
+
+    func update(from dictionary: [String: Any]) {
+        if let round = dictionary[DatabaseSchema.Scoresheet.round] as? String { self.round = round }
+
+        // Building
+        if let val = dictionary[DatabaseSchema.Scoresheet.stuntDifficulty] as? Double { self.stuntDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.stuntExecution] as? Double { self.stuntExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.stuntDriverDegree] as? Double { self.stuntDriverDegree = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.stuntDriverMaxPart] as? Double { self.stuntDriverMaxPart = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.pyramidDifficulty] as? Double { self.pyramidDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.pyramidExecution] as? Double { self.pyramidExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.pyramidDrivers] as? Double { self.pyramidDrivers = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.tossDifficulty] as? Double { self.tossDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.tossExecution] as? Double { self.tossExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.buildingCreativity] as? Double { self.buildingCreativity = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.buildingShowmanship] as? Double { self.buildingShowmanship = val }
+
+        // Tumbling
+        if let val = dictionary[DatabaseSchema.Scoresheet.standingDifficulty] as? Double { self.standingDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.standingExecution] as? Double { self.standingExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.standingDrivers] as? Double { self.standingDrivers = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.runningDifficulty] as? Double { self.runningDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.runningExecution] as? Double { self.runningExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.runningDrivers] as? Double { self.runningDrivers = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.runningDriverMaxPart] as? Double { self.runningDriverMaxPart = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.jumpsDifficulty] as? Double { self.jumpsDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.jumpsExecution] as? Double { self.jumpsExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.tumblingCreativity] as? Double { self.tumblingCreativity = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.tumblingShowmanship] as? Double { self.tumblingShowmanship = val }
+
+        // Overall
+        if let val = dictionary[DatabaseSchema.Scoresheet.danceDifficulty] as? Double { self.danceDifficulty = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.danceExecution] as? Double { self.danceExecution = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.formations] as? Double { self.formations = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.overallCreativity] as? Double { self.overallCreativity = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.overallShowmanship] as? Double { self.overallShowmanship = val }
+
+        // Deductions
+        if let val = dictionary[DatabaseSchema.Scoresheet.athleteFalls] as? Int { self.athleteFalls = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.majorAthleteFalls] as? Int { self.majorAthleteFalls = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.buildingBobbles] as? Int { self.buildingBobbles = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.buildingFalls] as? Int { self.buildingFalls = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.majorBuildingFalls] as? Int { self.majorBuildingFalls = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.boundaryViolations] as? Int { self.boundaryViolations = val }
+        if let val = dictionary[DatabaseSchema.Scoresheet.timeLimitViolations] as? Int { self.timeLimitViolations = val }
     }
 }

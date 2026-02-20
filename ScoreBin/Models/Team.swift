@@ -49,18 +49,36 @@ final class Team {
 
     // MARK: - Export
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func exportForDatabase() -> [String: Any] {
         [
-            "id": id.uuidString,
-            "name": name,
-            "gym_id": gym?.id.uuidString ?? NSNull(),
-            "level": level,
-            "age_division": ageDivision,
-            "tier": tier,
-            "athlete_count": athleteCount,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            DatabaseSchema.Team.id: id.uuidString,
+            DatabaseSchema.Team.name: name,
+            DatabaseSchema.Team.gymId: gym?.id.uuidString ?? NSNull(),
+            DatabaseSchema.Team.level: level,
+            DatabaseSchema.Team.ageDivision: ageDivision,
+            DatabaseSchema.Team.tier: tier,
+            DatabaseSchema.Team.athleteCount: athleteCount,
+            DatabaseSchema.Team.createdAt: ISO8601DateFormatter.shared.string(from: createdAt)
         ]
+    }
+
+    // MARK: - Import
+
+    func update(from dictionary: [String: Any]) {
+        if let name = dictionary[DatabaseSchema.Team.name] as? String {
+            self.name = name
+        }
+        if let level = dictionary[DatabaseSchema.Team.level] as? String {
+            self.level = level
+        }
+        if let ageDivision = dictionary[DatabaseSchema.Team.ageDivision] as? String {
+            self.ageDivision = ageDivision
+        }
+        if let tier = dictionary[DatabaseSchema.Team.tier] as? String {
+            self.tier = tier
+        }
+        if let count = dictionary[DatabaseSchema.Team.athleteCount] as? Int {
+            self.athleteCount = count
+        }
     }
 }

@@ -28,14 +28,23 @@ final class Gym {
 
     // MARK: - Export
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func exportForDatabase() -> [String: Any] {
         [
-            "id": id.uuidString,
-            "name": name,
-            "location": location,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            DatabaseSchema.Gym.id: id.uuidString,
+            DatabaseSchema.Gym.name: name,
+            DatabaseSchema.Gym.location: location,
+            DatabaseSchema.Gym.createdAt: ISO8601DateFormatter.shared.string(from: createdAt)
         ]
+    }
+
+    // MARK: - Import
+
+    func update(from dictionary: [String: Any]) {
+        if let name = dictionary[DatabaseSchema.Gym.name] as? String {
+            self.name = name
+        }
+        if let location = dictionary[DatabaseSchema.Gym.location] as? String {
+            self.location = location
+        }
     }
 }
