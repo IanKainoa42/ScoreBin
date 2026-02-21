@@ -103,3 +103,8 @@ extension Date {
     }
 }
 
+// MARK: - Formatters
+extension ISO8601DateFormatter {
+    /// Shared instance for database interactions
+    static let shared = ISO8601DateFormatter()
+}

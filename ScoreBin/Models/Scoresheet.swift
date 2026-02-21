@@ -209,15 +209,13 @@ final class Scoresheet {
 
     // MARK: - Export for Database
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func exportForDatabase() -> [String: Any] {
         return [
             "id": id.uuidString,
             "team_id": team?.id.uuidString ?? NSNull(),
             "competition_id": competition?.id.uuidString ?? NSNull(),
             "round": round,
-            "created_at": Self.iso8601Formatter.string(from: createdAt),
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt),
 
             // Building scores
             "stunt_difficulty": stuntDifficulty,
@@ -269,5 +267,55 @@ final class Scoresheet {
             // Sync
             "sync_status": "synced" // We are exporting to sync, so status on remote should be synced? Or we just send data? Usually we send data.
         ]
+    }
+
+    // MARK: - Update
+
+    func update(from data: [String: Any]) {
+        if let round = data["round"] as? String { self.round = round }
+
+        // Building scores
+        if let stuntDifficulty = data["stunt_difficulty"] as? Double { self.stuntDifficulty = stuntDifficulty }
+        if let stuntExecution = data["stunt_execution"] as? Double { self.stuntExecution = stuntExecution }
+        if let stuntDriverDegree = data["stunt_driver_degree"] as? Double { self.stuntDriverDegree = stuntDriverDegree }
+        if let stuntDriverMaxPart = data["stunt_driver_max_part"] as? Double { self.stuntDriverMaxPart = stuntDriverMaxPart }
+        if let pyramidDifficulty = data["pyramid_difficulty"] as? Double { self.pyramidDifficulty = pyramidDifficulty }
+        if let pyramidExecution = data["pyramid_execution"] as? Double { self.pyramidExecution = pyramidExecution }
+        if let pyramidDrivers = data["pyramid_drivers"] as? Double { self.pyramidDrivers = pyramidDrivers }
+        if let tossDifficulty = data["toss_difficulty"] as? Double { self.tossDifficulty = tossDifficulty }
+        if let tossExecution = data["toss_execution"] as? Double { self.tossExecution = tossExecution }
+        if let buildingCreativity = data["building_creativity"] as? Double { self.buildingCreativity = buildingCreativity }
+        if let buildingShowmanship = data["building_showmanship"] as? Double { self.buildingShowmanship = buildingShowmanship }
+
+        // Tumbling scores
+        if let standingDifficulty = data["standing_difficulty"] as? Double { self.standingDifficulty = standingDifficulty }
+        if let standingExecution = data["standing_execution"] as? Double { self.standingExecution = standingExecution }
+        if let standingDrivers = data["standing_drivers"] as? Double { self.standingDrivers = standingDrivers }
+        if let runningDifficulty = data["running_difficulty"] as? Double { self.runningDifficulty = runningDifficulty }
+        if let runningExecution = data["running_execution"] as? Double { self.runningExecution = runningExecution }
+        if let runningDrivers = data["running_drivers"] as? Double { self.runningDrivers = runningDrivers }
+        if let runningDriverMaxPart = data["running_driver_max_part"] as? Double { self.runningDriverMaxPart = runningDriverMaxPart }
+        if let jumpsDifficulty = data["jumps_difficulty"] as? Double { self.jumpsDifficulty = jumpsDifficulty }
+        if let jumpsExecution = data["jumps_execution"] as? Double { self.jumpsExecution = jumpsExecution }
+        if let tumblingCreativity = data["tumbling_creativity"] as? Double { self.tumblingCreativity = tumblingCreativity }
+        if let tumblingShowmanship = data["tumbling_showmanship"] as? Double { self.tumblingShowmanship = tumblingShowmanship }
+
+        // Overall scores
+        if let danceDifficulty = data["dance_difficulty"] as? Double { self.danceDifficulty = danceDifficulty }
+        if let danceExecution = data["dance_execution"] as? Double { self.danceExecution = danceExecution }
+        if let formations = data["formations"] as? Double { self.formations = formations }
+        if let overallCreativity = data["overall_creativity"] as? Double { self.overallCreativity = overallCreativity }
+        if let overallShowmanship = data["overall_showmanship"] as? Double { self.overallShowmanship = overallShowmanship }
+
+        // Deductions
+        if let athleteFalls = data["athlete_falls"] as? Int { self.athleteFalls = athleteFalls }
+        if let majorAthleteFalls = data["major_athlete_falls"] as? Int { self.majorAthleteFalls = majorAthleteFalls }
+        if let buildingBobbles = data["building_bobbles"] as? Int { self.buildingBobbles = buildingBobbles }
+        if let buildingFalls = data["building_falls"] as? Int { self.buildingFalls = buildingFalls }
+        if let majorBuildingFalls = data["major_building_falls"] as? Int { self.majorBuildingFalls = majorBuildingFalls }
+        if let boundaryViolations = data["boundary_violations"] as? Int { self.boundaryViolations = boundaryViolations }
+        if let timeLimitViolations = data["time_limit_violations"] as? Int { self.timeLimitViolations = timeLimitViolations }
+
+        // TODO: Handle team_id and competition_id updates (requires resolving relationships)
     }
 }
