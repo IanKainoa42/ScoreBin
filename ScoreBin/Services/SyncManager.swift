@@ -10,7 +10,6 @@ class SyncManager {
     private let supabase = SupabaseService.shared
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor")
-    private let iso8601Formatter = ISO8601DateFormatter()
 
     var isOnline: Bool = true
     var isSyncing: Bool = false
@@ -313,11 +312,15 @@ class SyncManager {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
+                if let ageDivision = data["age_division"] as? String { existing.ageDivision = ageDivision }
+                if let tier = data["tier"] as? String { existing.tier = tier }
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
                     if let level = data["level"] as? String { team.level = level }
                     if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    if let ageDivision = data["age_division"] as? String { team.ageDivision = ageDivision }
+                    if let tier = data["tier"] as? String { team.tier = tier }
                     context.insert(team)
                 }
             }
@@ -344,7 +347,7 @@ class SyncManager {
 
         for (id, data) in parsedData {
             let dateString = data["date"] as? String
-            let parsedDate = dateString.flatMap { iso8601Formatter.date(from: $0) }
+            let parsedDate = dateString.flatMap { ISO8601DateFormatter.shared.date(from: $0) }
             let date = parsedDate ?? Date()
             let location = data["location"] as? String ?? ""
             let notes = data["notes"] as? String ?? ""
@@ -383,20 +386,56 @@ class SyncManager {
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
         for (id, data) in parsedData {
-            if let existing = existingMap[id] {
-                if let round = data["round"] as? String { existing.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    existing.stuntDifficulty = stuntDiff
-                }
-            } else {
-                let scoresheet = Scoresheet(id: id)
-                scoresheet.syncStatus = .synced
-                if let round = data["round"] as? String { scoresheet.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    scoresheet.stuntDifficulty = stuntDiff
-                }
-                context.insert(scoresheet)
-            }
+            let scoresheet = existingMap[id] ?? {
+                let s = Scoresheet(id: id)
+                s.syncStatus = .synced
+                context.insert(s)
+                return s
+            }()
+
+            if let round = data["round"] as? String { scoresheet.round = round }
+
+            // Building
+            if let val = data["stunt_difficulty"] as? Double { scoresheet.stuntDifficulty = val }
+            if let val = data["stunt_execution"] as? Double { scoresheet.stuntExecution = val }
+            if let val = data["stunt_driver_degree"] as? Double { scoresheet.stuntDriverDegree = val }
+            if let val = data["stunt_driver_max_part"] as? Double { scoresheet.stuntDriverMaxPart = val }
+            if let val = data["pyramid_difficulty"] as? Double { scoresheet.pyramidDifficulty = val }
+            if let val = data["pyramid_execution"] as? Double { scoresheet.pyramidExecution = val }
+            if let val = data["pyramid_drivers"] as? Double { scoresheet.pyramidDrivers = val }
+            if let val = data["toss_difficulty"] as? Double { scoresheet.tossDifficulty = val }
+            if let val = data["toss_execution"] as? Double { scoresheet.tossExecution = val }
+            if let val = data["building_creativity"] as? Double { scoresheet.buildingCreativity = val }
+            if let val = data["building_showmanship"] as? Double { scoresheet.buildingShowmanship = val }
+
+            // Tumbling
+            if let val = data["standing_difficulty"] as? Double { scoresheet.standingDifficulty = val }
+            if let val = data["standing_execution"] as? Double { scoresheet.standingExecution = val }
+            if let val = data["standing_drivers"] as? Double { scoresheet.standingDrivers = val }
+            if let val = data["running_difficulty"] as? Double { scoresheet.runningDifficulty = val }
+            if let val = data["running_execution"] as? Double { scoresheet.runningExecution = val }
+            if let val = data["running_drivers"] as? Double { scoresheet.runningDrivers = val }
+            if let val = data["running_driver_max_part"] as? Double { scoresheet.runningDriverMaxPart = val }
+            if let val = data["jumps_difficulty"] as? Double { scoresheet.jumpsDifficulty = val }
+            if let val = data["jumps_execution"] as? Double { scoresheet.jumpsExecution = val }
+            if let val = data["tumbling_creativity"] as? Double { scoresheet.tumblingCreativity = val }
+            if let val = data["tumbling_showmanship"] as? Double { scoresheet.tumblingShowmanship = val }
+
+            // Overall
+            if let val = data["dance_difficulty"] as? Double { scoresheet.danceDifficulty = val }
+            if let val = data["dance_execution"] as? Double { scoresheet.danceExecution = val }
+            if let val = data["formations"] as? Double { scoresheet.formations = val }
+            if let val = data["overall_creativity"] as? Double { scoresheet.overallCreativity = val }
+            if let val = data["overall_showmanship"] as? Double { scoresheet.overallShowmanship = val }
+
+            // Deductions
+            if let val = data["athlete_falls"] as? Int { scoresheet.athleteFalls = val }
+            if let val = data["major_athlete_falls"] as? Int { scoresheet.majorAthleteFalls = val }
+            if let val = data["building_bobbles"] as? Int { scoresheet.buildingBobbles = val }
+            if let val = data["building_falls"] as? Int { scoresheet.buildingFalls = val }
+            if let val = data["major_building_falls"] as? Int { scoresheet.majorBuildingFalls = val }
+            if let val = data["boundary_violations"] as? Int { scoresheet.boundaryViolations = val }
+            if let val = data["time_limit_violations"] as? Int { scoresheet.timeLimitViolations = val }
         }
     }
 }
