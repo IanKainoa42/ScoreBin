@@ -10,7 +10,6 @@ class SyncManager {
     private let supabase = SupabaseService.shared
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor")
-    private let iso8601Formatter = ISO8601DateFormatter()
 
     var isOnline: Bool = true
     var isSyncing: Bool = false
@@ -312,12 +311,17 @@ class SyncManager {
             if let existing = existingMap[id] {
                 if let name = data["name"] as? String { existing.name = name }
                 if let level = data["level"] as? String { existing.level = level }
+                if let ageDivision = data["age_division"] as? String { existing.ageDivision = ageDivision }
+                if let tier = data["tier"] as? String { existing.tier = tier }
                 if let count = data["athlete_count"] as? Int { existing.athleteCount = count }
             } else {
                 if let name = data["name"] as? String {
                     let team = Team(id: id, name: name)
                     if let level = data["level"] as? String { team.level = level }
+                    if let ageDivision = data["age_division"] as? String { team.ageDivision = ageDivision }
+                    if let tier = data["tier"] as? String { team.tier = tier }
                     if let count = data["athlete_count"] as? Int { team.athleteCount = count }
+                    team.syncStatus = .synced
                     context.insert(team)
                 }
             }
@@ -344,7 +348,7 @@ class SyncManager {
 
         for (id, data) in parsedData {
             let dateString = data["date"] as? String
-            let parsedDate = dateString.flatMap { iso8601Formatter.date(from: $0) }
+            let parsedDate = dateString.flatMap { ISO8601DateFormatter.shared.date(from: $0) }
             let date = parsedDate ?? Date()
             let location = data["location"] as? String ?? ""
             let notes = data["notes"] as? String ?? ""
@@ -382,19 +386,59 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
+        func update(_ scoresheet: Scoresheet, with data: [String: Any]) {
+            if let round = data["round"] as? String { scoresheet.round = round }
+
+            // Building
+            if let v = data["stunt_difficulty"] as? Double { scoresheet.stuntDifficulty = v }
+            if let v = data["stunt_execution"] as? Double { scoresheet.stuntExecution = v }
+            if let v = data["stunt_driver_degree"] as? Double { scoresheet.stuntDriverDegree = v }
+            if let v = data["stunt_driver_max_part"] as? Double { scoresheet.stuntDriverMaxPart = v }
+            if let v = data["pyramid_difficulty"] as? Double { scoresheet.pyramidDifficulty = v }
+            if let v = data["pyramid_execution"] as? Double { scoresheet.pyramidExecution = v }
+            if let v = data["pyramid_drivers"] as? Double { scoresheet.pyramidDrivers = v }
+            if let v = data["toss_difficulty"] as? Double { scoresheet.tossDifficulty = v }
+            if let v = data["toss_execution"] as? Double { scoresheet.tossExecution = v }
+            if let v = data["building_creativity"] as? Double { scoresheet.buildingCreativity = v }
+            if let v = data["building_showmanship"] as? Double { scoresheet.buildingShowmanship = v }
+
+            // Tumbling
+            if let v = data["standing_difficulty"] as? Double { scoresheet.standingDifficulty = v }
+            if let v = data["standing_execution"] as? Double { scoresheet.standingExecution = v }
+            if let v = data["standing_drivers"] as? Double { scoresheet.standingDrivers = v }
+            if let v = data["running_difficulty"] as? Double { scoresheet.runningDifficulty = v }
+            if let v = data["running_execution"] as? Double { scoresheet.runningExecution = v }
+            if let v = data["running_drivers"] as? Double { scoresheet.runningDrivers = v }
+            if let v = data["running_driver_max_part"] as? Double { scoresheet.runningDriverMaxPart = v }
+            if let v = data["jumps_difficulty"] as? Double { scoresheet.jumpsDifficulty = v }
+            if let v = data["jumps_execution"] as? Double { scoresheet.jumpsExecution = v }
+            if let v = data["tumbling_creativity"] as? Double { scoresheet.tumblingCreativity = v }
+            if let v = data["tumbling_showmanship"] as? Double { scoresheet.tumblingShowmanship = v }
+
+            // Overall
+            if let v = data["dance_difficulty"] as? Double { scoresheet.danceDifficulty = v }
+            if let v = data["dance_execution"] as? Double { scoresheet.danceExecution = v }
+            if let v = data["formations"] as? Double { scoresheet.formations = v }
+            if let v = data["overall_creativity"] as? Double { scoresheet.overallCreativity = v }
+            if let v = data["overall_showmanship"] as? Double { scoresheet.overallShowmanship = v }
+
+            // Deductions
+            if let v = data["athlete_falls"] as? Int { scoresheet.athleteFalls = v }
+            if let v = data["major_athlete_falls"] as? Int { scoresheet.majorAthleteFalls = v }
+            if let v = data["building_bobbles"] as? Int { scoresheet.buildingBobbles = v }
+            if let v = data["building_falls"] as? Int { scoresheet.buildingFalls = v }
+            if let v = data["major_building_falls"] as? Int { scoresheet.majorBuildingFalls = v }
+            if let v = data["boundary_violations"] as? Int { scoresheet.boundaryViolations = v }
+            if let v = data["time_limit_violations"] as? Int { scoresheet.timeLimitViolations = v }
+        }
+
         for (id, data) in parsedData {
             if let existing = existingMap[id] {
-                if let round = data["round"] as? String { existing.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    existing.stuntDifficulty = stuntDiff
-                }
+                update(existing, with: data)
             } else {
                 let scoresheet = Scoresheet(id: id)
                 scoresheet.syncStatus = .synced
-                if let round = data["round"] as? String { scoresheet.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    scoresheet.stuntDifficulty = stuntDiff
-                }
+                update(scoresheet, with: data)
                 context.insert(scoresheet)
             }
         }
