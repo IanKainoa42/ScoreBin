@@ -382,21 +382,129 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
-            if let existing = existingMap[id] {
-                if let round = data["round"] as? String { existing.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    existing.stuntDifficulty = stuntDiff
-                }
-            } else {
-                let scoresheet = Scoresheet(id: id)
-                scoresheet.syncStatus = .synced
-                if let round = data["round"] as? String { scoresheet.round = round }
-                if let stuntDiff = data["stunt_difficulty"] as? Double {
-                    scoresheet.stuntDifficulty = stuntDiff
-                }
-                context.insert(scoresheet)
+        // Collect referenced Team and Competition IDs
+        var teamIDs = Set<UUID>()
+        var compIDs = Set<UUID>()
+
+        for (_, data) in parsedData {
+            if let teamIDStr = data["team_id"] as? String, let tid = UUID(uuidString: teamIDStr) {
+                teamIDs.insert(tid)
+            }
+            if let compIDStr = data["competition_id"] as? String,
+                let cid = UUID(uuidString: compIDStr)
+            {
+                compIDs.insert(cid)
             }
         }
+
+        // Fetch Teams
+        let teamsMap: [UUID: Team]
+        if !teamIDs.isEmpty {
+            let tidArray = Array(teamIDs)
+            let teamDesc = FetchDescriptor<Team>(predicate: #Predicate { tidArray.contains($0.id) })
+            let teams = try context.fetch(teamDesc)
+            teamsMap = Dictionary(uniqueKeysWithValues: teams.map { ($0.id, $0) })
+        } else {
+            teamsMap = [:]
+        }
+
+        // Fetch Competitions
+        let compsMap: [UUID: Competition]
+        if !compIDs.isEmpty {
+            let cidArray = Array(compIDs)
+            let compDesc = FetchDescriptor<Competition>(
+                predicate: #Predicate { cidArray.contains($0.id) })
+            let comps = try context.fetch(compDesc)
+            compsMap = Dictionary(uniqueKeysWithValues: comps.map { ($0.id, $0) })
+        } else {
+            compsMap = [:]
+        }
+
+        for (id, data) in parsedData {
+            let scoresheet: Scoresheet
+            if let existing = existingMap[id] {
+                scoresheet = existing
+            } else {
+                scoresheet = Scoresheet(id: id)
+                context.insert(scoresheet)
+            }
+
+            // Server wins, so mark as synced
+            scoresheet.syncStatus = .synced
+            update(scoresheet, with: data)
+
+            // Link relationships
+            if let teamIDStr = data["team_id"] as? String,
+                let tid = UUID(uuidString: teamIDStr),
+                let team = teamsMap[tid]
+            {
+                scoresheet.team = team
+            }
+
+            if let compIDStr = data["competition_id"] as? String,
+                let cid = UUID(uuidString: compIDStr),
+                let comp = compsMap[cid]
+            {
+                scoresheet.competition = comp
+            }
+        }
+    }
+
+    @MainActor
+    private func update(_ scoresheet: Scoresheet, with data: [String: Any]) {
+        if let round = data["round"] as? String { scoresheet.round = round }
+        if let createdAtString = data["created_at"] as? String,
+            let date = iso8601Formatter.date(from: createdAtString)
+        {
+            scoresheet.createdAt = date
+        }
+
+        // Building
+        if let val = data["stunt_difficulty"] as? Double { scoresheet.stuntDifficulty = val }
+        if let val = data["stunt_execution"] as? Double { scoresheet.stuntExecution = val }
+        if let val = data["stunt_driver_degree"] as? Double { scoresheet.stuntDriverDegree = val }
+        if let val = data["stunt_driver_max_part"] as? Double { scoresheet.stuntDriverMaxPart = val }
+        if let val = data["pyramid_difficulty"] as? Double { scoresheet.pyramidDifficulty = val }
+        if let val = data["pyramid_execution"] as? Double { scoresheet.pyramidExecution = val }
+        if let val = data["pyramid_drivers"] as? Double { scoresheet.pyramidDrivers = val }
+        if let val = data["toss_difficulty"] as? Double { scoresheet.tossDifficulty = val }
+        if let val = data["toss_execution"] as? Double { scoresheet.tossExecution = val }
+        if let val = data["building_creativity"] as? Double { scoresheet.buildingCreativity = val }
+        if let val = data["building_showmanship"] as? Double {
+            scoresheet.buildingShowmanship = val
+        }
+
+        // Tumbling
+        if let val = data["standing_difficulty"] as? Double { scoresheet.standingDifficulty = val }
+        if let val = data["standing_execution"] as? Double { scoresheet.standingExecution = val }
+        if let val = data["standing_drivers"] as? Double { scoresheet.standingDrivers = val }
+        if let val = data["running_difficulty"] as? Double { scoresheet.runningDifficulty = val }
+        if let val = data["running_execution"] as? Double { scoresheet.runningExecution = val }
+        if let val = data["running_drivers"] as? Double { scoresheet.runningDrivers = val }
+        if let val = data["running_driver_max_part"] as? Double {
+            scoresheet.runningDriverMaxPart = val
+        }
+        if let val = data["jumps_difficulty"] as? Double { scoresheet.jumpsDifficulty = val }
+        if let val = data["jumps_execution"] as? Double { scoresheet.jumpsExecution = val }
+        if let val = data["tumbling_creativity"] as? Double { scoresheet.tumblingCreativity = val }
+        if let val = data["tumbling_showmanship"] as? Double {
+            scoresheet.tumblingShowmanship = val
+        }
+
+        // Overall
+        if let val = data["dance_difficulty"] as? Double { scoresheet.danceDifficulty = val }
+        if let val = data["dance_execution"] as? Double { scoresheet.danceExecution = val }
+        if let val = data["formations"] as? Double { scoresheet.formations = val }
+        if let val = data["overall_creativity"] as? Double { scoresheet.overallCreativity = val }
+        if let val = data["overall_showmanship"] as? Double { scoresheet.overallShowmanship = val }
+
+        // Deductions
+        if let val = data["athlete_falls"] as? Int { scoresheet.athleteFalls = val }
+        if let val = data["major_athlete_falls"] as? Int { scoresheet.majorAthleteFalls = val }
+        if let val = data["building_bobbles"] as? Int { scoresheet.buildingBobbles = val }
+        if let val = data["building_falls"] as? Int { scoresheet.buildingFalls = val }
+        if let val = data["major_building_falls"] as? Int { scoresheet.majorBuildingFalls = val }
+        if let val = data["boundary_violations"] as? Int { scoresheet.boundaryViolations = val }
+        if let val = data["time_limit_violations"] as? Int { scoresheet.timeLimitViolations = val }
     }
 }
