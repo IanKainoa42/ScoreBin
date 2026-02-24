@@ -14,6 +14,15 @@ enum ScoringRules {
         static let timeLimitViolation: Double = 0.05
     }
 
+    // MARK: - Deduction Labels
+    enum DeductionLabels {
+        static let athleteFalls = "Athlete Falls"
+        static let majorAthleteFalls = "Major Athlete Falls"
+        static let buildingBobbles = "Building Bobbles"
+        static let buildingFalls = "Building Falls"
+        static let majorBuildingFalls = "Major Building Falls"
+    }
+
     // MARK: - Score Maximums
     enum Maximums {
         // Building

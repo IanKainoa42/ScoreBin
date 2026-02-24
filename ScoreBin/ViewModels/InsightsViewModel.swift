@@ -186,14 +186,6 @@ class InsightsViewModel {
         let totalPoints: Double
     }
 
-    private enum DeductionCategory: String {
-        case athleteFalls = "Athlete Falls"
-        case majorAthleteFalls = "Major Athlete Falls"
-        case buildingBobbles = "Building Bobbles"
-        case buildingFalls = "Building Falls"
-        case majorBuildingFalls = "Major Building Falls"
-    }
-
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
         var athleteFalls = 0
         var majorAthleteFalls = 0
@@ -213,7 +205,7 @@ class InsightsViewModel {
 
         if athleteFalls > 0 {
             patterns.append(DeductionPattern(
-                category: DeductionCategory.athleteFalls.rawValue,
+                category: ScoringRules.DeductionLabels.athleteFalls,
                 totalCount: athleteFalls,
                 totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
             ))
@@ -221,7 +213,7 @@ class InsightsViewModel {
 
         if majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
-                category: DeductionCategory.majorAthleteFalls.rawValue,
+                category: ScoringRules.DeductionLabels.majorAthleteFalls,
                 totalCount: majorAthleteFalls,
                 totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
             ))
@@ -229,7 +221,7 @@ class InsightsViewModel {
 
         if buildingBobbles > 0 {
             patterns.append(DeductionPattern(
-                category: DeductionCategory.buildingBobbles.rawValue,
+                category: ScoringRules.DeductionLabels.buildingBobbles,
                 totalCount: buildingBobbles,
                 totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
             ))
@@ -237,7 +229,7 @@ class InsightsViewModel {
 
         if buildingFalls > 0 {
             patterns.append(DeductionPattern(
-                category: DeductionCategory.buildingFalls.rawValue,
+                category: ScoringRules.DeductionLabels.buildingFalls,
                 totalCount: buildingFalls,
                 totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
             ))
@@ -245,7 +237,7 @@ class InsightsViewModel {
 
         if majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
-                category: DeductionCategory.majorBuildingFalls.rawValue,
+                category: ScoringRules.DeductionLabels.majorBuildingFalls,
                 totalCount: majorBuildingFalls,
                 totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
             ))
