@@ -4,20 +4,34 @@ import Charts
 struct ScoreDistributionChart: View {
     let scoresheets: [Scoresheet]
 
-    private var distributionData: [ScoreRange] {
+    private var chartData: (distribution: [ScoreRange], stats: (avg: Double, high: Double, low: Double)?) {
+        guard !scoresheets.isEmpty else {
+            return ([], nil)
+        }
+
         var counts = [Int](repeating: 0, count: 6)
+        var total = 0.0
+        var high = -Double.infinity
+        var low = Double.infinity
 
         for sheet in scoresheets {
             let score = sheet.finalScore
+
+            // Distribution
             if score < 30 { counts[0] += 1 }
             else if score < 35 { counts[1] += 1 }
             else if score < 40 { counts[2] += 1 }
             else if score < 45 { counts[3] += 1 }
             else if score < 47 { counts[4] += 1 }
             else { counts[5] += 1 }
+
+            // Stats
+            total += score
+            if score > high { high = score }
+            if score < low { low = score }
         }
 
-        return [
+        let distribution = [
             ScoreRange(label: "< 30", count: counts[0]),
             ScoreRange(label: "30-34", count: counts[1]),
             ScoreRange(label: "35-39", count: counts[2]),
@@ -25,31 +39,19 @@ struct ScoreDistributionChart: View {
             ScoreRange(label: "45-46", count: counts[4]),
             ScoreRange(label: "47-50", count: counts[5])
         ]
-    }
 
-    private var stats: (avg: Double, high: Double, low: Double)? {
-        guard !scoresheets.isEmpty else { return nil }
-
-        var total = 0.0
-        var high = -Double.infinity
-        var low = Double.infinity
-
-        for sheet in scoresheets {
-            let score = sheet.finalScore
-            total += score
-            if score > high { high = score }
-            if score < low { low = score }
-        }
-
-        return (total / Double(scoresheets.count), high, low)
+        let stats = (total / Double(scoresheets.count), high, low)
+        return (distribution, stats)
     }
 
     var body: some View {
+        let data = chartData
+
         VStack(alignment: .leading, spacing: 8) {
-            Chart(distributionData) { data in
+            Chart(data.distribution) { item in
                 BarMark(
-                    x: .value("Range", data.label),
-                    y: .value("Count", data.count)
+                    x: .value("Range", item.label),
+                    y: .value("Count", item.count)
                 )
                 .foregroundStyle(
                     LinearGradient(
@@ -59,8 +61,8 @@ struct ScoreDistributionChart: View {
                     )
                 )
                 .annotation(position: .top) {
-                    if data.count > 0 {
-                        Text("\(data.count)")
+                    if item.count > 0 {
+                        Text("\(item.count)")
                             .font(.caption2)
                             .foregroundColor(.gray)
                     }
@@ -83,7 +85,7 @@ struct ScoreDistributionChart: View {
 
             // Summary stats
             HStack(spacing: 20) {
-                if let stats = stats {
+                if let stats = data.stats {
                     StatLabel(title: "Average", value: stats.avg.scoreFormatted)
                     StatLabel(title: "High", value: stats.high.scoreFormatted)
                     StatLabel(title: "Low", value: stats.low.scoreFormatted)
@@ -95,7 +97,7 @@ struct ScoreDistributionChart: View {
 }
 
 struct ScoreRange: Identifiable {
-    let id = UUID()
+    var id: String { label }
     let label: String
     let count: Int
 }
