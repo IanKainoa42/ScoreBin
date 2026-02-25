@@ -13,13 +13,14 @@ class InsightsViewModel {
     // MARK: - Team Trends
 
     struct ScoreDataPoint: Identifiable {
-        let id = UUID()
+        let id: UUID
         let date: Date
         let score: Double
         let label: String
     }
 
     func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
+        guard !teams.isEmpty else { return [] }
         let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
         if let limit {
             return Array(active.prefix(limit))
@@ -31,6 +32,7 @@ class InsightsViewModel {
         team.scoresheets
             .map { sheet in
                 ScoreDataPoint(
+                    id: sheet.id,
                     date: sheet.createdAt,
                     score: sheet.finalScore,
                     label: sheet.competition?.name ?? "Practice"
@@ -63,7 +65,7 @@ class InsightsViewModel {
     // MARK: - Gym Analytics
 
     struct GymLevelStats: Identifiable {
-        let id = UUID()
+        var id: String { level }
         let level: String
         let averageScore: Double
         let teamCount: Int
@@ -79,7 +81,9 @@ class InsightsViewModel {
 
             for team in teams {
                 scoresheetCount += team.scoresheets.count
-                totalScore += team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
+                for sheet in team.scoresheets {
+                    totalScore += sheet.finalScore
+                }
             }
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
@@ -96,7 +100,7 @@ class InsightsViewModel {
     // MARK: - Category Breakdown
 
     struct CategoryBreakdown: Identifiable {
-        let id = UUID()
+        var id: String { category }
         let category: String
         let score: Double
         let maxScore: Double
@@ -180,7 +184,7 @@ class InsightsViewModel {
     // MARK: - Deduction Patterns
 
     struct DeductionPattern: Identifiable {
-        let id = UUID()
+        var id: String { category }
         let category: String
         let totalCount: Int
         let totalPoints: Double
