@@ -49,8 +49,6 @@ final class Team {
 
     // MARK: - Export
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func exportForDatabase() -> [String: Any] {
         [
             "id": id.uuidString,
@@ -60,7 +58,7 @@ final class Team {
             "age_division": ageDivision,
             "tier": tier,
             "athlete_count": athleteCount,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt)
         ]
     }
 }

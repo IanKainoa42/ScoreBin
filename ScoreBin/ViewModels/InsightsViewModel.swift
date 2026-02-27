@@ -21,11 +21,12 @@ class InsightsViewModel {
 
     func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
         guard !teams.isEmpty else { return [] }
-        let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
+        // Note: Removed .lazy as we're converting back to Array immediately anyway
+        let active = teams.filter { !$0.scoresheets.isEmpty }
         if let limit {
             return Array(active.prefix(limit))
         }
-        return Array(active)
+        return active
     }
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
@@ -76,14 +77,9 @@ class InsightsViewModel {
         let teamsByLevel = Dictionary(grouping: gym.teams, by: { $0.level })
 
         return teamsByLevel.map { level, teams in
-            var totalScore = 0.0
-            var scoresheetCount = 0
-
-            for team in teams {
-                scoresheetCount += team.scoresheets.count
-                for sheet in team.scoresheets {
-                    totalScore += sheet.finalScore
-                }
+            let (totalScore, scoresheetCount) = teams.reduce((0.0, 0)) { result, team in
+                let teamTotal = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
+                return (result.0 + teamTotal, result.1 + team.scoresheets.count)
             }
 
             let avgScore = scoresheetCount == 0 ? 0 : totalScore / Double(scoresheetCount)
@@ -144,17 +140,11 @@ class InsightsViewModel {
             ]
         }
 
-        let count = Double(team.scoresheets.count)
-        var totalBuilding = 0.0
-        var totalTumbling = 0.0
-        var totalOverall = 0.0
-
-        for sheet in team.scoresheets {
-            totalBuilding += sheet.buildingTotal
-            totalTumbling += sheet.tumblingTotal
-            totalOverall += sheet.overallTotal
+        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
+            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
         }
 
+        let count = Double(team.scoresheets.count)
         let avgBuilding = totalBuilding / count
         let avgTumbling = totalTumbling / count
         let avgOverall = totalOverall / count
