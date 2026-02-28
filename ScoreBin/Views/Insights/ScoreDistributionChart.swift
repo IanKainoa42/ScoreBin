@@ -9,38 +9,40 @@ struct ScoreDistributionChart: View {
             return ([], nil)
         }
 
-        var counts = [Int](repeating: 0, count: 6)
-        var total = 0.0
-        var high = -Double.infinity
-        var low = Double.infinity
+        let initialData: (counts: [Int], total: Double, high: Double, low: Double) = (
+            counts: [Int](repeating: 0, count: 6),
+            total: 0.0,
+            high: -Double.infinity,
+            low: Double.infinity
+        )
 
-        for sheet in scoresheets {
+        let processed = scoresheets.reduce(into: initialData) { result, sheet in
             let score = sheet.finalScore
 
             // Distribution
-            if score < 30 { counts[0] += 1 }
-            else if score < 35 { counts[1] += 1 }
-            else if score < 40 { counts[2] += 1 }
-            else if score < 45 { counts[3] += 1 }
-            else if score < 47 { counts[4] += 1 }
-            else { counts[5] += 1 }
+            if score < 30 { result.counts[0] += 1 }
+            else if score < 35 { result.counts[1] += 1 }
+            else if score < 40 { result.counts[2] += 1 }
+            else if score < 45 { result.counts[3] += 1 }
+            else if score < 47 { result.counts[4] += 1 }
+            else { result.counts[5] += 1 }
 
             // Stats
-            total += score
-            if score > high { high = score }
-            if score < low { low = score }
+            result.total += score
+            if score > result.high { result.high = score }
+            if score < result.low { result.low = score }
         }
 
         let distribution = [
-            ScoreRange(label: "< 30", count: counts[0]),
-            ScoreRange(label: "30-34", count: counts[1]),
-            ScoreRange(label: "35-39", count: counts[2]),
-            ScoreRange(label: "40-44", count: counts[3]),
-            ScoreRange(label: "45-46", count: counts[4]),
-            ScoreRange(label: "47-50", count: counts[5])
+            ScoreRange(label: "< 30", count: processed.counts[0]),
+            ScoreRange(label: "30-34", count: processed.counts[1]),
+            ScoreRange(label: "35-39", count: processed.counts[2]),
+            ScoreRange(label: "40-44", count: processed.counts[3]),
+            ScoreRange(label: "45-46", count: processed.counts[4]),
+            ScoreRange(label: "47-50", count: processed.counts[5])
         ]
 
-        let stats = (total / Double(scoresheets.count), high, low)
+        let stats = (processed.total / Double(scoresheets.count), processed.high, processed.low)
         return (distribution, stats)
     }
 
