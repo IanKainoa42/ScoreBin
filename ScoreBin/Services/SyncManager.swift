@@ -35,14 +35,12 @@ class SyncManager {
 
     private func setupNetworkMonitoring() {
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self?.isOnline = path.status == .satisfied
 
                 // Auto-sync when coming online
                 if path.status == .satisfied {
-                    Task {
-                        await self?.syncPendingChanges()
-                    }
+                    await self?.syncPendingChanges()
                 }
             }
         }
