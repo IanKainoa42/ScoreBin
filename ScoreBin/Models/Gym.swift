@@ -48,7 +48,7 @@ final class Gym {
             "id": id.uuidString,
             "name": name,
             "location": location,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt)
         ]
     }
 }

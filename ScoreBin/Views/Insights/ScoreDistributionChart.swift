@@ -16,10 +16,9 @@ struct ScoreDistributionChart: View {
             low: Double.infinity
         )
 
-        let processed = scoresheets.reduce(into: initialData) { result, sheet in
+        let aggregated = scoresheets.reduce(into: initialData) { result, sheet in
             let score = sheet.finalScore
 
-            // Distribution
             if score < 30 { result.counts[0] += 1 }
             else if score < 35 { result.counts[1] += 1 }
             else if score < 40 { result.counts[2] += 1 }
@@ -27,22 +26,21 @@ struct ScoreDistributionChart: View {
             else if score < 47 { result.counts[4] += 1 }
             else { result.counts[5] += 1 }
 
-            // Stats
             result.total += score
             if score > result.high { result.high = score }
             if score < result.low { result.low = score }
         }
 
         let distribution = [
-            ScoreRange(label: "< 30", count: processed.counts[0]),
-            ScoreRange(label: "30-34", count: processed.counts[1]),
-            ScoreRange(label: "35-39", count: processed.counts[2]),
-            ScoreRange(label: "40-44", count: processed.counts[3]),
-            ScoreRange(label: "45-46", count: processed.counts[4]),
-            ScoreRange(label: "47-50", count: processed.counts[5])
+            ScoreRange(label: "< 30", count: aggregated.counts[0]),
+            ScoreRange(label: "30-34", count: aggregated.counts[1]),
+            ScoreRange(label: "35-39", count: aggregated.counts[2]),
+            ScoreRange(label: "40-44", count: aggregated.counts[3]),
+            ScoreRange(label: "45-46", count: aggregated.counts[4]),
+            ScoreRange(label: "47-50", count: aggregated.counts[5])
         ]
 
-        let stats = (processed.total / Double(scoresheets.count), processed.high, processed.low)
+        let stats = (aggregated.total / Double(scoresheets.count), aggregated.high, aggregated.low)
         return (distribution, stats)
     }
 

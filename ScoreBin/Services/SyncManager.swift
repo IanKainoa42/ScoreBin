@@ -10,7 +10,6 @@ class SyncManager {
     private let supabase = SupabaseService.shared
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor")
-    private let iso8601Formatter = ISO8601DateFormatter()
 
     var isOnline: Bool = true
     var isSyncing: Bool = false
@@ -35,14 +34,12 @@ class SyncManager {
 
     private func setupNetworkMonitoring() {
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self?.isOnline = path.status == .satisfied
 
                 // Auto-sync when coming online
                 if path.status == .satisfied {
-                    Task {
-                        await self?.syncPendingChanges()
-                    }
+                    await self?.syncPendingChanges()
                 }
             }
         }
@@ -264,14 +261,18 @@ class SyncManager {
 
     // MARK: - Merge Helpers
 
-    @MainActor
-    private func mergeGyms(_ remoteData: [[String: Any]], context: ModelContext) async throws {
-        let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
+    private func parseRemoteData(_ remoteData: [[String: Any]]) -> [(UUID, [String: Any])] {
+        return remoteData.compactMap { data in
             guard let idString = data["id"] as? String,
                 let id = UUID(uuidString: idString)
             else { return nil }
             return (id, data)
         }
+    }
+
+    @MainActor
+    private func mergeGyms(_ remoteData: [[String: Any]], context: ModelContext) async throws {
+        let parsedData = parseRemoteData(remoteData)
         guard !parsedData.isEmpty else { return }
 
         let remoteIDs = parsedData.map { $0.0 }
@@ -294,12 +295,7 @@ class SyncManager {
 
     @MainActor
     private func mergeTeams(_ remoteData: [[String: Any]], context: ModelContext) async throws {
-        let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { return nil }
-            return (id, data)
-        }
+        let parsedData = parseRemoteData(remoteData)
         guard !parsedData.isEmpty else { return }
 
         let remoteIDs = parsedData.map { $0.0 }
@@ -324,12 +320,7 @@ class SyncManager {
     private func mergeCompetitions(_ remoteData: [[String: Any]], context: ModelContext)
         async throws
     {
-        let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { return nil }
-            return (id, data)
-        }
+        let parsedData = parseRemoteData(remoteData)
         guard !parsedData.isEmpty else { return }
 
         let remoteIDs = parsedData.map { $0.0 }
@@ -355,12 +346,7 @@ class SyncManager {
     @MainActor
     private func mergeScoresheets(_ remoteData: [[String: Any]], context: ModelContext) async throws
     {
-        let parsedData: [(UUID, [String: Any])] = remoteData.compactMap { data in
-            guard let idString = data["id"] as? String,
-                let id = UUID(uuidString: idString)
-            else { return nil }
-            return (id, data)
-        }
+        let parsedData = parseRemoteData(remoteData)
         guard !parsedData.isEmpty else { return }
 
         let remoteIDs = parsedData.map { $0.0 }

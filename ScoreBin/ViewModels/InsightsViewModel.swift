@@ -21,11 +21,12 @@ class InsightsViewModel {
 
     func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
         guard !teams.isEmpty else { return [] }
-        let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
+        // Note: Removed .lazy as we're converting back to Array immediately anyway
+        let active = teams.filter { !$0.scoresheets.isEmpty }
         if let limit {
             return Array(active.prefix(limit))
         }
-        return Array(active)
+        return active
     }
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
@@ -191,7 +192,7 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        let counts = team.scoresheets.reduce(into: (athleteFalls: 0, majorAthleteFalls: 0, buildingBobbles: 0, buildingFalls: 0, majorBuildingFalls: 0)) { result, sheet in
+        let stats = team.scoresheets.reduce(into: (athleteFalls: 0, majorAthleteFalls: 0, buildingBobbles: 0, buildingFalls: 0, majorBuildingFalls: 0)) { result, sheet in
             result.athleteFalls += sheet.athleteFalls
             result.majorAthleteFalls += sheet.majorAthleteFalls
             result.buildingBobbles += sheet.buildingBobbles
@@ -201,43 +202,43 @@ class InsightsViewModel {
 
         var patterns: [DeductionPattern] = []
 
-        if counts.athleteFalls > 0 {
+        if stats.athleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.athleteFalls,
-                totalCount: counts.athleteFalls,
-                totalPoints: Double(counts.athleteFalls) * ScoringRules.Deductions.athleteFall
+                totalCount: stats.athleteFalls,
+                totalPoints: Double(stats.athleteFalls) * ScoringRules.Deductions.athleteFall
             ))
         }
 
-        if counts.majorAthleteFalls > 0 {
+        if stats.majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorAthleteFalls,
-                totalCount: counts.majorAthleteFalls,
-                totalPoints: Double(counts.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+                totalCount: stats.majorAthleteFalls,
+                totalPoints: Double(stats.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
             ))
         }
 
-        if counts.buildingBobbles > 0 {
+        if stats.buildingBobbles > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingBobbles,
-                totalCount: counts.buildingBobbles,
-                totalPoints: Double(counts.buildingBobbles) * ScoringRules.Deductions.buildingBobble
+                totalCount: stats.buildingBobbles,
+                totalPoints: Double(stats.buildingBobbles) * ScoringRules.Deductions.buildingBobble
             ))
         }
 
-        if counts.buildingFalls > 0 {
+        if stats.buildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingFalls,
-                totalCount: counts.buildingFalls,
-                totalPoints: Double(counts.buildingFalls) * ScoringRules.Deductions.buildingFall
+                totalCount: stats.buildingFalls,
+                totalPoints: Double(stats.buildingFalls) * ScoringRules.Deductions.buildingFall
             ))
         }
 
-        if counts.majorBuildingFalls > 0 {
+        if stats.majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorBuildingFalls,
-                totalCount: counts.majorBuildingFalls,
-                totalPoints: Double(counts.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
+                totalCount: stats.majorBuildingFalls,
+                totalPoints: Double(stats.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
             ))
         }
 

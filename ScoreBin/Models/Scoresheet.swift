@@ -279,7 +279,7 @@ final class Scoresheet {
             "team_id": team?.id.uuidString ?? NSNull(),
             "competition_id": competition?.id.uuidString ?? NSNull(),
             "round": round,
-            "created_at": Self.iso8601Formatter.string(from: createdAt),
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt),
 
             // Building scores
             "stunt_difficulty": stuntDifficulty,
