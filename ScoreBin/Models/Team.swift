@@ -47,9 +47,25 @@ final class Team {
     // Available tiers
     static let tiers = ["elite", "premier", "recreation"]
 
-    // MARK: - Export
+    // MARK: - Update from Database
 
     private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func update(from data: [String: Any]) {
+        if let name = data["name"] as? String { self.name = name }
+        if let level = data["level"] as? String { self.level = level }
+        if let ageDivision = data["age_division"] as? String { self.ageDivision = ageDivision }
+        if let tier = data["tier"] as? String { self.tier = tier }
+        if let athleteCount = data["athlete_count"] as? Int { self.athleteCount = athleteCount }
+
+        if let createdAtString = data["created_at"] as? String,
+            let date = Self.iso8601Formatter.date(from: createdAtString)
+        {
+            self.createdAt = date
+        }
+    }
+
+    // MARK: - Export
 
     func exportForDatabase() -> [String: Any] {
         [
