@@ -85,9 +85,10 @@ struct ScoresheetEntryView: View {
                 }
             }
             .alert("Saved", isPresented: $showingSaveAlert) {
-                Button("OK", role: .cancel) {
+                Button("Save & New", role: .destructive) {
                     viewModel.reset()
                 }
+                Button("Continue Editing", role: .cancel) {}
             } message: {
                 Text("Scoresheet saved successfully!")
             }
