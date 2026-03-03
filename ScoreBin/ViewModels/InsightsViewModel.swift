@@ -149,14 +149,16 @@ class InsightsViewModel {
             ]
         }
 
-        let (totalBuilding, totalTumbling, totalOverall) = team.scoresheets.reduce((0.0, 0.0, 0.0)) { result, sheet in
-            (result.0 + sheet.buildingTotal, result.1 + sheet.tumblingTotal, result.2 + sheet.overallTotal)
+        let count = Double(team.scoresheets.count)
+        let totals = team.scoresheets.reduce(into: (building: 0.0, tumbling: 0.0, overall: 0.0)) { result, sheet in
+            result.building += sheet.buildingTotal
+            result.tumbling += sheet.tumblingTotal
+            result.overall += sheet.overallTotal
         }
 
-        let count = Double(team.scoresheets.count)
-        let avgBuilding = totalBuilding / count
-        let avgTumbling = totalTumbling / count
-        let avgOverall = totalOverall / count
+        let avgBuilding = totals.building / count
+        let avgTumbling = totals.tumbling / count
+        let avgOverall = totals.overall / count
 
         return [
             CategoryBreakdown(
@@ -190,59 +192,53 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        var athleteFalls = 0
-        var majorAthleteFalls = 0
-        var buildingBobbles = 0
-        var buildingFalls = 0
-        var majorBuildingFalls = 0
-
-        for sheet in team.scoresheets {
-            athleteFalls += sheet.athleteFalls
-            majorAthleteFalls += sheet.majorAthleteFalls
-            buildingBobbles += sheet.buildingBobbles
-            buildingFalls += sheet.buildingFalls
-            majorBuildingFalls += sheet.majorBuildingFalls
+        let stats = team.scoresheets.reduce(into: (athleteFalls: 0, majorAthleteFalls: 0, buildingBobbles: 0, buildingFalls: 0, majorBuildingFalls: 0)) { result, sheet in
+            result.athleteFalls += sheet.athleteFalls
+            result.majorAthleteFalls += sheet.majorAthleteFalls
+            result.buildingBobbles += sheet.buildingBobbles
+            result.buildingFalls += sheet.buildingFalls
+            result.majorBuildingFalls += sheet.majorBuildingFalls
         }
 
         var patterns: [DeductionPattern] = []
 
-        if athleteFalls > 0 {
+        if stats.athleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.athleteFalls,
-                totalCount: athleteFalls,
-                totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
+                totalCount: stats.athleteFalls,
+                totalPoints: Double(stats.athleteFalls) * ScoringRules.Deductions.athleteFall
             ))
         }
 
-        if majorAthleteFalls > 0 {
+        if stats.majorAthleteFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorAthleteFalls,
-                totalCount: majorAthleteFalls,
-                totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+                totalCount: stats.majorAthleteFalls,
+                totalPoints: Double(stats.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
             ))
         }
 
-        if buildingBobbles > 0 {
+        if stats.buildingBobbles > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingBobbles,
-                totalCount: buildingBobbles,
-                totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
+                totalCount: stats.buildingBobbles,
+                totalPoints: Double(stats.buildingBobbles) * ScoringRules.Deductions.buildingBobble
             ))
         }
 
-        if buildingFalls > 0 {
+        if stats.buildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingFalls,
-                totalCount: buildingFalls,
-                totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
+                totalCount: stats.buildingFalls,
+                totalPoints: Double(stats.buildingFalls) * ScoringRules.Deductions.buildingFall
             ))
         }
 
-        if majorBuildingFalls > 0 {
+        if stats.majorBuildingFalls > 0 {
             patterns.append(DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorBuildingFalls,
-                totalCount: majorBuildingFalls,
-                totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
+                totalCount: stats.majorBuildingFalls,
+                totalPoints: Double(stats.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
             ))
         }
 
