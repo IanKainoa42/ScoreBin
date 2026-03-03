@@ -207,9 +207,71 @@ final class Scoresheet {
         max(0, percentPerfection - totalDeductions)
     }
 
-    // MARK: - Export for Database
+    // MARK: - Update from Database
 
     private static let iso8601Formatter = ISO8601DateFormatter()
+
+    func update(from data: [String: Any]) {
+        if let round = data["round"] as? String { self.round = round }
+
+        if let createdAtString = data["created_at"] as? String,
+            let date = Self.iso8601Formatter.date(from: createdAtString)
+        {
+            self.createdAt = date
+        }
+
+        func updateDouble(_ key: String, _ path: ReferenceWritableKeyPath<Scoresheet, Double>) {
+            if let val = data[key] as? Double { self[keyPath: path] = val }
+        }
+
+        func updateInt(_ key: String, _ path: ReferenceWritableKeyPath<Scoresheet, Int>) {
+            if let val = data[key] as? Int { self[keyPath: path] = val }
+        }
+
+        // Building
+        updateDouble("stunt_difficulty", \.stuntDifficulty)
+        updateDouble("stunt_execution", \.stuntExecution)
+        updateDouble("stunt_driver_degree", \.stuntDriverDegree)
+        updateDouble("stunt_driver_max_part", \.stuntDriverMaxPart)
+        updateDouble("pyramid_difficulty", \.pyramidDifficulty)
+        updateDouble("pyramid_execution", \.pyramidExecution)
+        updateDouble("pyramid_drivers", \.pyramidDrivers)
+        updateDouble("toss_difficulty", \.tossDifficulty)
+        updateDouble("toss_execution", \.tossExecution)
+        updateDouble("building_creativity", \.buildingCreativity)
+        updateDouble("building_showmanship", \.buildingShowmanship)
+
+        // Tumbling
+        updateDouble("standing_difficulty", \.standingDifficulty)
+        updateDouble("standing_execution", \.standingExecution)
+        updateDouble("standing_drivers", \.standingDrivers)
+        updateDouble("running_difficulty", \.runningDifficulty)
+        updateDouble("running_execution", \.runningExecution)
+        updateDouble("running_drivers", \.runningDrivers)
+        updateDouble("running_driver_max_part", \.runningDriverMaxPart)
+        updateDouble("jumps_difficulty", \.jumpsDifficulty)
+        updateDouble("jumps_execution", \.jumpsExecution)
+        updateDouble("tumbling_creativity", \.tumblingCreativity)
+        updateDouble("tumbling_showmanship", \.tumblingShowmanship)
+
+        // Overall
+        updateDouble("dance_difficulty", \.danceDifficulty)
+        updateDouble("dance_execution", \.danceExecution)
+        updateDouble("formations", \.formations)
+        updateDouble("overall_creativity", \.overallCreativity)
+        updateDouble("overall_showmanship", \.overallShowmanship)
+
+        // Deductions
+        updateInt("athlete_falls", \.athleteFalls)
+        updateInt("major_athlete_falls", \.majorAthleteFalls)
+        updateInt("building_bobbles", \.buildingBobbles)
+        updateInt("building_falls", \.buildingFalls)
+        updateInt("major_building_falls", \.majorBuildingFalls)
+        updateInt("boundary_violations", \.boundaryViolations)
+        updateInt("time_limit_violations", \.timeLimitViolations)
+    }
+
+    // MARK: - Export for Database
 
     func exportForDatabase() -> [String: Any] {
         return [
