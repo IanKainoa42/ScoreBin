@@ -157,7 +157,7 @@ struct InsightsDashboardView: View {
                 }
             }
 
-            if activeTeams.isEmpty {
+            if allActive.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.title2)

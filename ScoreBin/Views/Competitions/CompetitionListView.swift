@@ -6,6 +6,7 @@ struct CompetitionListView: View {
     @Query(sort: \Competition.date, order: .reverse) private var competitions: [Competition]
 
     @State private var showingAddSheet = false
+    @State private var saveError: String?
 
     var body: some View {
         NavigationStack {
@@ -30,6 +31,7 @@ struct CompetitionListView: View {
             .sheet(isPresented: $showingAddSheet) {
                 AddCompetitionView()
             }
+            .saveErrorAlert($saveError)
         }
     }
 
@@ -81,7 +83,11 @@ struct CompetitionListView: View {
         for index in offsets {
             modelContext.delete(competitions[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 

@@ -14,6 +14,8 @@ final class Competition {
     @Relationship(deleteRule: .cascade, inverse: \Scoresheet.competition)
     var scoresheets: [Scoresheet]
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     init(
         id: UUID = UUID(),
         name: String,

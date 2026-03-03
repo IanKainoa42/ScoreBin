@@ -212,6 +212,7 @@ struct TeamDetailView: View {
 struct EditTeamView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @State private var saveError: String?
     @Query(sort: \Gym.name) private var gyms: [Gym]
     @Bindable var team: Team
 
@@ -263,11 +264,16 @@ struct EditTeamView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        try? modelContext.save()
-                        dismiss()
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            saveError = error.localizedDescription
+                        }
                     }
                 }
             }
+            .saveErrorAlert($saveError)
         }
     }
 }

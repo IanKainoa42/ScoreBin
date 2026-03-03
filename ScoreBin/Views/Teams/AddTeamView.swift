@@ -13,6 +13,7 @@ struct AddTeamView: View {
     @State private var ageDivision = "senior"
     @State private var tier = "elite"
     @State private var athleteCount = 20
+    @State private var saveError: String?
 
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -87,6 +88,7 @@ struct AddTeamView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .saveErrorAlert($saveError)
         }
     }
 
@@ -101,8 +103,12 @@ struct AddTeamView: View {
         )
 
         modelContext.insert(team)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 
@@ -112,6 +118,7 @@ struct AddGymView: View {
 
     @State private var name = ""
     @State private var location = ""
+    @State private var saveError: String?
 
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -142,6 +149,7 @@ struct AddGymView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .saveErrorAlert($saveError)
         }
     }
 
@@ -152,8 +160,12 @@ struct AddGymView: View {
         )
 
         modelContext.insert(gym)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 

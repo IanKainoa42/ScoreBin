@@ -9,6 +9,7 @@ struct AddCompetitionView: View {
     @State private var date = Date()
     @State private var location = ""
     @State private var notes = ""
+    @State private var saveError: String?
 
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -52,6 +53,7 @@ struct AddCompetitionView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .saveErrorAlert($saveError)
         }
     }
 
@@ -64,8 +66,12 @@ struct AddCompetitionView: View {
         )
 
         modelContext.insert(competition)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 

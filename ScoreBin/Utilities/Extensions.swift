@@ -115,3 +115,28 @@ extension Date {
         return Self.shortFormatter.string(from: self)
     }
 }
+
+// MARK: - Save Error Alert
+
+struct SaveErrorAlert: ViewModifier {
+    @Binding var saveError: String?
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Save Failed", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                Text(saveError ?? "An unknown error occurred.")
+            }
+    }
+}
+
+extension View {
+    /// Attach a save-error alert driven by an optional error string.
+    func saveErrorAlert(_ error: Binding<String?>) -> some View {
+        modifier(SaveErrorAlert(saveError: error))
+    }
+}

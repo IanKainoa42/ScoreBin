@@ -191,6 +191,8 @@ struct EditCompetitionView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var competition: Competition
 
+    @State private var saveError: String?
+
     var body: some View {
         NavigationStack {
             Form {
@@ -215,11 +217,16 @@ struct EditCompetitionView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        try? modelContext.save()
-                        dismiss()
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            saveError = error.localizedDescription
+                        }
                     }
                 }
             }
+            .saveErrorAlert($saveError)
         }
     }
 }

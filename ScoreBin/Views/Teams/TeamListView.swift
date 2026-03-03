@@ -9,6 +9,7 @@ struct TeamListView: View {
     @State private var showingAddSheet = false
     @State private var showingAddGymSheet = false
     @State private var searchText = ""
+    @State private var saveError: String?
 
     /// Teams filtered by search text (matches on team name, case-insensitive)
     private var filteredTeams: [Team] {
@@ -56,6 +57,7 @@ struct TeamListView: View {
             .sheet(isPresented: $showingAddGymSheet) {
                 AddGymView()
             }
+            .saveErrorAlert($saveError)
         }
     }
 
@@ -117,7 +119,11 @@ struct TeamListView: View {
         for index in offsets {
             modelContext.delete(teams[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 }
 
