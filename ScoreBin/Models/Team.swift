@@ -76,7 +76,7 @@ final class Team {
             "age_division": ageDivision,
             "tier": tier,
             "athlete_count": athleteCount,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt)
         ]
     }
 }

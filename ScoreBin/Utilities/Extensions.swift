@@ -78,6 +78,19 @@ extension Double {
     }
 }
 
+// MARK: - Date Formatter Extensions
+extension ISO8601DateFormatter {
+    public static let shared = ISO8601DateFormatter()
+}
+
+extension DateFormatter {
+    public static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+}
+
 // MARK: - Date Extensions
 extension Date {
     private static let competitionFormatter: DateFormatter = {
@@ -102,4 +115,3 @@ extension Date {
         return Self.shortFormatter.string(from: self)
     }
 }
-

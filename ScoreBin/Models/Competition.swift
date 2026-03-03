@@ -33,18 +33,9 @@ final class Competition {
         self.scoresheets = []
     }
 
-    // Static formatter for reuse
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter
-    }()
-
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     // Format date for display
     var formattedDate: String {
-        return Self.dateFormatter.string(from: date)
+        return DateFormatter.mediumDateFormatter.string(from: date)
     }
 
     // MARK: - Update from Database
@@ -73,10 +64,10 @@ final class Competition {
         [
             "id": id.uuidString,
             "name": name,
-            "date": Self.iso8601Formatter.string(from: date),
+            "date": ISO8601DateFormatter.shared.string(from: date),
             "location": location,
             "notes": notes,
-            "created_at": Self.iso8601Formatter.string(from: createdAt)
+            "created_at": ISO8601DateFormatter.shared.string(from: createdAt)
         ]
     }
 }
