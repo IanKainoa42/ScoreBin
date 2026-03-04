@@ -39,7 +39,7 @@ struct AddTeamView: View {
 
                     Picker("Level", selection: $level) {
                         ForEach(Team.levels, id: \.self) { level in
-                            Text(level).tag(level)
+                            Text(Team.levelDisplayNames[level] ?? level).tag(level)
                         }
                     }
                 }

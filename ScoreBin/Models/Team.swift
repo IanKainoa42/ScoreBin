@@ -41,6 +41,23 @@ final class Team {
     // Available levels
     static let levels = ["L1", "L2", "L3", "L4", "L4.2", "L5", "L6", "L7"]
 
+    /// Human-readable mapping from stored codes to display labels
+    static let levelDisplayNames: [String: String] = [
+        "L1": "Level 1",
+        "L2": "Level 2",
+        "L3": "Level 3",
+        "L4": "Level 4",
+        "L4.2": "Level 4.2",
+        "L5": "Level 5",
+        "L6": "Level 6",
+        "L7": "Level 7",
+    ]
+
+    /// User-facing level label (e.g. "Level 2" instead of "L2")
+    var levelDisplayName: String {
+        Self.levelDisplayNames[level] ?? level
+    }
+
     // Available age divisions
     static let ageDivisions = ["youth", "junior", "senior", "open"]
 
