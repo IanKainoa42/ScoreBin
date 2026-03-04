@@ -50,7 +50,7 @@ struct GymAnalyticsView: View {
                 }
 
                 VStack(spacing: 4) {
-                    let totalSheets = gym.teams.flatMap { $0.scoresheets }.count
+                    let totalSheets = gym.teams.reduce(0) { $0 + $1.scoresheets.count }
                     Text("\(totalSheets)")
                         .font(.title)
                         .fontWeight(.bold)

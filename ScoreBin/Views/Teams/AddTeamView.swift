@@ -15,7 +15,7 @@ struct AddTeamView: View {
     @State private var athleteCount = 20
 
     var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.isBlank
     }
 
     var body: some View {
@@ -114,7 +114,7 @@ struct AddGymView: View {
     @State private var location = ""
 
     var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.isBlank
     }
 
     var body: some View {
