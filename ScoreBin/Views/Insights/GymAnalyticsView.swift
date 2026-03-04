@@ -107,7 +107,7 @@ struct GymAnalyticsView: View {
                     }
                 }
                 .chartYScale(domain: 0...50)
-                .frame(height: 200)
+                .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 300 : 200)
 
                 // Stats table
                 ForEach(stats) { stat in

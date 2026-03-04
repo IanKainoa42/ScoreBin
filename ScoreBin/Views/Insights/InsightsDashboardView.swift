@@ -122,7 +122,7 @@ struct InsightsDashboardView: View {
                 .foregroundColor(.white)
 
             ScoreDistributionChart(scoresheets: scoresheets)
-                .frame(height: 200)
+                .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 300 : 200)
         }
         .padding()
         .cardStyle()

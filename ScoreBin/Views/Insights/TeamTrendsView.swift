@@ -77,7 +77,7 @@ struct TeamTrendsView: View {
                             .foregroundStyle(.gray)
                     }
                 }
-                .frame(height: 200)
+                .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 300 : 200)
             }
         }
         .padding()
@@ -119,7 +119,7 @@ struct TeamTrendsView: View {
                     }
                 }
             }
-            .frame(height: 200)
+            .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 300 : 200)
 
             // Legend
             HStack(spacing: 16) {
