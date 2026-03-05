@@ -45,7 +45,7 @@ class CompetitionViewModel {
 
     func averageScore(for competition: Competition) -> Double {
         guard !competition.scoresheets.isEmpty else { return 0 }
-        let total = competition.scoresheets.reduce(0) { $0 + $1.finalScore }
+        let total = competition.scoresheets.reduce(0.0) { $0 + $1.finalScore }
         return (total / Double(competition.scoresheets.count)).rounded2
     }
 
