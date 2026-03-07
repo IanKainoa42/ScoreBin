@@ -95,7 +95,7 @@ struct TeamListView: View {
     private var teamsList: some View {
         List {
             // Teams grouped by Gym, filtered by search
-            let teamsByGym = Dictionary(grouping: filteredTeams) { $0.gym?.name ?? "No Gym" }
+            let teamsByGym = Dictionary(grouping: filteredTeams) { $0.gym?.name ?? "Independent" }
             let sortedGyms = teamsByGym.keys.sorted()
 
             ForEach(sortedGyms, id: \.self) { gymName in

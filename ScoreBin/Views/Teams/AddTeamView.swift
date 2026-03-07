@@ -14,6 +14,7 @@ struct AddTeamView: View {
     @State private var tier = "elite"
     @State private var athleteCount = 20
     @State private var saveError: String?
+    @State private var showingQuantityChartInfo = false
 
     var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -68,6 +69,16 @@ struct AddTeamView: View {
                         Spacer()
                         Text(chart.description)
                             .foregroundColor(.scoreBinCyan)
+                        Button {
+                            showingQuantityChartInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.scoreBinCyan)
+                        }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showingQuantityChartInfo) {
+                            QuantityChartInfoView()
+                        }
                     }
                 }
             }

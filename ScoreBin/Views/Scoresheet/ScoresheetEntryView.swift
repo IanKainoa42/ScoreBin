@@ -130,6 +130,8 @@ struct ScoresheetHeaderView: View {
     @Query(sort: \Team.name) private var teams: [Team]
     @Query(sort: \Competition.date, order: .reverse) private var competitions: [Competition]
 
+    @State private var showingQuantityChartInfo = false
+
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
@@ -224,6 +226,17 @@ struct ScoresheetHeaderView: View {
                         Text(viewModel.quantityChart.description)
                             .font(.caption)
                             .foregroundColor(.gray)
+                        Button {
+                            showingQuantityChartInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.scoreBinCyan)
+                        }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showingQuantityChartInfo) {
+                            QuantityChartInfoView()
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -234,6 +247,63 @@ struct ScoresheetHeaderView: View {
         }
         .cardStyle()
         .padding(.horizontal, 4)
+    }
+}
+
+// MARK: - Quantity Chart Info Popover
+
+/// Explains the Majority / Most / Max quantity chart tiers to the judge.
+struct QuantityChartInfoView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Quantity Chart")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text("The quantity chart determines the minimum number of athletes required to earn each score tier in stunts and pyramids.")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+
+            VStack(alignment: .leading, spacing: 10) {
+                quantityRow(
+                    label: "MAJ (Majority)",
+                    color: .scoreBinCyan,
+                    detail: "More than half the team performing the skill simultaneously."
+                )
+                quantityRow(
+                    label: "MOST",
+                    color: .scoreBinEmerald,
+                    detail: "The majority threshold plus one — a supermajority of the team."
+                )
+                quantityRow(
+                    label: "MAX",
+                    color: .overallYellow,
+                    detail: "Maximum possible — nearly the entire team performing the skill at once."
+                )
+            }
+
+            Text("Example: 20 athletes → MAJ: 3, MOST: 4, MAX: 5")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .padding(.top, 4)
+        }
+        .padding(20)
+        .frame(minWidth: 280, maxWidth: 340)
+        .background(Color.scoreBinCardBackground)
+        .presentationCompactAdaptation(.popover)
+    }
+
+    private func quantityRow(label: String, color: Color, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+                .frame(width: 80, alignment: .leading)
+            Text(detail)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
     }
 }
 
