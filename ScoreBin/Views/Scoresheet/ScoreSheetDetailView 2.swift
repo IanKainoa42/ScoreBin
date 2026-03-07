@@ -8,7 +8,7 @@ struct ScoreSheetDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Header Card
@@ -24,21 +24,21 @@ struct ScoreSheetDetailView: View {
                         ScoreSectionView(
                             title: "Building",
                             icon: "person.3.fill",
-                            color: .blue,  // Using standard blue if scoreBin colors aren't globally available here, can adjust
+                            color: .buildingRed,
                             items: buildingItems
                         )
 
                         ScoreSectionView(
                             title: "Tumbling",
                             icon: "figure.gymnastics",
-                            color: .green,
+                            color: .tumblingTeal,
                             items: tumblingItems
                         )
 
                         ScoreSectionView(
                             title: "Overall",
                             icon: "star.fill",
-                            color: .purple,
+                            color: .overallYellow,
                             items: overallItems
                         )
                     }
