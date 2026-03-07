@@ -46,13 +46,13 @@ final class Competition {
         if let notes = data["notes"] as? String { self.notes = notes }
 
         if let dateString = data["date"] as? String,
-            let date = Self.iso8601Formatter.date(from: dateString)
+            let date = ISO8601DateFormatter.shared.date(from: dateString)
         {
             self.date = date
         }
 
         if let createdAtString = data["created_at"] as? String,
-            let date = Self.iso8601Formatter.date(from: createdAtString)
+            let date = ISO8601DateFormatter.shared.date(from: createdAtString)
         {
             self.createdAt = date
         }

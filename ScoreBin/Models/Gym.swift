@@ -28,14 +28,12 @@ final class Gym {
 
     // MARK: - Update from Database
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
-
     func update(from data: [String: Any]) {
         if let name = data["name"] as? String { self.name = name }
         if let location = data["location"] as? String { self.location = location }
 
         if let createdAtString = data["created_at"] as? String,
-            let date = Self.iso8601Formatter.date(from: createdAtString)
+            let date = ISO8601DateFormatter.shared.date(from: createdAtString)
         {
             self.createdAt = date
         }
