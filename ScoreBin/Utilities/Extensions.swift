@@ -91,6 +91,14 @@ extension DateFormatter {
     }()
 }
 
+// MARK: - String Extensions
+extension String {
+    /// Returns true if the string is empty or contains only whitespaces and newlines
+    var isBlank: Bool {
+        self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
 // MARK: - Date Extensions
 extension Date {
     private static let competitionFormatter: DateFormatter = {

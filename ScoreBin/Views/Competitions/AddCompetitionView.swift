@@ -11,7 +11,7 @@ struct AddCompetitionView: View {
     @State private var notes = ""
 
     var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.isBlank
     }
 
     var body: some View {
