@@ -104,8 +104,18 @@ struct InsightsDashboardView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 20)
             } else {
-                ForEach(scoresheets.prefix(5)) { sheet in
-                    RecentActivityRow(scoresheet: sheet)
+                // Filter to only scoresheets with an assigned team to avoid "Unknown Team" rows
+                let recentWithTeam = scoresheets.filter { $0.team != nil }.prefix(5)
+                if recentWithTeam.isEmpty {
+                    Text("All scored routines are unassigned. Select a team when scoring to see activity here.")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(Array(recentWithTeam)) { sheet in
+                        RecentActivityRow(scoresheet: sheet)
+                    }
                 }
             }
         }
