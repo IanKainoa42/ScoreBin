@@ -27,6 +27,7 @@
 		A10000000000000000000017 /* OverallJudgeSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* OverallJudgeSection.swift */; };
 		A10000000000000000000018 /* DeductionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* DeductionsSection.swift */; };
 		A10000000000000000000019 /* ScoreSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* ScoreSummaryView.swift */; };
+		A106FD00CCD1B14C45D23D16 /* ScoreSheetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2BC638B237FF0A27399B896 /* ScoreSheetDetailView.swift */; };
 		A10000000000000000000020 /* CompetitionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* CompetitionListView.swift */; };
 		A10000000000000000000021 /* CompetitionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* CompetitionDetailView.swift */; };
 		A10000000000000000000022 /* AddCompetitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* AddCompetitionView.swift */; };
@@ -35,6 +36,7 @@
 		A10000000000000000000025 /* AddTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* AddTeamView.swift */; };
 		A10000000000000000000026 /* InsightsDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* InsightsDashboardView.swift */; };
 		A10000000000000000000027 /* TeamTrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* TeamTrendsView.swift */; };
+		A14D0095857CFFE4D60AEB8D /* AllTeamsPerformanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2E9121D26A4E91DE54F177D /* AllTeamsPerformanceView.swift */; };
 		A10000000000000000000028 /* GymAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000028 /* GymAnalyticsView.swift */; };
 		A10000000000000000000029 /* ScoreDistributionChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* ScoreDistributionChart.swift */; };
 		A10000000000000000000030 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* SupabaseService.swift */; };
@@ -66,6 +68,7 @@
 		A20000000000000000000017 /* OverallJudgeSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverallJudgeSection.swift; sourceTree = "<group>"; };
 		A20000000000000000000018 /* DeductionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeductionsSection.swift; sourceTree = "<group>"; };
 		A20000000000000000000019 /* ScoreSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreSummaryView.swift; sourceTree = "<group>"; };
+		A2BC638B237FF0A27399B896 /* ScoreSheetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreSheetDetailView.swift; sourceTree = "<group>"; };
 		A20000000000000000000020 /* CompetitionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompetitionListView.swift; sourceTree = "<group>"; };
 		A20000000000000000000021 /* CompetitionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompetitionDetailView.swift; sourceTree = "<group>"; };
 		A20000000000000000000022 /* AddCompetitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCompetitionView.swift; sourceTree = "<group>"; };
@@ -74,6 +77,7 @@
 		A20000000000000000000025 /* AddTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTeamView.swift; sourceTree = "<group>"; };
 		A20000000000000000000026 /* InsightsDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsDashboardView.swift; sourceTree = "<group>"; };
 		A20000000000000000000027 /* TeamTrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTrendsView.swift; sourceTree = "<group>"; };
+		A2E9121D26A4E91DE54F177D /* AllTeamsPerformanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllTeamsPerformanceView.swift; sourceTree = "<group>"; };
 		A20000000000000000000028 /* GymAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymAnalyticsView.swift; sourceTree = "<group>"; };
 		A20000000000000000000029 /* ScoreDistributionChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreDistributionChart.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
@@ -191,6 +195,7 @@
 				A20000000000000000000017 /* OverallJudgeSection.swift */,
 				A20000000000000000000018 /* DeductionsSection.swift */,
 				A20000000000000000000019 /* ScoreSummaryView.swift */,
+				A2BC638B237FF0A27399B896 /* ScoreSheetDetailView.swift */,
 				A20000000000000000000034 /* StickyScoreBar.swift */,
 			);
 			path = Scoresheet;
@@ -221,6 +226,7 @@
 			children = (
 				A20000000000000000000026 /* InsightsDashboardView.swift */,
 				A20000000000000000000027 /* TeamTrendsView.swift */,
+				A2E9121D26A4E91DE54F177D /* AllTeamsPerformanceView.swift */,
 				A20000000000000000000028 /* GymAnalyticsView.swift */,
 				A20000000000000000000029 /* ScoreDistributionChart.swift */,
 			);
@@ -315,6 +321,7 @@
 				A10000000000000000000017 /* OverallJudgeSection.swift in Sources */,
 				A10000000000000000000018 /* DeductionsSection.swift in Sources */,
 				A10000000000000000000019 /* ScoreSummaryView.swift in Sources */,
+				A106FD00CCD1B14C45D23D16 /* ScoreSheetDetailView.swift in Sources */,
 				A10000000000000000000020 /* CompetitionListView.swift in Sources */,
 				A10000000000000000000021 /* CompetitionDetailView.swift in Sources */,
 				A10000000000000000000022 /* AddCompetitionView.swift in Sources */,
@@ -323,6 +330,7 @@
 				A10000000000000000000025 /* AddTeamView.swift in Sources */,
 				A10000000000000000000026 /* InsightsDashboardView.swift in Sources */,
 				A10000000000000000000027 /* TeamTrendsView.swift in Sources */,
+				A14D0095857CFFE4D60AEB8D /* AllTeamsPerformanceView.swift in Sources */,
 				A10000000000000000000028 /* GymAnalyticsView.swift in Sources */,
 				A10000000000000000000029 /* ScoreDistributionChart.swift in Sources */,
 				A10000000000000000000030 /* SupabaseService.swift in Sources */,

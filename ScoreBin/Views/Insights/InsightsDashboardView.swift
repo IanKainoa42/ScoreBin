@@ -84,13 +84,26 @@ struct InsightsDashboardView: View {
                 .foregroundColor(.white)
 
             if scoresheets.isEmpty {
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Text("No scoresheets yet")
                         .font(.subheadline)
                         .foregroundColor(.gray)
-                    Text("Go to the Scoresheet tab to enter your first scores")
-                        .font(.caption)
-                        .foregroundColor(.gray.opacity(0.7))
+
+                    NavigationLink {
+                        ScoresheetEntryView()
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Enter Your First Scoresheet")
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.scoreBinGradient)
+                        .cornerRadius(8)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 20)
@@ -123,13 +136,24 @@ struct InsightsDashboardView: View {
 
     private var teamPerformanceSection: some View {
         let activeTeams = viewModel.activeTeams(from: teams, limit: 5)
+        let totalActiveTeams = teams.filter { !$0.scoresheets.isEmpty }.count
 
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Team Performance")
-                .font(.headline)
-                .foregroundColor(.white)
+            HStack {
+                Text("Team Performance")
+                    .font(.headline)
+                    .foregroundColor(.white)
 
+                Spacer()
 
+                if totalActiveTeams > 5 {
+                    NavigationLink(destination: AllTeamsPerformanceView()) {
+                        Text("See All (\(totalActiveTeams))")
+                            .font(.subheadline)
+                            .foregroundColor(.scoreBinCyan)
+                    }
+                }
+            }
 
             ForEach(activeTeams.prefix(5)) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
@@ -138,13 +162,26 @@ struct InsightsDashboardView: View {
             }
 
             if activeTeams.isEmpty {
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Text("No team performance data yet")
                         .font(.subheadline)
                         .foregroundColor(.gray)
-                    Text("Score a team's routine to see their performance trends here")
-                        .font(.caption)
-                        .foregroundColor(.gray.opacity(0.7))
+
+                    NavigationLink {
+                        ScoresheetEntryView()
+                    } label: {
+                        HStack {
+                            Image(systemName: "doc.text.fill")
+                            Text("Score a Routine")
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.scoreBinGradient)
+                        .cornerRadius(8)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 20)
