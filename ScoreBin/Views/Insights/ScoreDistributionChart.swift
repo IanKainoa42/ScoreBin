@@ -4,9 +4,14 @@ import Charts
 struct ScoreDistributionChart: View {
     let scoresheets: [Scoresheet]
 
-    private var chartData: (distribution: [ScoreRange], stats: (avg: Double, high: Double, low: Double)?) {
+    @State private var distribution: [ScoreRange] = []
+    @State private var stats: (avg: Double, high: Double, low: Double)?
+
+    private func computeChartData() {
         guard !scoresheets.isEmpty else {
-            return ([], nil)
+            distribution = []
+            stats = nil
+            return
         }
 
         let initialData: (counts: [Int], total: Double, high: Double, low: Double) = (
@@ -31,7 +36,7 @@ struct ScoreDistributionChart: View {
             if score < result.low { result.low = score }
         }
 
-        let distribution = [
+        distribution = [
             ScoreRange(label: "< 30", count: aggregated.counts[0]),
             ScoreRange(label: "30-34", count: aggregated.counts[1]),
             ScoreRange(label: "35-39", count: aggregated.counts[2]),
@@ -40,15 +45,12 @@ struct ScoreDistributionChart: View {
             ScoreRange(label: "47-50", count: aggregated.counts[5])
         ]
 
-        let stats = (aggregated.total / Double(scoresheets.count), aggregated.high, aggregated.low)
-        return (distribution, stats)
+        stats = (aggregated.total / Double(scoresheets.count), aggregated.high, aggregated.low)
     }
 
     var body: some View {
-        let data = chartData
-
         VStack(alignment: .leading, spacing: 8) {
-            Chart(data.distribution) { item in
+            Chart(distribution) { item in
                 BarMark(
                     x: .value("Range", item.label),
                     y: .value("Count", item.count)
@@ -85,13 +87,19 @@ struct ScoreDistributionChart: View {
 
             // Summary stats
             HStack(spacing: 20) {
-                if let stats = data.stats {
+                if let stats = stats {
                     StatLabel(title: "Average", value: stats.avg.scoreFormatted)
                     StatLabel(title: "High", value: stats.high.scoreFormatted)
                     StatLabel(title: "Low", value: stats.low.scoreFormatted)
                 }
             }
             .frame(maxWidth: .infinity)
+        }
+        .onAppear {
+            computeChartData()
+        }
+        .onChange(of: scoresheets) { _, _ in
+            computeChartData()
         }
     }
 }

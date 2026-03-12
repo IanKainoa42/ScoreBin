@@ -39,6 +39,11 @@ struct GymAnalyticsView: View {
                 .foregroundColor(.white)
 
             HStack(spacing: 20) {
+                let counts = gym.teams.reduce(into: (sheets: 0, athletes: 0)) { result, team in
+                    result.sheets += team.scoresheets.count
+                    result.athletes += team.athleteCount
+                }
+
                 VStack(spacing: 4) {
                     Text("\(gym.teams.count)")
                         .font(.title)
@@ -50,8 +55,7 @@ struct GymAnalyticsView: View {
                 }
 
                 VStack(spacing: 4) {
-                    let totalSheets = gym.teams.reduce(0) { $0 + $1.scoresheets.count }
-                    Text("\(totalSheets)")
+                    Text("\(counts.sheets)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.scoreBinEmerald)
@@ -61,8 +65,7 @@ struct GymAnalyticsView: View {
                 }
 
                 VStack(spacing: 4) {
-                    let totalAthletes = gym.teams.reduce(0) { $0 + $1.athleteCount }
-                    Text("\(totalAthletes)")
+                    Text("\(counts.athletes)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.overallYellow)
