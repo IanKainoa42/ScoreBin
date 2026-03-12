@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1F0902FE2F276D100050FB05 /* ScoreSheetDetailView 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0902FD2F276D100050FB05 /* ScoreSheetDetailView 2.swift */; };
 		1F0903002F276EAA0050FB05 /* scorebin_app_icon_1769420362850.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F0902FF2F276EAA0050FB05 /* scorebin_app_icon_1769420362850.png */; };
 		A10000000000000000000001 /* ScoreBinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* ScoreBinApp.swift */; };
 		A10000000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* Assets.xcassets */; };
@@ -47,7 +46,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1F0902FD2F276D100050FB05 /* ScoreSheetDetailView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScoreSheetDetailView 2.swift"; sourceTree = "<group>"; };
 		1F0902FF2F276EAA0050FB05 /* scorebin_app_icon_1769420362850.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = scorebin_app_icon_1769420362850.png; sourceTree = "<group>"; };
 		A20000000000000000000001 /* ScoreBinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreBinApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -186,7 +184,6 @@
 		A50000000000000000000009 /* Scoresheet */ = {
 			isa = PBXGroup;
 			children = (
-				1F0902FD2F276D100050FB05 /* ScoreSheetDetailView 2.swift */,
 				A20000000000000000000013 /* ScoresheetEntryView.swift */,
 				A20000000000000000000014 /* ScoreInputRow.swift */,
 				A20000000000000000000015 /* BuildingJudgeSection.swift */,
@@ -326,7 +323,6 @@
 				A10000000000000000000025 /* AddTeamView.swift in Sources */,
 				A10000000000000000000026 /* InsightsDashboardView.swift in Sources */,
 				A10000000000000000000027 /* TeamTrendsView.swift in Sources */,
-				1F0902FE2F276D100050FB05 /* ScoreSheetDetailView 2.swift in Sources */,
 				A10000000000000000000028 /* GymAnalyticsView.swift in Sources */,
 				A10000000000000000000029 /* ScoreDistributionChart.swift in Sources */,
 				A10000000000000000000030 /* SupabaseService.swift in Sources */,
