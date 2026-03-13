@@ -94,12 +94,65 @@ struct ScoreDistributionChart: View {
                 }
             }
             .frame(maxWidth: .infinity)
+
+            // Performance tier context
+            if let stats = stats {
+                performanceTierView(for: stats.avg)
+            }
         }
         .onAppear {
             computeChartData()
         }
         .onChange(of: scoresheets) { _, _ in
             computeChartData()
+        }
+    }
+
+    /// Returns a performance tier label based on the average score
+    private func performanceTierView(for avgScore: Double) -> some View {
+        let (tier, color, icon) = performanceTier(for: avgScore)
+        return HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(color)
+            Text("Team Average: \(tier)")
+                .font(.caption)
+                .foregroundColor(color)
+            Spacer()
+            Text(performanceTierHint(for: avgScore))
+                .font(.caption2)
+                .foregroundColor(.gray)
+        }
+        .padding(.top, 4)
+    }
+
+    private func performanceTier(for score: Double) -> (String, Color, String) {
+        switch score {
+        case 47...:
+            return ("Elite", .scoreBinEmerald, "star.fill")
+        case 45..<47:
+            return ("Championship", .scoreBinCyan, "trophy.fill")
+        case 40..<45:
+            return ("Competitive", .overallYellow, "bolt.fill")
+        case 35..<40:
+            return ("Developing", .orange, "arrow.up.circle.fill")
+        default:
+            return ("Building", .gray, "hammer.fill")
+        }
+    }
+
+    private func performanceTierHint(for score: Double) -> String {
+        switch score {
+        case 47...:
+            return "Top-tier execution"
+        case 45..<47:
+            return "Podium potential"
+        case 40..<45:
+            return "Strong fundamentals"
+        case 35..<40:
+            return "Room to grow"
+        default:
+            return "Focus on basics"
         }
     }
 }
