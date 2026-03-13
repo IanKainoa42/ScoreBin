@@ -66,7 +66,7 @@ struct TeamDetailView: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(team.level)
+                    Text(team.humanizedLevel)
                         .font(.headline)
                         .fontWeight(.bold)
                         .foregroundColor(.scoreBinCyan)
@@ -230,7 +230,7 @@ struct EditTeamView: View {
 
                     Picker("Level", selection: $team.level) {
                         ForEach(Team.levels, id: \.self) { level in
-                            Text(level).tag(level)
+                            Text(Team.humanizedLevel(level)).tag(level)
                         }
                     }
                 }

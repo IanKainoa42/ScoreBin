@@ -133,7 +133,7 @@ struct TeamRowView: View {
 
                 Spacer()
 
-                Text(team.level)
+                Text(team.humanizedLevel)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.scoreBinCyan)
