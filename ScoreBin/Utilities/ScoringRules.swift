@@ -123,6 +123,15 @@ enum ScoringRules {
         var description: String {
             "MAJ: \(majority)  MOST: \(most)  MAX: \(max)"
         }
+
+        /// Human-readable explanation of what quantity chart values mean
+        static let helpText = """
+            Quantity Chart determines skill requirements based on roster size:
+
+            • MAJ (Majority): Over half the team performs the skill
+            • MOST: The majority minus 1 performs the skill
+            • MAX: The maximum number of athletes performing together
+            """
     }
 
     // MARK: - Score Ranges for Input Validation

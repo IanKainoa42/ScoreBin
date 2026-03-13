@@ -13,6 +13,7 @@ struct AddTeamView: View {
     @State private var ageDivision = "senior"
     @State private var tier = "elite"
     @State private var athleteCount = 20
+    @State private var showingQuantityChartHelp = false
 
     var isValid: Bool {
         !name.isBlank
@@ -67,7 +68,20 @@ struct AddTeamView: View {
                         Spacer()
                         Text(chart.description)
                             .foregroundColor(.scoreBinCyan)
+                        Button {
+                            showingQuantityChartHelp = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.scoreBinCyan)
+                        }
+                        .buttonStyle(.plain)
                     }
+                }
+                .alert("Quantity Chart", isPresented: $showingQuantityChartHelp) {
+                    Button("Got it", role: .cancel) {}
+                } message: {
+                    Text(ScoringRules.QuantityChart.helpText)
                 }
             }
             .navigationTitle("New Team")

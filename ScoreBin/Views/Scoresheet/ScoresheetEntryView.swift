@@ -129,6 +129,8 @@ struct ScoresheetHeaderView: View {
     @Query(sort: \Team.name) private var teams: [Team]
     @Query(sort: \Competition.date, order: .reverse) private var competitions: [Competition]
 
+    @State private var showingQuantityChartHelp = false
+
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
@@ -223,11 +225,23 @@ struct ScoresheetHeaderView: View {
                         Text(viewModel.quantityChart.description)
                             .font(.caption)
                             .foregroundColor(.gray)
+                        Button {
+                            showingQuantityChartHelp = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundColor(.scoreBinCyan)
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color.scoreBinCardBackground)
                     .cornerRadius(8)
+                    .alert("Quantity Chart", isPresented: $showingQuantityChartHelp) {
+                        Button("Got it", role: .cancel) {}
+                    } message: {
+                        Text(ScoringRules.QuantityChart.helpText)
+                    }
                 }
             }
         }

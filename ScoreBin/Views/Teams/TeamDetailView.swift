@@ -7,6 +7,7 @@ struct TeamDetailView: View {
 
     @State private var insightsVM = InsightsViewModel()
     @State private var showingEditSheet = false
+    @State private var showingQuantityChartHelp = false
 
     var body: some View {
         ScrollView {
@@ -94,19 +95,33 @@ struct TeamDetailView: View {
                 Spacer()
 
                 let chart = ScoringRules.QuantityChart.forAthleteCount(team.athleteCount)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Quantity Chart")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text(chart.description)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.scoreBinCyan)
+                HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Quantity Chart")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Text(chart.description)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.scoreBinCyan)
+                    }
+                    Button {
+                        showingQuantityChartHelp = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundColor(.scoreBinCyan)
+                    }
                 }
             }
         }
         .padding()
         .cardStyle()
+        .alert("Quantity Chart", isPresented: $showingQuantityChartHelp) {
+            Button("Got it", role: .cancel) {}
+        } message: {
+            Text(ScoringRules.QuantityChart.helpText)
+        }
     }
 
     private var statsCard: some View {
