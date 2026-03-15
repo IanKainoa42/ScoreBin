@@ -48,7 +48,7 @@ class InsightsViewModel {
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.map(\.finalScore).max() ?? 0
+        team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
     }
 
     func scoreImprovement(for team: Team) -> Double {
