@@ -338,7 +338,7 @@ struct DeductionRow: View {
 }
 
 struct ScoreDetailItem: Identifiable {
-    let id = UUID()
+    var id: String { label }
     let label: String
     let value: Double
     let max: Double

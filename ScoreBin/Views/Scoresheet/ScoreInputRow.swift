@@ -19,7 +19,7 @@ struct ScoreInputRow: View {
             HStack(spacing: 8) {
                 Button {
                     if value > range.min {
-                        value = max(range.min, ((value - range.step) * 100).rounded() / 100)
+                        value = max(range.min, (value - range.step).rounded2)
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
@@ -44,7 +44,7 @@ struct ScoreInputRow: View {
 
                 Button {
                     if value < range.max {
-                        value = min(range.max, ((value + range.step) * 100).rounded() / 100)
+                        value = min(range.max, (value + range.step).rounded2)
                     }
                 } label: {
                     Image(systemName: "plus.circle.fill")
