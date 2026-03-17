@@ -356,17 +356,13 @@ class SyncManager {
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
         // Collect referenced Team and Competition IDs
-        var teamIDs = Set<UUID>()
-        var compIDs = Set<UUID>()
-
-        for (_, data) in parsedData {
+        let (teamIDs, compIDs) = parsedData.reduce(into: (Set<UUID>(), Set<UUID>())) { result, item in
+            let data = item.1
             if let teamIDStr = data["team_id"] as? String, let tid = UUID(uuidString: teamIDStr) {
-                teamIDs.insert(tid)
+                result.0.insert(tid)
             }
-            if let compIDStr = data["competition_id"] as? String,
-                let cid = UUID(uuidString: compIDStr)
-            {
-                compIDs.insert(cid)
+            if let compIDStr = data["competition_id"] as? String, let cid = UUID(uuidString: compIDStr) {
+                result.1.insert(cid)
             }
         }
 
