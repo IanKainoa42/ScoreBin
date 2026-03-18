@@ -62,14 +62,22 @@ extension View {
 
 // MARK: - Number Formatting
 extension Double {
+    private static let scoreFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+
     /// Format score for display (2 decimal places)
     var scoreFormatted: String {
-        String(format: "%.2f", self)
+        Self.scoreFormatter.string(from: NSNumber(value: self)) ?? String(format: "%.2f", self)
     }
 
     /// Format score with sign for deductions
     var deductionFormatted: String {
-        String(format: "-%.2f", self)
+        "-\(scoreFormatted)"
     }
 
     /// Round to 2 decimal places

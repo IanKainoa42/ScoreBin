@@ -280,7 +280,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        parsedData.forEach { id, data in
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -303,7 +303,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        parsedData.forEach { id, data in
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -329,7 +329,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        parsedData.forEach { id, data in
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -356,15 +356,19 @@ class SyncManager {
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
         // Collect referenced Team and Competition IDs
-        let (teamIDs, compIDs) = parsedData.reduce(into: (Set<UUID>(), Set<UUID>())) { result, item in
-            let data = item.1
-            if let teamIDStr = data["team_id"] as? String, let tid = UUID(uuidString: teamIDStr) {
-                result.0.insert(tid)
+        let teamIDs = Set(parsedData.compactMap {
+            if let teamIDStr = $0.1["team_id"] as? String {
+                return UUID(uuidString: teamIDStr)
             }
-            if let compIDStr = data["competition_id"] as? String, let cid = UUID(uuidString: compIDStr) {
-                result.1.insert(cid)
+            return nil
+        })
+
+        let compIDs = Set(parsedData.compactMap {
+            if let compIDStr = $0.1["competition_id"] as? String {
+                return UUID(uuidString: compIDStr)
             }
-        }
+            return nil
+        })
 
         // Fetch Teams
         let teamsMap: [UUID: Team]
@@ -389,7 +393,7 @@ class SyncManager {
             compsMap = [:]
         }
 
-        for (id, data) in parsedData {
+        parsedData.forEach { id, data in
             let scoresheet: Scoresheet
             if let existing = existingMap[id] {
                 scoresheet = existing

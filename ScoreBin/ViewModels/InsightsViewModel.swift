@@ -55,11 +55,16 @@ class InsightsViewModel {
         let scoresheets = team.scoresheets
         guard scoresheets.count >= 2 else { return 0 }
 
-        guard let earliest = scoresheets.min(by: { $0.createdAt < $1.createdAt }),
-              let latest = scoresheets.max(by: { $0.createdAt < $1.createdAt })
-        else { return 0 }
+        let bounds = scoresheets.reduce(into: (earliest: scoresheets[0], latest: scoresheets[0])) { result, sheet in
+            if sheet.createdAt < result.earliest.createdAt {
+                result.earliest = sheet
+            }
+            if sheet.createdAt > result.latest.createdAt {
+                result.latest = sheet
+            }
+        }
 
-        return (latest.finalScore - earliest.finalScore).rounded2
+        return (bounds.latest.finalScore - bounds.earliest.finalScore).rounded2
     }
 
     // MARK: - Gym Analytics
