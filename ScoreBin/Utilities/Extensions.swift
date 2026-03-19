@@ -121,6 +121,13 @@ extension Date {
         return formatter
     }()
 
+    private static let abbreviatedDateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
     /// Format date for competition display
     var competitionFormatted: String {
         return Self.competitionFormatter.string(from: self)
@@ -129,5 +136,10 @@ extension Date {
     /// Format date for short display
     var shortFormatted: String {
         return Self.shortFormatter.string(from: self)
+    }
+
+    /// Format date and time for abbreviated display
+    var abbreviatedDateTimeFormatted: String {
+        return Self.abbreviatedDateTimeFormatter.string(from: self)
     }
 }
