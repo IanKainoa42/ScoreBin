@@ -79,7 +79,7 @@ struct ScoreSheetDetailView: View {
                     .foregroundColor(.gray)
             }
 
-            Text(scoresheet.createdAt.formatted(date: .abbreviated, time: .shortened))
+            Text(scoresheet.createdAt.abbreviatedDateTimeFormatted)
                 .font(.caption)
                 .foregroundColor(.gray)
                 .padding(.top, 4)
@@ -98,14 +98,14 @@ struct ScoreSheetDetailView: View {
         HStack(spacing: 0) {
             ScoreSummaryItem(
                 title: "Raw Score",
-                value: scoresheet.rawScore.rounded2.formatted()
+                value: scoresheet.rawScore.scoreFormatted
             )
 
             Divider().background(Color.gray.opacity(0.3))
 
             ScoreSummaryItem(
                 title: "Deductions",
-                value: scoresheet.totalDeductions.rounded2.formatted(),
+                value: scoresheet.totalDeductions.scoreFormatted,
                 color: scoresheet.totalDeductions > 0 ? .red : .gray
             )
 
@@ -113,7 +113,7 @@ struct ScoreSheetDetailView: View {
 
             ScoreSummaryItem(
                 title: "Final Score",
-                value: scoresheet.finalScore.rounded2.formatted(),
+                value: scoresheet.finalScore.scoreFormatted,
                 color: .scoreBinEmerald
             )
         }
@@ -284,12 +284,12 @@ struct ScoreSectionView: View {
 
                         Spacer()
 
-                        Text("\(item.value.rounded2.formatted())")
+                        Text(item.value.scoreFormatted)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
 
-                        Text("/ \(item.max.rounded2.formatted())")
+                        Text("/ \(item.max.scoreFormatted)")
                             .font(.caption)
                             .foregroundColor(.gray.opacity(0.7))
                             .frame(width: 40, alignment: .trailing)
@@ -328,7 +328,7 @@ struct DeductionRow: View {
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(4)
 
-            Text("-\((Double(count) * value).rounded2.formatted())")
+            Text("-\((Double(count) * value).scoreFormatted)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.red)

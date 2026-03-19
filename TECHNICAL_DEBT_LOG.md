@@ -1,5 +1,25 @@
 # Technical Debt & Code Optimization Log
 
+## ⚡ [Performance] Avoid Inline Formatter Allocations in Views
+**What:** Refactored `ScoreSheetDetailView.swift` to replace `.rounded2.formatted()` usages with the statically cached `.scoreFormatted` extension, and replaced inline date formatting (`.formatted(date: .abbreviated, time: .shortened)`) with a statically cached `abbreviatedDateTimeFormatter` extension.
+**Why:** Calling `.formatted()` on primitive types or dates inside SwiftUI View properties or loops can implicitly initialize new formatters inline or perform inefficient allocations during layout calculation passes. Using statically cached formatters (e.g. `NumberFormatter` and `DateFormatter` in `Extensions.swift`) dramatically reduces temporary object allocations and memory overhead during view re-evaluation.
+**Measured Improvement:** Replaced O(N) inline formatter allocations with O(1) statically cached formatter invocations. This limits memory churn and ARC overhead, leading to smoother scrolling and re-rendering of scoresheet details.
+**Risk Assessment:** Low risk. Used the same format structures to match the previous string displays.
+
+### Before
+```swift
+Text("\(item.value.rounded2.formatted())")
+Text(scoresheet.createdAt.formatted(date: .abbreviated, time: .shortened))
+```
+
+### After
+```swift
+Text(item.value.scoreFormatted)
+Text(scoresheet.createdAt.abbreviatedDateTimeFormatted)
+```
+
+---
+
 ## ⚡ [Performance] Cache NumberFormatter for Double String Interpolation
 **What:** Refactored `Double.scoreFormatted` and `Double.deductionFormatted` extensions in `ScoreBin/Utilities/Extensions.swift` to use a statically cached `NumberFormatter` instead of `String(format: "%.2f")`.
 **Why:** Initializing `String(format:)` or new formatters inline is computationally expensive in Swift. Since these properties are accessed hundreds of times per view render (e.g., inside `ScoresheetDetailView` and `TeamTrendsView`), caching a single thread-safe `NumberFormatter` eliminates significant redundant object allocation overhead.
