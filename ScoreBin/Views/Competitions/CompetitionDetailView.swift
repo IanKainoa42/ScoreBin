@@ -84,15 +84,16 @@ struct CompetitionDetailView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
+            let stats = viewModel.competitionStats(for: competition)
             HStack(spacing: 20) {
                 StatItem(title: "Total", value: "\(competition.scoresheets.count)")
                 StatItem(
-                    title: "Average", value: viewModel.averageScore(for: competition).scoreFormatted
+                    title: "Average", value: stats.average.scoreFormatted
                 )
                 StatItem(
-                    title: "High", value: viewModel.highestScore(for: competition).scoreFormatted)
+                    title: "High", value: stats.high.scoreFormatted)
                 StatItem(
-                    title: "Low", value: viewModel.lowestScore(for: competition).scoreFormatted)
+                    title: "Low", value: stats.low.scoreFormatted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -1,5 +1,48 @@
 # Technical Debt & Code Optimization Log
 
+## ⚡ [Performance] Consolidate Extrema Array Traversal in CompetitionViewModel
+**What:** Refactored `averageScore(for:)`, `highestScore(for:)`, and `lowestScore(for:)` in `ScoreBin/ViewModels/CompetitionViewModel.swift` into a single `competitionStats(for:)` method that uses a single-pass `reduce(into:)`. Updated `ScoreBin/Views/Competitions/CompetitionDetailView.swift` to use the new method.
+**Why:** The original implementation iterated over the entire `competition.scoresheets` array three times (`O(3N)`) to calculate the average, highest, and lowest scores. A single `.reduce` calculates all three values simultaneously (`O(N)`), providing a more declarative and performant Swift implementation.
+**Measured Improvement:** Reduces iteration count by 66%.
+**Risk Assessment:** Low risk. Ensured boundary conditions (e.g., empty array) are identical to the previous implementation, returning `(0, 0, 0)`.
+
+### Before
+```swift
+func averageScore(for competition: Competition) -> Double {
+    guard !competition.scoresheets.isEmpty else { return 0 }
+    let total = competition.scoresheets.reduce(0.0) { $0 + $1.finalScore }
+    return (total / Double(competition.scoresheets.count)).rounded2
+}
+
+func highestScore(for competition: Competition) -> Double {
+    competition.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+}
+
+func lowestScore(for competition: Competition) -> Double {
+    competition.scoresheets.min(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+}
+```
+
+### After
+```swift
+func competitionStats(for competition: Competition) -> (average: Double, high: Double, low: Double) {
+    guard !competition.scoresheets.isEmpty else { return (0, 0, 0) }
+
+    let initial = (total: 0.0, high: -Double.infinity, low: Double.infinity)
+    let stats = competition.scoresheets.reduce(into: initial) { result, sheet in
+        let score = sheet.finalScore
+        result.total += score
+        if score > result.high { result.high = score }
+        if score < result.low { result.low = score }
+    }
+
+    let average = (stats.total / Double(competition.scoresheets.count)).rounded2
+    return (average, stats.high, stats.low)
+}
+```
+
+---
+
 ## ⚡ [Performance] Avoid Inline Formatter Allocations in Views
 **What:** Refactored `ScoreSheetDetailView.swift` to replace `.rounded2.formatted()` usages with the statically cached `.scoreFormatted` extension, and replaced inline date formatting (`.formatted(date: .abbreviated, time: .shortened)`) with a statically cached `abbreviatedDateTimeFormatter` extension.
 **Why:** Calling `.formatted()` on primitive types or dates inside SwiftUI View properties or loops can implicitly initialize new formatters inline or perform inefficient allocations during layout calculation passes. Using statically cached formatters (e.g. `NumberFormatter` and `DateFormatter` in `Extensions.swift`) dramatically reduces temporary object allocations and memory overhead during view re-evaluation.
