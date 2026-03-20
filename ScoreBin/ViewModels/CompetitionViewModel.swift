@@ -43,18 +43,19 @@ class CompetitionViewModel {
 
     // MARK: - Statistics
 
-    func averageScore(for competition: Competition) -> Double {
-        guard !competition.scoresheets.isEmpty else { return 0 }
-        let total = competition.scoresheets.reduce(0.0) { $0 + $1.finalScore }
-        return (total / Double(competition.scoresheets.count)).rounded2
-    }
+    func competitionStats(for competition: Competition) -> (average: Double, high: Double, low: Double) {
+        guard !competition.scoresheets.isEmpty else { return (0, 0, 0) }
 
-    func highestScore(for competition: Competition) -> Double {
-        competition.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
-    }
+        let initial = (total: 0.0, high: -Double.infinity, low: Double.infinity)
+        let stats = competition.scoresheets.reduce(into: initial) { result, sheet in
+            let score = sheet.finalScore
+            result.total += score
+            if score > result.high { result.high = score }
+            if score < result.low { result.low = score }
+        }
 
-    func lowestScore(for competition: Competition) -> Double {
-        competition.scoresheets.min(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+        let average = (stats.total / Double(competition.scoresheets.count)).rounded2
+        return (average, stats.high, stats.low)
     }
 
     func scoresheetsByRound(for competition: Competition) -> [String: [Scoresheet]] {
