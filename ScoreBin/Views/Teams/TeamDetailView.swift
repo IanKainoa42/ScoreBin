@@ -116,18 +116,19 @@ struct TeamDetailView: View {
                 .foregroundColor(.white)
 
             HStack(spacing: 20) {
+                let stats = insightsVM.teamStats(for: team)
                 StatItem(
                     title: "Average",
-                    value: insightsVM.averageScore(for: team).scoreFormatted
+                    value: stats.average.scoreFormatted
                 )
                 StatItem(
                     title: "Best",
-                    value: insightsVM.bestScore(for: team).scoreFormatted
+                    value: stats.best.scoreFormatted
                 )
                 StatItem(
                     title: "Trend",
-                    value: (insightsVM.scoreImprovement(for: team) >= 0 ? "+" : "") +
-                           insightsVM.scoreImprovement(for: team).scoreFormatted
+                    value: (stats.improvement >= 0 ? "+" : "") +
+                           stats.improvement.scoreFormatted
                 )
                 StatItem(
                     title: "Sheets",

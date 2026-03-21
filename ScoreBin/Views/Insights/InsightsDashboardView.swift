@@ -239,12 +239,13 @@ struct TeamPerformanceRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(viewModel.averageScore(for: team).scoreFormatted)
+                let stats = viewModel.teamStats(for: team)
+                Text(stats.average.scoreFormatted)
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(.scoreBinCyan)
 
-                let improvement = viewModel.scoreImprovement(for: team)
+                let improvement = stats.improvement
                 if improvement != 0 {
                     Text((improvement >= 0 ? "+" : "") + improvement.scoreFormatted)
                         .font(.caption)
