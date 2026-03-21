@@ -117,3 +117,58 @@ let bounds = scoresheets.reduce(into: (earliest: scoresheets[0], latest: scoresh
     if sheet.createdAt > result.latest.createdAt { result.latest = sheet }
 }
 ```
+
+## ⚡ [Performance] Consolidate Extrema Array Traversal in InsightsViewModel
+**What:** Refactored `averageScore(for:)`, `bestScore(for:)`, and `scoreImprovement(for:)` in `ScoreBin/ViewModels/InsightsViewModel.swift` into a single `teamStats(for:)` method that uses a single-pass `reduce(into:)`. Updated `ScoreBin/Views/Teams/TeamDetailView.swift` and `ScoreBin/Views/Insights/InsightsDashboardView.swift` to use the new method.
+**Why:** The original implementation iterated over the entire `team.scoresheets` array multiple times (O(N) for total, O(N) for max, and O(N) for bounds reduction) to calculate the average, best, and improvement scores. A single `.reduce` calculates all values simultaneously (`O(N)`), providing a more declarative and performant Swift implementation.
+**Measured Improvement:** Reduces iteration count from O(3N) to O(N).
+**Risk Assessment:** Low risk. Ensured boundary conditions (e.g., empty array or < 2 scoresheets) are properly handled and identical to the previous implementation.
+
+### Before
+```swift
+func averageScore(for team: Team) -> Double {
+    guard !team.scoresheets.isEmpty else { return 0 }
+    let total = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
+    return (total / Double(team.scoresheets.count)).rounded2
+}
+
+func bestScore(for team: Team) -> Double {
+    team.scoresheets.max(by: { $0.finalScore < $1.finalScore })?.finalScore ?? 0
+}
+
+func scoreImprovement(for team: Team) -> Double {
+    let scoresheets = team.scoresheets
+    guard scoresheets.count >= 2 else { return 0 }
+
+    let bounds = scoresheets.reduce(into: (earliest: scoresheets[0], latest: scoresheets[0])) { result, sheet in
+        if sheet.createdAt < result.earliest.createdAt {
+            result.earliest = sheet
+        }
+        if sheet.createdAt > result.latest.createdAt {
+            result.latest = sheet
+        }
+    }
+
+    return (bounds.latest.finalScore - bounds.earliest.finalScore).rounded2
+}
+```
+
+### After
+```swift
+func teamStats(for team: Team) -> (average: Double, best: Double, improvement: Double) {
+    guard let firstSheet = team.scoresheets.first else { return (0, 0, 0) }
+
+    let initial = (total: 0.0, best: -Double.infinity, earliest: firstSheet, latest: firstSheet)
+    let stats = team.scoresheets.reduce(into: initial) { result, sheet in
+        result.total += sheet.finalScore
+        if sheet.finalScore > result.best { result.best = sheet.finalScore }
+        if sheet.createdAt < result.earliest.createdAt { result.earliest = sheet }
+        if sheet.createdAt > result.latest.createdAt { result.latest = sheet }
+    }
+
+    let average = (stats.total / Double(team.scoresheets.count)).rounded2
+    let improvement = team.scoresheets.count >= 2 ? (stats.latest.finalScore - stats.earliest.finalScore).rounded2 : 0.0
+
+    return (average, stats.best == -Double.infinity ? 0 : stats.best, improvement)
+}
+```
