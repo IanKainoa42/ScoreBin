@@ -4,13 +4,7 @@ struct DeductionsSection: View {
     @Binding var scoresheet: Scoresheet
 
     var totalDeductions: Double {
-        (Double(scoresheet.athleteFalls) * ScoringRules.Deductions.athleteFall +
-         Double(scoresheet.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall +
-         Double(scoresheet.buildingBobbles) * ScoringRules.Deductions.buildingBobble +
-         Double(scoresheet.buildingFalls) * ScoringRules.Deductions.buildingFall +
-         Double(scoresheet.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall +
-         Double(scoresheet.boundaryViolations) * ScoringRules.Deductions.boundaryViolation +
-         Double(scoresheet.timeLimitViolations) * ScoringRules.Deductions.timeLimitViolation).rounded2
+        scoresheet.totalDeductions.rounded2
     }
 
     var body: some View {

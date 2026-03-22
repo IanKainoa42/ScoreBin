@@ -5,7 +5,7 @@ struct OverallJudgeSection: View {
     var viewModel: ScoresheetViewModel
 
     var danceTotal: Double {
-        (scoresheet.danceDifficulty + scoresheet.danceExecution).rounded2
+        scoresheet.danceTotal.rounded2
     }
 
     var body: some View {

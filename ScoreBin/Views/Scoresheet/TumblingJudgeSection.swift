@@ -4,17 +4,15 @@ struct TumblingJudgeSection: View {
     @Binding var scoresheet: Scoresheet
 
     var standingTotal: Double {
-        (scoresheet.standingDifficulty + scoresheet.standingExecution + scoresheet.standingDrivers)
-            .rounded2
+        scoresheet.standingTotal.rounded2
     }
 
     var runningTotal: Double {
-        (scoresheet.runningDifficulty + scoresheet.runningExecution + scoresheet.runningDrivers + scoresheet.runningDriverMaxPart)
-            .rounded2
+        scoresheet.runningTotal.rounded2
     }
 
     var jumpsTotal: Double {
-        (scoresheet.jumpsDifficulty + scoresheet.jumpsExecution).rounded2
+        scoresheet.jumpsTotal.rounded2
     }
 
     var body: some View {
