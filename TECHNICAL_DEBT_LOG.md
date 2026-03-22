@@ -172,3 +172,31 @@ func teamStats(for team: Team) -> (average: Double, best: Double, improvement: D
     return (average, stats.best == -Double.infinity ? 0 : stats.best, improvement)
 }
 ```
+
+## ⚡ [Architecture] Centralize Score Calculation Logic in Scoresheet Model
+**What:** Refactored `BuildingJudgeSection`, `TumblingJudgeSection`, `OverallJudgeSection`, and `DeductionsSection` to remove manually duplicated score calculations (e.g., `stuntTotal`, `totalDeductions`). Replaced these local computed properties with calls directly to the identical computed properties already present in the `Scoresheet` model (e.g., `scoresheet.stuntTotal.rounded2`).
+**Why:** Business logic and score aggregations were improperly embedded and duplicated directly within the SwiftUI views, violating MVVM and separation of concerns. Centralizing these calculations in the `Scoresheet` model ensures consistency, prevents bugs if scoring rules change, and simplifies the views.
+**Measured Improvement:** Eliminated ~20 lines of redundant mathematical calculations from the View layer.
+**Risk Assessment:** Low risk. Replaced identical calculation logic with the authoritative logic from the model. Kept the `.rounded2` modifier to ensure no UI formatting regressions.
+
+### Before
+```swift
+// In DeductionsSection.swift
+var totalDeductions: Double {
+    (Double(scoresheet.athleteFalls) * ScoringRules.Deductions.athleteFall +
+     Double(scoresheet.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall +
+     Double(scoresheet.buildingBobbles) * ScoringRules.Deductions.buildingBobble +
+     Double(scoresheet.buildingFalls) * ScoringRules.Deductions.buildingFall +
+     Double(scoresheet.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall +
+     Double(scoresheet.boundaryViolations) * ScoringRules.Deductions.boundaryViolation +
+     Double(scoresheet.timeLimitViolations) * ScoringRules.Deductions.timeLimitViolation).rounded2
+}
+```
+
+### After
+```swift
+// In DeductionsSection.swift
+var totalDeductions: Double {
+    scoresheet.totalDeductions.rounded2
+}
+```
