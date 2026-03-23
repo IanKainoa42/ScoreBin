@@ -132,7 +132,9 @@ class SyncManager {
         let batchData = items.map { dataProvider($0) }
 
         try await bulkUploadAction(batchData)
-        items.forEach { updateStatus($0) }
+        for item in items {
+            updateStatus(item)
+        }
     }
 
     // MARK: - Individual Sync Methods
@@ -280,7 +282,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        parsedData.forEach { id, data in
+        for (id, data) in parsedData {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -303,7 +305,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        parsedData.forEach { id, data in
+        for (id, data) in parsedData {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -329,7 +331,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        parsedData.forEach { id, data in
+        for (id, data) in parsedData {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -393,7 +395,7 @@ class SyncManager {
             compsMap = [:]
         }
 
-        parsedData.forEach { id, data in
+        for (id, data) in parsedData {
             let scoresheet: Scoresheet
             if let existing = existingMap[id] {
                 scoresheet = existing
