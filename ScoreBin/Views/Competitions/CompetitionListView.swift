@@ -78,7 +78,7 @@ struct CompetitionListView: View {
     }
 
     private func deleteCompetitions(at offsets: IndexSet) {
-        offsets.forEach { index in
+        for index in offsets {
             modelContext.delete(competitions[index])
         }
         try? modelContext.save()

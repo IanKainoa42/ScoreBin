@@ -114,7 +114,7 @@ struct TeamListView: View {
     }
 
     private func deleteTeams(_ teams: [Team], at offsets: IndexSet) {
-        offsets.forEach { index in
+        for index in offsets {
             modelContext.delete(teams[index])
         }
         try? modelContext.save()
