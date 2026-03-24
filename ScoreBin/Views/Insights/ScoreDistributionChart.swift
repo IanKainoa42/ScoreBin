@@ -2,16 +2,20 @@ import SwiftUI
 import Charts
 
 struct ScoreDistributionChart: View {
-    let scoresheets: [Scoresheet]
+    private let distribution: [ScoreRange]
+    private let stats: (avg: Double, high: Double, low: Double)?
 
-    @State private var distribution: [ScoreRange] = []
-    @State private var stats: (avg: Double, high: Double, low: Double)?
+    init(scores: [Double]) {
+        let summary = Self.computeChartData(from: scores)
+        self.distribution = summary.distribution
+        self.stats = summary.stats
+    }
 
-    private func computeChartData() {
-        guard !scoresheets.isEmpty else {
-            distribution = []
-            stats = nil
-            return
+    private static func computeChartData(
+        from scores: [Double]
+    ) -> (distribution: [ScoreRange], stats: (avg: Double, high: Double, low: Double)?) {
+        guard !scores.isEmpty else {
+            return ([], nil)
         }
 
         let initialData: (counts: [Int], total: Double, high: Double, low: Double) = (
@@ -21,29 +25,33 @@ struct ScoreDistributionChart: View {
             low: Double.infinity
         )
 
-        let aggregated = scoresheets.reduce(into: initialData) { result, sheet in
-            let score = sheet.finalScore
+        let aggregated = scores.reduce(into: initialData) { result, score in
 
-            switch score {
-            case ..<30: result.counts[0] += 1
-            case 30..<35: result.counts[1] += 1
-            case 35..<40: result.counts[2] += 1
-            case 40..<45: result.counts[3] += 1
-            case 45..<47: result.counts[4] += 1
-            default: result.counts[5] += 1
-            }
+            if score < 30 { result.counts[0] += 1 }
+            else if score < 35 { result.counts[1] += 1 }
+            else if score < 40 { result.counts[2] += 1 }
+            else if score < 45 { result.counts[3] += 1 }
+            else if score < 47 { result.counts[4] += 1 }
+            else { result.counts[5] += 1 }
 
             result.total += score
             if score > result.high { result.high = score }
             if score < result.low { result.low = score }
         }
 
-        let labels = ["< 30", "30-34", "35-39", "40-44", "45-46", "47-50"]
-        distribution = zip(labels, aggregated.counts).map {
-            ScoreRange(label: $0, count: $1)
-        }
+        let distribution = [
+            ScoreRange(label: "< 30", count: aggregated.counts[0]),
+            ScoreRange(label: "30-34", count: aggregated.counts[1]),
+            ScoreRange(label: "35-39", count: aggregated.counts[2]),
+            ScoreRange(label: "40-44", count: aggregated.counts[3]),
+            ScoreRange(label: "45-46", count: aggregated.counts[4]),
+            ScoreRange(label: "47-50", count: aggregated.counts[5])
+        ]
 
-        stats = (aggregated.total / Double(scoresheets.count), aggregated.high, aggregated.low)
+        return (
+            distribution,
+            (aggregated.total / Double(scores.count), aggregated.high, aggregated.low)
+        )
     }
 
     var body: some View {
@@ -93,12 +101,6 @@ struct ScoreDistributionChart: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .onAppear {
-            computeChartData()
-        }
-        .onChange(of: scoresheets) { _, _ in
-            computeChartData()
-        }
     }
 }
 
@@ -126,7 +128,7 @@ struct StatLabel: View {
 }
 
 #Preview {
-    ScoreDistributionChart(scoresheets: [])
+    ScoreDistributionChart(scores: [])
         .frame(height: 250)
         .padding()
         .background(Color.scoreBinBackground)

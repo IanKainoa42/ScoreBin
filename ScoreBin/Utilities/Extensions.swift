@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftIanKit
 
 // MARK: - Color Extensions
 extension Color {
@@ -60,86 +61,20 @@ extension View {
     }
 }
 
-// MARK: - Number Formatting
-extension Double {
-    private static let scoreFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
-        return formatter
-    }()
+// MARK: - Backwards Compatibility Aliases (delegates to SwiftIanKit)
 
+extension Double {
     /// Format score for display (2 decimal places)
-    var scoreFormatted: String {
-        Self.scoreFormatter.string(from: NSNumber(value: self)) ?? String(format: "%.2f", self)
-    }
+    var scoreFormatted: String { formatted2d }
 
     /// Format score with sign for deductions
-    var deductionFormatted: String {
-        "-\(scoreFormatted)"
-    }
+    var deductionFormatted: String { "-\(formatted2d)" }
 
     /// Round to 2 decimal places
-    var rounded2: Double {
-        (self * 100).rounded() / 100
-    }
+    var rounded2: Double { roundedTo2 }
 }
 
-// MARK: - Date Formatter Extensions
-extension ISO8601DateFormatter {
-    public static let shared = ISO8601DateFormatter()
-}
-
-extension DateFormatter {
-    public static let mediumDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter
-    }()
-}
-
-// MARK: - String Extensions
-extension String {
-    /// Returns true if the string is empty or contains only whitespaces and newlines
-    var isBlank: Bool {
-        self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-}
-
-// MARK: - Date Extensions
 extension Date {
-    private static let competitionFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter
-    }()
-
-    private static let shortFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M/d/yy"
-        return formatter
-    }()
-
-    private static let abbreviatedDateTimeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
     /// Format date for competition display
-    var competitionFormatted: String {
-        return Self.competitionFormatter.string(from: self)
-    }
-
-    /// Format date for short display
-    var shortFormatted: String {
-        return Self.shortFormatter.string(from: self)
-    }
-
-    /// Format date and time for abbreviated display
-    var abbreviatedDateTimeFormatted: String {
-        return Self.abbreviatedDateTimeFormatter.string(from: self)
-    }
+    var competitionFormatted: String { mediumFormatted }
 }

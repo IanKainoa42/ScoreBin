@@ -9,23 +9,25 @@ struct TeamDetailView: View {
     @State private var showingEditSheet = false
 
     var body: some View {
+        let summary = insightsVM.teamSummary(for: team, recentLimit: 5)
+
         ScrollView {
             LazyVStack(alignment: .center, spacing: 16) {
                 // Team Info Card
                 teamInfoCard
 
                 // Statistics Card
-                if !team.scoresheets.isEmpty {
-                    statsCard
+                if summary.totalScoresheets > 0 {
+                    statsCard(summary: summary)
                 }
 
                 // Category Breakdown
-                if !team.scoresheets.isEmpty {
-                    categoryBreakdownCard
+                if summary.totalScoresheets > 0 {
+                    categoryBreakdownCard(summary: summary)
                 }
 
                 // Recent Scoresheets
-                recentScoresheets
+                recentScoresheets(summary: summary)
             }
             .padding()
         }
@@ -109,30 +111,29 @@ struct TeamDetailView: View {
         .cardStyle()
     }
 
-    private var statsCard: some View {
+    private func statsCard(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Performance")
                 .font(.headline)
                 .foregroundColor(.white)
 
             HStack(spacing: 20) {
-                let stats = insightsVM.teamStats(for: team)
                 StatItem(
                     title: "Average",
-                    value: stats.average.scoreFormatted
+                    value: summary.averageScore.scoreFormatted
                 )
                 StatItem(
                     title: "Best",
-                    value: stats.best.scoreFormatted
+                    value: summary.bestScore.scoreFormatted
                 )
                 StatItem(
                     title: "Trend",
-                    value: (stats.improvement >= 0 ? "+" : "") +
-                           stats.improvement.scoreFormatted
+                    value: (summary.scoreImprovement >= 0 ? "+" : "") +
+                           summary.scoreImprovement.scoreFormatted
                 )
                 StatItem(
                     title: "Sheets",
-                    value: "\(team.scoresheets.count)"
+                    value: "\(summary.totalScoresheets)"
                 )
             }
         }
@@ -141,14 +142,13 @@ struct TeamDetailView: View {
         .cardStyle()
     }
 
-    private var categoryBreakdownCard: some View {
+    private func categoryBreakdownCard(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Average Category Scores")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let breakdown = insightsVM.averageCategoryBreakdown(for: team)
-            ForEach(breakdown) { category in
+            ForEach(summary.categoryBreakdown) { category in
                 HStack {
                     Text(category.category)
                         .font(.subheadline)
@@ -177,20 +177,20 @@ struct TeamDetailView: View {
         .cardStyle()
     }
 
-    private var recentScoresheets: some View {
+    private func recentScoresheets(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Scoresheets")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            if team.scoresheets.isEmpty {
+            if summary.recentScoresheets.isEmpty {
                 Text("No scoresheets yet")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.vertical, 20)
                     .frame(maxWidth: .infinity)
             } else {
-                ForEach(team.scoresheets.sorted { $0.createdAt > $1.createdAt }.prefix(5)) { sheet in
+                ForEach(summary.recentScoresheets) { sheet in
                     ScoresheetRowView(scoresheet: sheet)
                 }
             }

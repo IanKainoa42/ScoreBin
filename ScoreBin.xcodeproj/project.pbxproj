@@ -43,6 +43,9 @@
 		A10000000000000000000033 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* AppConfig.swift */; };
 		A10000000000000000000034 /* StickyScoreBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* StickyScoreBar.swift */; };
 		A10000000000000000000035 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* OnboardingView.swift */; };
+		A10000000000000000000036 /* ScoreSheetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* ScoreSheetDetailView.swift */; };
+		C10000000000000000000001 /* SwiftIanKit in Frameworks */ = {isa = PBXBuildFile; productRef = C20000000000000000000001 /* SwiftIanKit */; };
+		C10000000000000000000002 /* CheerRulesKit in Frameworks */ = {isa = PBXBuildFile; productRef = C20000000000000000000002 /* CheerRulesKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -82,6 +85,7 @@
 		A20000000000000000000033 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		A20000000000000000000034 /* StickyScoreBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyScoreBar.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A20000000000000000000036 /* ScoreSheetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreSheetDetailView.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* ScoreBin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScoreBin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -90,6 +94,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C10000000000000000000001 /* SwiftIanKit in Frameworks */,
+				C10000000000000000000002 /* CheerRulesKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,6 +198,7 @@
 				A20000000000000000000018 /* DeductionsSection.swift */,
 				A20000000000000000000019 /* ScoreSummaryView.swift */,
 				A20000000000000000000034 /* StickyScoreBar.swift */,
+				A20000000000000000000036 /* ScoreSheetDetailView.swift */,
 			);
 			path = Scoresheet;
 			sourceTree = "<group>";
@@ -243,6 +250,10 @@
 			dependencies = (
 			);
 			name = ScoreBin;
+			packageProductDependencies = (
+				C20000000000000000000001 /* SwiftIanKit */,
+				C20000000000000000000002 /* CheerRulesKit */,
+			);
 			productName = ScoreBin;
 			productReference = A30000000000000000000001 /* ScoreBin.app */;
 			productType = "com.apple.product-type.application";
@@ -273,6 +284,10 @@
 			mainGroup = A50000000000000000000001;
 			productRefGroup = A50000000000000000000003 /* Products */;
 			projectDirPath = "";
+			packageReferences = (
+				C30000000000000000000001 /* XCLocalSwiftPackageReference "SwiftAppKit" */,
+				C30000000000000000000002 /* XCLocalSwiftPackageReference "CheerRulesKit" */,
+			);
 			projectRoot = "";
 			targets = (
 				A60000000000000000000001 /* ScoreBin */,
@@ -331,6 +346,7 @@
 				A10000000000000000000033 /* AppConfig.swift in Sources */,
 				A10000000000000000000034 /* StickyScoreBar.swift in Sources */,
 				A10000000000000000000035 /* OnboardingView.swift in Sources */,
+				A10000000000000000000036 /* ScoreSheetDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,6 +552,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C30000000000000000000001 /* XCLocalSwiftPackageReference "SwiftAppKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../SwiftAppKit;
+		};
+		C30000000000000000000002 /* XCLocalSwiftPackageReference "CheerRulesKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../CheerRulesKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C20000000000000000000001 /* SwiftIanKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C30000000000000000000001 /* XCLocalSwiftPackageReference "SwiftAppKit" */;
+			productName = SwiftIanKit;
+		};
+		C20000000000000000000002 /* CheerRulesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C30000000000000000000002 /* XCLocalSwiftPackageReference "CheerRulesKit" */;
+			productName = CheerRulesKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A90000000000000000000001 /* Project object */;
 }

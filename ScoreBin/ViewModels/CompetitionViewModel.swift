@@ -6,6 +6,15 @@ import SwiftData
 class CompetitionViewModel {
     var modelContext: ModelContext?
 
+    struct CompetitionSummary {
+        let totalScoresheets: Int
+        let averageScore: Double
+        let highestScore: Double
+        let lowestScore: Double
+        let scoresheetsByRound: [String: [Scoresheet]]
+        let sortedRounds: [String]
+    }
+
     init(modelContext: ModelContext? = nil) {
         self.modelContext = modelContext
     }
@@ -43,22 +52,77 @@ class CompetitionViewModel {
 
     // MARK: - Statistics
 
-    func competitionStats(for competition: Competition) -> (average: Double, high: Double, low: Double) {
-        guard !competition.scoresheets.isEmpty else { return (0, 0, 0) }
+    func summary(for competition: Competition) -> CompetitionSummary {
+        let scoresheets = competition.scoresheets
 
-        let initial = (total: 0.0, high: -Double.infinity, low: Double.infinity)
-        let stats = competition.scoresheets.reduce(into: initial) { result, sheet in
-            let score = sheet.finalScore
-            result.total += score
-            if score > result.high { result.high = score }
-            if score < result.low { result.low = score }
+        guard !scoresheets.isEmpty else {
+            return CompetitionSummary(
+                totalScoresheets: 0,
+                averageScore: 0,
+                highestScore: 0,
+                lowestScore: 0,
+                scoresheetsByRound: [:],
+                sortedRounds: []
+            )
         }
 
-        let average = (stats.total / Double(competition.scoresheets.count)).rounded2
-        return (average, stats.high, stats.low)
+        let aggregates = scoresheets.reduce(
+            into: (
+                totalScore: 0.0,
+                highest: -Double.infinity,
+                lowest: Double.infinity,
+                byRound: [String: [Scoresheet]]()
+            )
+        ) { result, sheet in
+            result.totalScore += sheet.finalScore
+            result.highest = max(result.highest, sheet.finalScore)
+            result.lowest = min(result.lowest, sheet.finalScore)
+            result.byRound[sheet.round, default: []].append(sheet)
+        }
+
+        let scoresheetsByRound = aggregates.byRound.mapValues {
+            $0.sorted { $0.createdAt > $1.createdAt }
+        }
+        let sortedRounds = scoresheetsByRound.keys.sorted { lhs, rhs in
+            let lhsIndex = roundSortIndex(lhs)
+            let rhsIndex = roundSortIndex(rhs)
+            if lhsIndex == rhsIndex {
+                return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            }
+            return lhsIndex < rhsIndex
+        }
+
+        return CompetitionSummary(
+            totalScoresheets: scoresheets.count,
+            averageScore: (aggregates.totalScore / Double(scoresheets.count)).rounded2,
+            highestScore: aggregates.highest.rounded2,
+            lowestScore: aggregates.lowest.rounded2,
+            scoresheetsByRound: scoresheetsByRound,
+            sortedRounds: sortedRounds
+        )
+    }
+
+    func averageScore(for competition: Competition) -> Double {
+        summary(for: competition).averageScore
+    }
+
+    func highestScore(for competition: Competition) -> Double {
+        summary(for: competition).highestScore
+    }
+
+    func lowestScore(for competition: Competition) -> Double {
+        summary(for: competition).lowestScore
     }
 
     func scoresheetsByRound(for competition: Competition) -> [String: [Scoresheet]] {
-        Dictionary(grouping: competition.scoresheets) { $0.round }
+        summary(for: competition).scoresheetsByRound
+    }
+
+    private func roundSortIndex(_ round: String) -> Int {
+        if let index = RoundType.allCases.firstIndex(where: { $0.rawValue == round }) {
+            return index
+        }
+
+        return RoundType.allCases.count
     }
 }
