@@ -254,3 +254,64 @@ for (id, data) in parsedData {
     }
 }
 ```
+
+---
+
+## ⚡ [Readability] Replace imperative list-building with declarative array filtering
+**What:** Refactored `deductionPatterns(for:)` in `ScoreBin/ViewModels/InsightsViewModel.swift` to avoid imperative `.append()` calls with conditional branches, building the list up-front and using `.filter`. Refactored `ScoreDistributionChart.swift` to use an explicit `switch` statement with score ranges instead of multiple `else if` statements.
+**Why:** The code used multiple identical `if` blocks to conditionally `.append` array values, creating long and error-prone code blocks. Creating an array of all possible values and chaining `.filter { $0.totalCount > 0 }.sorted(...)` is much safer and more idiomatic Swift. A similar change was made to the chart generation which replaces 6 manual chained `if/else if` statements with a clean, readable `switch` case that matches against Swift `Range` objects.
+**Measured Improvement:** Eliminated redundant code structure and multiple conditional branches, reducing cognitive complexity and improving maintainability.
+**Risk Assessment:** Low risk. Replaces nested `append` logic and `if/else` checks with cleaner, mathematically equivalent declarative statements.
+
+### Before
+```swift
+// InsightsViewModel.swift
+var patterns: [DeductionPattern] = []
+
+if stats.athleteFalls > 0 {
+    patterns.append(DeductionPattern(...))
+}
+// (repeated 5 times)
+
+// ScoreDistributionChart.swift
+if score < 30 { result.counts[0] += 1 }
+else if score < 35 { result.counts[1] += 1 }
+else if score < 40 { result.counts[2] += 1 }
+else if score < 45 { result.counts[3] += 1 }
+else if score < 47 { result.counts[4] += 1 }
+else { result.counts[5] += 1 }
+
+distribution = [
+    ScoreRange(label: "< 30", count: aggregated.counts[0]),
+    // (repeated 6 times with manual hardcoded array indices)
+]
+```
+
+### After
+```swift
+// InsightsViewModel.swift
+let possiblePatterns = [
+    DeductionPattern(...),
+    DeductionPattern(...),
+    // ...
+]
+
+return possiblePatterns
+    .filter { $0.totalCount > 0 }
+    .sorted { $0.totalPoints > $1.totalPoints }
+
+// ScoreDistributionChart.swift
+switch score {
+case ..<30: result.counts[0] += 1
+case 30..<35: result.counts[1] += 1
+case 35..<40: result.counts[2] += 1
+case 40..<45: result.counts[3] += 1
+case 45..<47: result.counts[4] += 1
+default: result.counts[5] += 1
+}
+
+let labels = ["< 30", "30-34", "35-39", "40-44", "45-46", "47-50"]
+distribution = zip(labels, aggregated.counts).map {
+    ScoreRange(label: $0, count: $1)
+}
+```

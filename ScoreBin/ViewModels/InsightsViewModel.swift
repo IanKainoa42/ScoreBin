@@ -193,49 +193,37 @@ class InsightsViewModel {
             result.majorBuildingFalls += sheet.majorBuildingFalls
         }
 
-        var patterns: [DeductionPattern] = []
-
-        if stats.athleteFalls > 0 {
-            patterns.append(DeductionPattern(
+        let possiblePatterns = [
+            DeductionPattern(
                 category: ScoringRules.DeductionLabels.athleteFalls,
                 totalCount: stats.athleteFalls,
                 totalPoints: Double(stats.athleteFalls) * ScoringRules.Deductions.athleteFall
-            ))
-        }
-
-        if stats.majorAthleteFalls > 0 {
-            patterns.append(DeductionPattern(
+            ),
+            DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorAthleteFalls,
                 totalCount: stats.majorAthleteFalls,
                 totalPoints: Double(stats.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
-            ))
-        }
-
-        if stats.buildingBobbles > 0 {
-            patterns.append(DeductionPattern(
+            ),
+            DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingBobbles,
                 totalCount: stats.buildingBobbles,
                 totalPoints: Double(stats.buildingBobbles) * ScoringRules.Deductions.buildingBobble
-            ))
-        }
-
-        if stats.buildingFalls > 0 {
-            patterns.append(DeductionPattern(
+            ),
+            DeductionPattern(
                 category: ScoringRules.DeductionLabels.buildingFalls,
                 totalCount: stats.buildingFalls,
                 totalPoints: Double(stats.buildingFalls) * ScoringRules.Deductions.buildingFall
-            ))
-        }
-
-        if stats.majorBuildingFalls > 0 {
-            patterns.append(DeductionPattern(
+            ),
+            DeductionPattern(
                 category: ScoringRules.DeductionLabels.majorBuildingFalls,
                 totalCount: stats.majorBuildingFalls,
                 totalPoints: Double(stats.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
-            ))
-        }
+            )
+        ]
 
-        return patterns.sorted { $0.totalPoints > $1.totalPoints }
+        return possiblePatterns
+            .filter { $0.totalCount > 0 }
+            .sorted { $0.totalPoints > $1.totalPoints }
     }
 
     // MARK: - View Helpers
