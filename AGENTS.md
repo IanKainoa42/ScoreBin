@@ -86,11 +86,14 @@ targeting these files without a concrete failing test or user-visible bug as the
 acceptance criterion.** Agents loop on them indefinitely otherwise.
 
 - `ScoreBin/ViewModels/InsightsViewModel.swift` — statsPerLevel, activeTeams, and
-  scoreHistory have been rewritten ~6 times. Current implementation is considered
-  stable. Do not refactor without a specific failing assertion.
+  scoreHistory have been rewritten 7 times in the last 14 days alone (PRs #46–#59).
+  **FROZEN AS OF 2026-03-19. Last violation: PR #59 (2026-03-25).** Do not refactor
+  without a specific failing assertion.
 - `ScoreBin/Services/SyncManager.swift` — mergeScoresheets/mergeTeams, updatePendingCount,
-  and DateFormatter usage have been optimized ~8 times. ISO8601DateFormatter is now a
-  shared static (confirmed). Do not consolidate again.
+  and DateFormatter usage have been optimized 10+ times. 4 PRs (#34–#37) were closed
+  without merging — all attempted the same refactor and were rejected. ISO8601DateFormatter
+  is a shared static (confirmed). **FROZEN AS OF 2026-03-19. Last violation: PR #58
+  (2026-03-23).** Do not consolidate again.
 - `ScoreBin/Utilities/Extensions.swift` — DateFormatter and string extensions are finalized.
   Do not add new formatter variants without a documented reason.
 
@@ -101,10 +104,11 @@ contains **all three** of:
 2. A reference to which prior PR attempted this fix and why it's insufficient
 3. An acceptance criterion that a human reviewer can verify in 60 seconds
 
-If your task says "optimize", "refactor", "consolidate", "reduce allocations", or
-"clean up" without a failing assertion, **stop immediately**. Post a comment:
-"Task rejected: [file] is locked per Known Fragile Areas. No changes made. Add a
-failing test or user-visible regression to unlock."
+If your task says "optimize", "refactor", "consolidate", "reduce allocations", "clean
+up", "cache", or "reduce iterations" without a failing assertion, **stop immediately**.
+This includes automated sessions (Daily Optimization Workflow, Bolt agent, Sentinel).
+Post a comment: "Task rejected: [file] is locked per Known Fragile Areas. No changes
+made. Add a failing test or user-visible regression to unlock."
 
 Dispatch system will block re-dispatch if the same file was touched for the same
 stated reason in the last 14 PRs.
@@ -226,3 +230,12 @@ Models follow an offline-first pattern:
 2. `SyncManager` monitors network status with `NWPathMonitor`
 3. Auto-syncs when connection restored
 4. Each model tracks its own `syncStatus` independently
+
+## Commit Hygiene
+
+Before staging any commit, delete all intermediate patch artifacts from the working directory:
+- `*.orig` files (e.g., `InsightsViewModel.swift.orig`)
+- `patch.diff` or any `*.diff` files
+- Temp Swift files not in the official Xcode target (e.g., `test_auth.swift`)
+
+These are tools, not source code. Jules has merged PRs containing `.orig` and `patch.diff` files — they create noise in git history and should never be committed.
