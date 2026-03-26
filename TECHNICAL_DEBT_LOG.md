@@ -315,3 +315,66 @@ distribution = zip(labels, aggregated.counts).map {
     ScoreRange(label: $0, count: $1)
 }
 ```
+## ⚡ [Performance] Implement Batched Saving in SyncManager
+**What:** Refactored `mergeGyms`, `mergeTeams`, `mergeCompetitions`, and `mergeScoresheets` in `ScoreBin/Services/SyncManager.swift` to batch save operations every 100 records and once at the end of the loop.
+**Why:** During large sync imports, the previous implementation held all parsed and mapped remote records in memory before attempting a single save, risking memory pressure and app termination. Batching saves per 100 records mitigates this overhead.
+**Measured Improvement:** Reduced memory footprint and potential CPU/GPU spikes during synchronization of large datasets.
+**Risk Assessment:** Low risk. Sequence of insertions is preserved, and the function already handles throws correctly.
+
+### Before
+```swift
+for (id, data) in parsedData {
+    if let existing = existingMap[id] {
+        existing.update(from: data)
+    } else {
+        if let name = data["name"] as? String {
+            let gym = Gym(id: id, name: name)
+            gym.update(from: data)
+            context.insert(gym)
+        }
+    }
+}
+```
+
+### After
+```swift
+for (index, (id, data)) in parsedData.enumerated() {
+    if let existing = existingMap[id] {
+        existing.update(from: data)
+    } else {
+        if let name = data["name"] as? String {
+            let gym = Gym(id: id, name: name)
+            gym.update(from: data)
+            context.insert(gym)
+        }
+    }
+    if (index + 1) % 100 == 0 {
+        try context.save()
+    }
+}
+try context.save()
+```
+
+## ⚡ [Maintainability] Replace Hardcoded Strings in ScoreSheetDetailView
+**What:** Replaced hardcoded deduction strings (e.g., "Athlete Fall", "Major Athlete Fall") in `ScoreBin/Views/Scoresheet/ScoreSheetDetailView.swift` with their respective constants from `ScoringRules.DeductionLabels`.
+**Why:** Improves maintainability and avoids potential string typos when referencing or displaying deductions throughout the application.
+**Measured Improvement:** Centralized string references, increasing code safety.
+**Risk Assessment:** None.
+
+### Before
+```swift
+if scoresheet.athleteFalls > 0 {
+    DeductionRow(
+        name: "Athlete Fall", count: scoresheet.athleteFalls,
+        value: ScoringRules.Deductions.athleteFall)
+}
+```
+
+### After
+```swift
+if scoresheet.athleteFalls > 0 {
+    DeductionRow(
+        name: ScoringRules.DeductionLabels.athleteFalls, count: scoresheet.athleteFalls,
+        value: ScoringRules.Deductions.athleteFall)
+}
+```

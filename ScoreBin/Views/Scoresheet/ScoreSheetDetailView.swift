@@ -135,37 +135,37 @@ struct ScoreSheetDetailView: View {
             VStack(spacing: 8) {
                 if scoresheet.athleteFalls > 0 {
                     DeductionRow(
-                        name: "Athlete Fall", count: scoresheet.athleteFalls,
+                        name: ScoringRules.DeductionLabels.athleteFalls, count: scoresheet.athleteFalls,
                         value: ScoringRules.Deductions.athleteFall)
                 }
                 if scoresheet.majorAthleteFalls > 0 {
                     DeductionRow(
-                        name: "Major Athlete Fall", count: scoresheet.majorAthleteFalls,
+                        name: ScoringRules.DeductionLabels.majorAthleteFalls, count: scoresheet.majorAthleteFalls,
                         value: ScoringRules.Deductions.majorAthleteFall)
                 }
                 if scoresheet.buildingBobbles > 0 {
                     DeductionRow(
-                        name: "Building Bobble", count: scoresheet.buildingBobbles,
+                        name: ScoringRules.DeductionLabels.buildingBobbles, count: scoresheet.buildingBobbles,
                         value: ScoringRules.Deductions.buildingBobble)
                 }
                 if scoresheet.buildingFalls > 0 {
                     DeductionRow(
-                        name: "Building Fall", count: scoresheet.buildingFalls,
+                        name: ScoringRules.DeductionLabels.buildingFalls, count: scoresheet.buildingFalls,
                         value: ScoringRules.Deductions.buildingFall)
                 }
                 if scoresheet.majorBuildingFalls > 0 {
                     DeductionRow(
-                        name: "Major Building Fall", count: scoresheet.majorBuildingFalls,
+                        name: ScoringRules.DeductionLabels.majorBuildingFalls, count: scoresheet.majorBuildingFalls,
                         value: ScoringRules.Deductions.majorBuildingFall)
                 }
                 if scoresheet.boundaryViolations > 0 {
                     DeductionRow(
-                        name: "Boundary Violation", count: scoresheet.boundaryViolations,
+                        name: "Boundary Violations", count: scoresheet.boundaryViolations,
                         value: ScoringRules.Deductions.boundaryViolation)
                 }
                 if scoresheet.timeLimitViolations > 0 {
                     DeductionRow(
-                        name: "Time Limit", count: scoresheet.timeLimitViolations,
+                        name: "Time Limit Violations", count: scoresheet.timeLimitViolations,
                         value: ScoringRules.Deductions.timeLimitViolation)
                 }
             }

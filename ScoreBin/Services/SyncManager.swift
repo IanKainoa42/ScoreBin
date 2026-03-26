@@ -282,7 +282,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -292,7 +292,11 @@ class SyncManager {
                     context.insert(gym)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -305,7 +309,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -315,7 +319,11 @@ class SyncManager {
                     context.insert(team)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -331,7 +339,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -342,7 +350,11 @@ class SyncManager {
                     context.insert(competition)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -395,7 +407,7 @@ class SyncManager {
             compsMap = [:]
         }
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             let scoresheet: Scoresheet
             if let existing = existingMap[id] {
                 scoresheet = existing
@@ -422,6 +434,11 @@ class SyncManager {
             {
                 scoresheet.competition = comp
             }
+
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 }
