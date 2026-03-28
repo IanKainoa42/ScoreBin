@@ -173,6 +173,43 @@ func teamStats(for team: Team) -> (average: Double, best: Double, improvement: D
 }
 ```
 
+## ⚡ [Performance] Consolidate Nested Array Traversal in InsightsViewModel
+**What:** Refactored `statsPerLevel(for:)` in `ScoreBin/ViewModels/InsightsViewModel.swift` to use a single-pass `for-in` loop on `team.scoresheets` instead of sequentially getting the count and computing the sum via `reduce(0.0)`.
+**Why:** The original implementation called `team.scoresheets.count` (O(N)) and `team.scoresheets.reduce` (O(N)) sequentially within the outer iteration over `gym.teams`. By manually tracking `scoresheetCount` and `totalScore` inside a single `for-in` loop, we calculate both values simultaneously (O(N)), avoiding intermediate array property calls and optimizing overall time complexity.
+**Measured Improvement:** Reduces iteration operations on nested collections.
+**Risk Assessment:** Low risk. Mathematical equivalence to previous logic.
+
+### Before
+```swift
+let statsByLevel = gym.teams.reduce(into: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)]()) { result, team in
+    let level = team.level
+    let sheets = team.scoresheets
+    let count = sheets.count
+    let sum = sheets.reduce(0.0) { $0 + $1.finalScore }
+
+    var current = result[level] ?? (0.0, 0, 0)
+    current.totalScore += sum
+    current.scoresheetCount += count
+    current.teamCount += 1
+    result[level] = current
+}
+```
+
+### After
+```swift
+let statsByLevel = gym.teams.reduce(into: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)]()) { result, team in
+    var current = result[team.level] ?? (0.0, 0, 0)
+
+    for sheet in team.scoresheets {
+        current.totalScore += sheet.finalScore
+        current.scoresheetCount += 1
+    }
+    current.teamCount += 1
+
+    result[team.level] = current
+}
+```
+
 ## ⚡ [Architecture] Centralize Score Calculation Logic in Scoresheet Model
 **What:** Refactored `BuildingJudgeSection`, `TumblingJudgeSection`, `OverallJudgeSection`, and `DeductionsSection` to remove manually duplicated score calculations (e.g., `stuntTotal`, `totalDeductions`). Replaced these local computed properties with calls directly to the identical computed properties already present in the `Scoresheet` model (e.g., `scoresheet.stuntTotal.rounded2`).
 **Why:** Business logic and score aggregations were improperly embedded and duplicated directly within the SwiftUI views, violating MVVM and separation of concerns. Centralizing these calculations in the `Scoresheet` model ensures consistency, prevents bugs if scoring rules change, and simplifies the views.

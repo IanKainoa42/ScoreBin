@@ -70,16 +70,15 @@ class InsightsViewModel {
 
     func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
         let statsByLevel = gym.teams.reduce(into: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)]()) { result, team in
-            let level = team.level
-            let sheets = team.scoresheets
-            let count = sheets.count
-            let sum = sheets.reduce(0.0) { $0 + $1.finalScore }
+            var current = result[team.level] ?? (0.0, 0, 0)
 
-            var current = result[level] ?? (0.0, 0, 0)
-            current.totalScore += sum
-            current.scoresheetCount += count
+            for sheet in team.scoresheets {
+                current.totalScore += sheet.finalScore
+                current.scoresheetCount += 1
+            }
             current.teamCount += 1
-            result[level] = current
+
+            result[team.level] = current
         }
 
         return statsByLevel.map { level, stats in
