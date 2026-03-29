@@ -415,3 +415,29 @@ if scoresheet.athleteFalls > 0 {
         value: ScoringRules.Deductions.athleteFall)
 }
 ```
+
+## ⚡️ [Performance] Remove redundant DateFormatter allocation in Model
+**What:** Replaced `DateFormatter.mediumDateFormatter.string(from: date)` in `ScoreBin/Models/Competition.swift` with the statically cached `date.competitionFormatted` extension.
+**Why:** The `formattedDate` computed property previously initialized or utilized a potentially expensive direct static accessor inside the Model instead of using the pre-existing cached helper `competitionFormatted` available via `Extensions.swift`, which delegates to `SwiftIanKit`. This ensures all date formatting remains centralized and performs optimally when rendering large lists of competitions.
+**Measured Improvement:** Eliminated 1 redundant direct dependency call and reduced potential UI thread overhead in `CompetitionListView`.
+**Risk Assessment:** None.
+
+### Before
+```swift
+var formattedDate: String {
+    return DateFormatter.mediumDateFormatter.string(from: date)
+}
+```
+
+### After
+```swift
+var formattedDate: String {
+    return date.competitionFormatted
+}
+```
+
+## ⚡️ [Maintainability] Centralize hardcoded Boundary and Time Limit Violation strings
+**What:** Added `boundaryViolation`, `boundaryViolations`, `timeLimitViolation`, and `timeLimitViolations` to an extension of `ScoresheetConstants.DeductionLabels` in `ScoreBin/Utilities/ScoringRules.swift`, and applied them across `ScoreSheetDetailView.swift` and `DeductionsSection.swift`.
+**Why:** These strings were previously hardcoded in the views, creating a risk of typos and breaking consistency with other deductions (like `athleteFalls`) which already used centralized constants. Centralizing them ensures uniform updates and easier localization or renaming in the future.
+**Measured Improvement:** Replaced 8 instances of hardcoded magic strings with safe static constants.
+**Risk Assessment:** None.

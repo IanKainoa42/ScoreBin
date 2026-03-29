@@ -35,7 +35,7 @@ final class Competition {
 
     // Format date for display
     var formattedDate: String {
-        return DateFormatter.mediumDateFormatter.string(from: date)
+        return date.competitionFormatted
     }
 
     // MARK: - Update from Database

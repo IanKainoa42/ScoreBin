@@ -160,12 +160,12 @@ struct ScoreSheetDetailView: View {
                 }
                 if scoresheet.boundaryViolations > 0 {
                     DeductionRow(
-                        name: "Boundary Violations", count: scoresheet.boundaryViolations,
+                        name: ScoringRules.DeductionLabels.boundaryViolations, count: scoresheet.boundaryViolations,
                         value: ScoringRules.Deductions.boundaryViolation)
                 }
                 if scoresheet.timeLimitViolations > 0 {
                     DeductionRow(
-                        name: "Time Limit Violations", count: scoresheet.timeLimitViolations,
+                        name: ScoringRules.DeductionLabels.timeLimitViolations, count: scoresheet.timeLimitViolations,
                         value: ScoringRules.Deductions.timeLimitViolation)
                 }
             }
