@@ -5,6 +5,15 @@ import CheerRulesKit
 /// All 160+ call sites (ScoringRules.Deductions, ScoringRules.Maximums, etc.) continue working.
 typealias ScoringRules = ScoresheetConstants
 
+// MARK: - Extra Deduction Labels
+
+extension ScoresheetConstants.DeductionLabels {
+    static let boundaryViolation = "Boundary Violation"
+    static let boundaryViolations = "Boundary Violations"
+    static let timeLimitViolation = "Time Limit Violation"
+    static let timeLimitViolations = "Time Limit Violations"
+}
+
 // MARK: - Quantity Chart (bridges to UnitedBuildingRubric)
 
 extension ScoresheetConstants {

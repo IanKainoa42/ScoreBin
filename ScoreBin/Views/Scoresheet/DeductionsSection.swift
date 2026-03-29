@@ -28,43 +28,43 @@ struct DeductionsSection: View {
 
             VStack(spacing: 0) {
                 DeductionCounterRow(
-                    label: "Athlete Fall",
+                    label: ScoringRules.DeductionLabels.athleteFalls,
                     count: $scoresheet.athleteFalls,
                     pointsPer: ScoringRules.Deductions.athleteFall
                 )
 
                 DeductionCounterRow(
-                    label: "Major Athlete Fall",
+                    label: ScoringRules.DeductionLabels.majorAthleteFalls,
                     count: $scoresheet.majorAthleteFalls,
                     pointsPer: ScoringRules.Deductions.majorAthleteFall
                 )
 
                 DeductionCounterRow(
-                    label: "Building Bobble",
+                    label: ScoringRules.DeductionLabels.buildingBobbles,
                     count: $scoresheet.buildingBobbles,
                     pointsPer: ScoringRules.Deductions.buildingBobble
                 )
 
                 DeductionCounterRow(
-                    label: "Building Fall",
+                    label: ScoringRules.DeductionLabels.buildingFalls,
                     count: $scoresheet.buildingFalls,
                     pointsPer: ScoringRules.Deductions.buildingFall
                 )
 
                 DeductionCounterRow(
-                    label: "Major Building Fall",
+                    label: ScoringRules.DeductionLabels.majorBuildingFalls,
                     count: $scoresheet.majorBuildingFalls,
                     pointsPer: ScoringRules.Deductions.majorBuildingFall
                 )
 
                 DeductionCounterRow(
-                    label: "Boundary Violation",
+                    label: ScoringRules.DeductionLabels.boundaryViolation,
                     count: $scoresheet.boundaryViolations,
                     pointsPer: ScoringRules.Deductions.boundaryViolation
                 )
 
                 DeductionCounterRow(
-                    label: "Time Limit Violation",
+                    label: ScoringRules.DeductionLabels.timeLimitViolation,
                     count: $scoresheet.timeLimitViolations,
                     pointsPer: ScoringRules.Deductions.timeLimitViolation
                 )
