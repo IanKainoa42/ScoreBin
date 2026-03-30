@@ -163,10 +163,14 @@ class InsightsViewModel {
 
         let count = Double(totalScoresheets)
         let recentScoresheets = recentLimit.map { Array(sortedScoresheets.prefix($0)) } ?? sortedScoresheets
-        let scoreImprovement =
-            totalScoresheets >= 2
-            ? (sortedScoresheets.first!.finalScore - sortedScoresheets.last!.finalScore).rounded2
-            : 0
+        let scoreImprovement: Double = {
+            guard totalScoresheets >= 2,
+                  let firstScore = sortedScoresheets.first?.finalScore,
+                  let lastScore = sortedScoresheets.last?.finalScore else {
+                return 0.0
+            }
+            return (firstScore - lastScore).rounded2
+        }()
 
         return TeamSummary(
             team: team,
