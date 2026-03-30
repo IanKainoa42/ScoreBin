@@ -441,3 +441,29 @@ var formattedDate: String {
 **Why:** These strings were previously hardcoded in the views, creating a risk of typos and breaking consistency with other deductions (like `athleteFalls`) which already used centralized constants. Centralizing them ensures uniform updates and easier localization or renaming in the future.
 **Measured Improvement:** Replaced 8 instances of hardcoded magic strings with safe static constants.
 **Risk Assessment:** None.
+
+## ⚡ [Safety] Remove Force-Unwraps in InsightsViewModel
+**What:** Refactored `scoreImprovement(for:)` logic in `ScoreBin/ViewModels/InsightsViewModel.swift` to replace an unsafe force-unwrap of optional array elements with an optional binding closure.
+**Why:** The original implementation relied on `sortedScoresheets.first!.finalScore` based on a prior count check. While theoretically safe in that narrow context, force-unwraps are an anti-pattern that can lead to unexpected crashes during refactoring or edge cases. Replacing it with `guard let` ensures compile-time safety.
+**Measured Improvement:** 0 crashes from optional unwrapping. Improves codebase safety and static analysis scores.
+**Risk Assessment:** None. The fallback value remains 0.0, identical to the previous behavior.
+
+### Before
+```swift
+let scoreImprovement =
+    totalScoresheets >= 2
+    ? (sortedScoresheets.first!.finalScore - sortedScoresheets.last!.finalScore).rounded2
+    : 0
+```
+
+### After
+```swift
+let scoreImprovement: Double = {
+    guard totalScoresheets >= 2,
+          let firstScore = sortedScoresheets.first?.finalScore,
+          let lastScore = sortedScoresheets.last?.finalScore else {
+        return 0.0
+    }
+    return (firstScore - lastScore).rounded2
+}()
+```
