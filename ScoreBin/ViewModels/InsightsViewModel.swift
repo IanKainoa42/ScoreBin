@@ -395,58 +395,36 @@ class InsightsViewModel {
         buildingFalls: Int,
         majorBuildingFalls: Int
     ) -> [DeductionPattern] {
-        var patterns: [DeductionPattern] = []
-
-        if athleteFalls > 0 {
-            patterns.append(
-                DeductionPattern(
-                    category: ScoringRules.DeductionLabels.athleteFalls,
-                    totalCount: athleteFalls,
-                    totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
-                )
+        let possiblePatterns = [
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.athleteFalls,
+                totalCount: athleteFalls,
+                totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.majorAthleteFalls,
+                totalCount: majorAthleteFalls,
+                totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.buildingBobbles,
+                totalCount: buildingBobbles,
+                totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.buildingFalls,
+                totalCount: buildingFalls,
+                totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.majorBuildingFalls,
+                totalCount: majorBuildingFalls,
+                totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
             )
-        }
+        ]
 
-        if majorAthleteFalls > 0 {
-            patterns.append(
-                DeductionPattern(
-                    category: ScoringRules.DeductionLabels.majorAthleteFalls,
-                    totalCount: majorAthleteFalls,
-                    totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
-                )
-            )
-        }
-
-        if buildingBobbles > 0 {
-            patterns.append(
-                DeductionPattern(
-                    category: ScoringRules.DeductionLabels.buildingBobbles,
-                    totalCount: buildingBobbles,
-                    totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
-                )
-            )
-        }
-
-        if buildingFalls > 0 {
-            patterns.append(
-                DeductionPattern(
-                    category: ScoringRules.DeductionLabels.buildingFalls,
-                    totalCount: buildingFalls,
-                    totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
-                )
-            )
-        }
-
-        if majorBuildingFalls > 0 {
-            patterns.append(
-                DeductionPattern(
-                    category: ScoringRules.DeductionLabels.majorBuildingFalls,
-                    totalCount: majorBuildingFalls,
-                    totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
-                )
-            )
-        }
-
-        return patterns.sorted { $0.totalPoints > $1.totalPoints }
+        return possiblePatterns
+            .filter { $0.totalCount > 0 }
+            .sorted { $0.totalPoints > $1.totalPoints }
     }
 }

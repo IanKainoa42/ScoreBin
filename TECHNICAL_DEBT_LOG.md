@@ -352,6 +352,60 @@ distribution = zip(labels, aggregated.counts).map {
     ScoreRange(label: $0, count: $1)
 }
 ```
+
+## ⚡ [Readability] Replace imperative list-building with declarative array filtering in deductionPatterns
+**What:** Refactored `deductionPatterns(for:)` in `ScoreBin/ViewModels/InsightsViewModel.swift` to avoid imperative `.append()` calls with conditional branches, building the list up-front and using `.filter`.
+**Why:** The code used multiple identical `if` blocks to conditionally `.append` array values, creating long and error-prone code blocks. Creating an array of all possible values and chaining `.filter { $0.totalCount > 0 }.sorted(...)` is much safer and more idiomatic Swift.
+**Measured Improvement:** Eliminated 5 redundant conditional branches, reducing cognitive complexity and improving maintainability.
+**Risk Assessment:** Low risk. Replaces nested `append` logic and `if` checks with cleaner, mathematically equivalent declarative statements.
+
+### Before
+```swift
+var patterns: [DeductionPattern] = []
+
+if athleteFalls > 0 {
+    patterns.append(
+        DeductionPattern(
+            category: ScoringRules.DeductionLabels.athleteFalls,
+            totalCount: athleteFalls,
+            totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
+        )
+    )
+}
+
+if majorAthleteFalls > 0 {
+    patterns.append(
+        DeductionPattern(
+            category: ScoringRules.DeductionLabels.majorAthleteFalls,
+            totalCount: majorAthleteFalls,
+            totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+        )
+    )
+}
+// (repeated 5 times)
+```
+
+### After
+```swift
+let possiblePatterns = [
+    DeductionPattern(
+        category: ScoringRules.DeductionLabels.athleteFalls,
+        totalCount: athleteFalls,
+        totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
+    ),
+    DeductionPattern(
+        category: ScoringRules.DeductionLabels.majorAthleteFalls,
+        totalCount: majorAthleteFalls,
+        totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+    ),
+    // ...
+]
+
+return possiblePatterns
+    .filter { $0.totalCount > 0 }
+    .sorted { $0.totalPoints > $1.totalPoints }
+```
+
 ## ⚡ [Performance] Implement Batched Saving in SyncManager
 **What:** Refactored `mergeGyms`, `mergeTeams`, `mergeCompetitions`, and `mergeScoresheets` in `ScoreBin/Services/SyncManager.swift` to batch save operations every 100 records and once at the end of the loop.
 **Why:** During large sync imports, the previous implementation held all parsed and mapped remote records in memory before attempting a single save, risking memory pressure and app termination. Batching saves per 100 records mitigates this overhead.
