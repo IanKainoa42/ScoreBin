@@ -15,6 +15,11 @@ struct ScoreSheetDetailView: View {
                     headerSection
                         .padding(.horizontal)
 
+                    if scoresheet.importPreviewRelativePath != nil {
+                        ImportedScoresheetPreviewCard(scoresheet: scoresheet)
+                            .padding(.horizontal)
+                    }
+
                     // Score Summary
                     scoreSummarySection
                         .padding(.horizontal)
@@ -77,6 +82,14 @@ struct ScoreSheetDetailView: View {
                 Text(gymName)
                     .font(.subheadline)
                     .foregroundColor(.gray)
+            }
+
+            if let importSourceType = scoresheet.importSourceType {
+                Text(
+                    "Imported from \(ScoresheetImportSourceType(rawValue: importSourceType)?.displayName ?? importSourceType)"
+                )
+                .font(.caption)
+                .foregroundColor(.scoreBinCyan)
             }
 
             Text(scoresheet.createdAt.abbreviatedDateTimeFormatted)

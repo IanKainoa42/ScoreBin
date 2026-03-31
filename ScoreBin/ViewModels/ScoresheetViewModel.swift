@@ -193,4 +193,38 @@ class ScoresheetViewModel {
             UIPasteboard.general.string = json
         }
     }
+
+    // MARK: - Import
+
+    func applyImportDraft(_ draft: ScoresheetImportDraft) {
+        let importedScoresheet = Scoresheet(
+            id: draft.id,
+            createdAt: draft.createdAt,
+            team: selectedTeam,
+            competition: selectedCompetition,
+            round: draft.round
+        )
+
+        for fieldID in ScoresheetFieldID.allCases {
+            if let value = draft.parsedFields[fieldID]?.candidateValue {
+                fieldID.apply(value, to: importedScoresheet)
+            }
+        }
+
+        if !ScoringRules.isTossAllowed(forLevel: selectedTeam?.level) {
+            importedScoresheet.tossDifficulty = 0
+            importedScoresheet.tossExecution = 0
+        }
+
+        importedScoresheet.importedAt = draft.createdAt
+        importedScoresheet.importSourceType = draft.sourceType.rawValue
+        importedScoresheet.importSourceRelativePath = draft.sourceRelativePath
+        importedScoresheet.importPreviewRelativePath = draft.previewRelativePath
+        importedScoresheet.parserVersion = draft.parserVersion
+        importedScoresheet.syncStatus = .pending
+
+        scoresheet = importedScoresheet
+        scoresheet.team = selectedTeam
+        scoresheet.competition = selectedCompetition
+    }
 }
