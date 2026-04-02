@@ -33,17 +33,6 @@ struct ScoresheetEntryView: View {
         canEnterScores && !isImporting
     }
 
-    private var reviewSheetPresented: Binding<Bool> {
-        Binding(
-            get: { importDraftForReview != nil },
-            set: { newValue in
-                if !newValue {
-                    importDraftForReview = nil
-                }
-            }
-        )
-    }
-
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -180,12 +169,12 @@ struct ScoresheetEntryView: View {
                     ScoresheetImportSourceChooserView(
                         selectedPhotoItem: $selectedPhotoItem,
                         onScan: {
-                            DispatchQueue.main.async {
+                            Task { @MainActor in
                                 activeImportSheet = .scanner
                             }
                         },
                         onPDF: {
-                            DispatchQueue.main.async {
+                            Task { @MainActor in
                                 showingPDFImporter = true
                             }
                         }
@@ -203,17 +192,15 @@ struct ScoresheetEntryView: View {
                     .ignoresSafeArea()
                 }
             }
-            .sheet(isPresented: reviewSheetPresented) {
-                if importDraftForReview != nil {
-                    ScoresheetImportReviewView(
-                        draft: Binding(
-                            get: { importDraftForReview! },
-                            set: { importDraftForReview = $0 }
-                        )
-                    ) { resolvedDraft in
-                        viewModel.applyImportDraft(resolvedDraft)
-                        importDraftForReview = nil
-                    }
+            .sheet(item: $importDraftForReview) { draft in
+                ScoresheetImportReviewView(
+                    draft: Binding(
+                        get: { importDraftForReview ?? draft },
+                        set: { importDraftForReview = $0 }
+                    )
+                ) { resolvedDraft in
+                    viewModel.applyImportDraft(resolvedDraft)
+                    importDraftForReview = nil
                 }
             }
             .fileImporter(
