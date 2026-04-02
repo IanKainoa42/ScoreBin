@@ -87,8 +87,8 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
 
 - `ScoreBin/ViewModels/InsightsViewModel.swift` — statsPerLevel, activeTeams, and
   scoreHistory have been rewritten 9+ times (PRs #46–#61).
-  **FROZEN AS OF 2026-03-19. Last violations: PR #59 (2026-03-25), PR #61 (2026-03-28).**
-  Do not refactor without a specific failing assertion. This file has violated the freeze 3 times post-rule.
+  **FROZEN AS OF 2026-03-19. Last violations: PR #59 (2026-03-25), PR #61 (2026-03-28), PR #63 (2026-03-30), PR #64 (2026-03-31).**
+  Do not refactor without a specific failing assertion. This file has violated the freeze **5 times post-rule** and is now also covered by `.jules/bolt.md` (Bolt's primary instruction source).
 - `ScoreBin/Services/SyncManager.swift` — mergeScoresheets/mergeTeams, updatePendingCount,
   and DateFormatter usage have been optimized 10+ times. 4 PRs (#34–#37) were closed
   without merging — all attempted the same refactor and were rejected. ISO8601DateFormatter
