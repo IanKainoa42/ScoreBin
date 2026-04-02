@@ -62,7 +62,7 @@ struct ScoresheetEntryView: View {
                                 Image(systemName: "doc.text.image")
                                     .foregroundColor(.scoreBinCyan)
                                 Text(
-                                    "Imported \(importedAt.formatted(date: .abbreviated, time: .shortened)) from \(viewModel.scoresheet.importSourceType ?? "source")"
+                                    "Imported \(importedAt.abbreviatedDateTimeFormatted) from \(viewModel.scoresheet.importSourceType ?? "source")"
                                 )
                                 .font(.subheadline)
                                 .foregroundColor(.white)

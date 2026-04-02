@@ -1,0 +1,3 @@
+1. **Refactor Date Formatting in `ScoresheetEntryView.swift`**
+   - In `ScoreBin/Views/Scoresheet/ScoresheetEntryView.swift`, replace `importedAt.formatted(date: .abbreviated, time: .shortened)` with `importedAt.abbreviatedDateTimeFormatted`.
+   - Update `ScoreBin/Utilities/Extensions.swift` to add `var abbreviatedDateTimeFormatted: String` to `Date` if it's not present and it's missing from `SwiftIanKit`. Oh wait, let's verify if `abbreviatedDateTimeFormatted` is in `SwiftIanKit` by looking for where it is defined or by just adding it. Actually, `ScoreSheetDetailView.swift` uses `scoresheet.createdAt.abbreviatedDateTimeFormatted`. Let's assume `abbreviatedDateTimeFormatted` is provided by `SwiftIanKit` or another file. If it compiles now, we can just use it.
