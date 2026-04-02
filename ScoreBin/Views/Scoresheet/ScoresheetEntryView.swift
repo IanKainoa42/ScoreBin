@@ -195,7 +195,7 @@ struct ScoresheetEntryView: View {
             .sheet(item: $importDraftForReview) { draft in
                 ScoresheetImportReviewView(
                     draft: Binding(
-                        get: { draft },
+                        get: { importDraftForReview ?? draft },
                         set: { importDraftForReview = $0 }
                     )
                 ) { resolvedDraft in
