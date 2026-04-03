@@ -569,3 +569,37 @@ onScan: {
     }
 }
 ```
+
+## ⚡ [Safety] Replace GCD with Swift Concurrency in OCR Recognizer
+**What:** Refactored `recognizeText(in:)` in `ScoreBin/Services/ScoresheetImportService.swift` to use `Task.detached {` instead of `DispatchQueue.global(qos: .userInitiated).async {`.
+**Why:** Replacing raw GCD closures with Swift Concurrency (`Task.detached`) adheres to modern Swift thread management standards, eliminates legacy async API mixing, and properly bridges unstructured concurrency with `withCheckedThrowingContinuation`.
+**Measured Improvement:** Reduces reliance on GCD scheduling and integrates correctly with Swift's cooperative thread pool.
+**Risk Assessment:** Low risk. `Task.detached` executes work on an arbitrary thread similar to `DispatchQueue.global`, ensuring synchronous OCR processing does not block the Main Actor while retaining correct thread context.
+
+### Before
+```swift
+DispatchQueue.global(qos: .userInitiated).async {
+    do {
+        try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+    } catch {
+        continuation.resume(throwing: error)
+    }
+}
+```
+
+### After
+```swift
+Task.detached {
+    do {
+        try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
+    } catch {
+        continuation.resume(throwing: error)
+    }
+}
+```
+
+## ⚡ [Hygiene] Remove intermediate patch files
+**What:** Deleted `ScoreBin/ViewModels/InsightsViewModel.swift.orig` from the repository.
+**Why:** The `AGENTS.md` explicitly states intermediate patch artifacts (like `*.orig` files) should never be committed as they create noise in git history.
+**Measured Improvement:** Keeps git history and workspace clean.
+**Risk Assessment:** None.

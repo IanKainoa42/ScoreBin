@@ -70,7 +70,7 @@ struct VisionScoresheetTextRecognizer: ScoresheetTextRecognizing {
             request.minimumTextHeight = 0.015
             request.revision = VNRecognizeTextRequestRevision3
 
-            DispatchQueue.global(qos: .userInitiated).async {
+            Task.detached {
                 do {
                     try VNImageRequestHandler(cgImage: cgImage, options: [:]).perform([request])
                 } catch {
