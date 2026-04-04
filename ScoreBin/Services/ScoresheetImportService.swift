@@ -477,48 +477,42 @@ final class ScoresheetImportService: ScoresheetImporting {
         range: ScoringRules.ScoreRange,
         isAmbiguous: Bool
     ) -> [ParsedValueCandidate] {
-        var candidates: [ParsedValueCandidate] = []
-
         let rawValueIsInRange = rawValue >= range.min - 0.001 && rawValue <= range.max + 0.001
         if rawValueIsInRange {
-            if let candidate = makeScoreCandidate(
+            let candidate = makeScoreCandidate(
                 from: rawValue,
                 originalRawValue: rawValue,
                 range: range,
                 isAmbiguous: isAmbiguous
-            ) {
-                candidates.append(candidate)
-            }
-            return candidates
+            )
+            return [candidate].compactMap { $0 }
         }
 
         let plausibleScaledValues = [rawValue / 10, rawValue / 100].filter { candidate in
             candidate >= range.min - range.step && candidate <= range.max + range.step
         }
 
-        for scaledValue in plausibleScaledValues {
-            if let candidate = makeScoreCandidate(
+        let candidates = plausibleScaledValues.compactMap { scaledValue in
+            makeScoreCandidate(
                 from: scaledValue,
                 originalRawValue: rawValue,
                 range: range,
                 isAmbiguous: isAmbiguous
-            ) {
-                candidates.append(candidate)
-            }
-        }
-
-        if candidates.isEmpty,
-            let fallbackCandidate = makeScoreCandidate(
-                from: rawValue,
-                originalRawValue: rawValue,
-                range: range,
-                isAmbiguous: isAmbiguous
             )
-        {
-            candidates.append(fallbackCandidate)
         }
 
-        return candidates.uniqued()
+        if !candidates.isEmpty {
+            return candidates.uniqued()
+        }
+
+        let fallbackCandidate = makeScoreCandidate(
+            from: rawValue,
+            originalRawValue: rawValue,
+            range: range,
+            isAmbiguous: isAmbiguous
+        )
+
+        return [fallbackCandidate].compactMap { $0 }.uniqued()
     }
 
     private func makeScoreCandidate(
