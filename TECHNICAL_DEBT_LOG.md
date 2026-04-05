@@ -603,3 +603,39 @@ Task.detached {
 **Why:** The `AGENTS.md` explicitly states intermediate patch artifacts (like `*.orig` files) should never be committed as they create noise in git history.
 **Measured Improvement:** Keeps git history and workspace clean.
 **Risk Assessment:** None.
+
+## Refactor Imperative Loops to Declarative Operations in ScoresheetImportService
+**Date:** 2026-03-29
+**Description:** Refactored multiple instances of `for-in` loops that relied on mutable state into declarative, Swift-optimized operations (`map`, `filter`, `flatMap`, `compactMap`, and `reduce(into:)`) in `ScoresheetImportService.swift`.
+
+**Before:**
+```swift
+func parseRecognizedFields(
+    _ observations: [RecognizedTextObservation],
+    context: ScoresheetImportContext
+) -> [ScoresheetFieldID: ParsedField] {
+    var parsedFields: [ScoresheetFieldID: ParsedField] = [:]
+    for definition in Self.fieldDefinitions {
+        // ... mutable dictionary insertions
+    }
+    return parsedFields
+}
+```
+
+**After:**
+```swift
+func parseRecognizedFields(
+    _ observations: [RecognizedTextObservation],
+    context: ScoresheetImportContext
+) -> [ScoresheetFieldID: ParsedField] {
+    return Self.fieldDefinitions.reduce(into: [ScoresheetFieldID: ParsedField]()) { parsedFields, definition in
+        // ... pure updates to the inout accumulator
+    }
+}
+```
+
+**Performance Metrics:**
+Reduces mutable intermediate state allocations during parsing and UI building, leading to cleaner and potentially faster runtime execution due to Swift compiler optimizations for higher-order functions. In `buildCandidates`, an unnecessary `spatialConfidence` calculation was also hoisted out of a mapping block to avoid redundant calls.
+
+**Risk Assessment:**
+Low risk. The core OCR mapping logic and field definitions themselves are unchanged. The logic shift is purely syntactical and semantic at the collection-processing layer.
