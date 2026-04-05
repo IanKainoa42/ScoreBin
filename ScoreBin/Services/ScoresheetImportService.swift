@@ -137,9 +137,7 @@ final class ScoresheetImportService: ScoresheetImporting {
         _ observations: [RecognizedTextObservation],
         context: ScoresheetImportContext
     ) -> [ScoresheetFieldID: ParsedField] {
-        var parsedFields: [ScoresheetFieldID: ParsedField] = [:]
-
-        for definition in Self.fieldDefinitions {
+        return Self.fieldDefinitions.reduce(into: [ScoresheetFieldID: ParsedField]()) { parsedFields, definition in
             if definition.fieldID.isTossField
                 && !ScoringRules.isTossAllowed(forLevel: context.teamLevel)
             {
@@ -152,7 +150,7 @@ final class ScoresheetImportService: ScoresheetImporting {
                     sourceRect: nil,
                     failureReason: nil
                 )
-                continue
+                return
             }
 
             let searchRegion = definition.searchRegion.insetBy(dx: -0.03, dy: -0.02)
@@ -177,7 +175,7 @@ final class ScoresheetImportService: ScoresheetImporting {
                     sourceRect: nil,
                     failureReason: "No OCR value matched this field"
                 )
-                continue
+                return
             }
 
             let isAmbiguous =
@@ -216,8 +214,6 @@ final class ScoresheetImportService: ScoresheetImporting {
                 failureReason: failureReason
             )
         }
-
-        return parsedFields
     }
 
     private func prepareDocument(from input: ScoresheetImportInput) throws -> PreparedImportDocument {
@@ -372,34 +368,31 @@ final class ScoresheetImportService: ScoresheetImporting {
         labelConfidence: Double
     ) -> [FieldCandidate] {
         let valueRegion = definition.valueRegion.insetBy(dx: -0.015, dy: -0.008)
-        var candidates: [FieldCandidate] = []
 
-        for observation in observations {
-            guard
+        let candidates: [FieldCandidate] = observations
+            .filter { observation in
                 observation.boundingBox.intersects(valueRegion)
                     || valueRegion.contains(observation.boundingBox.center)
-            else {
-                continue
             }
-
-            let parsedCandidates = parseFieldValues(
-                from: observation.text,
-                fieldID: definition.fieldID,
-                teamLevel: teamLevel
-            )
-
-            for parsed in parsedCandidates {
+            .flatMap { observation -> [FieldCandidate] in
                 let spatial = spatialConfidence(
                     observation.boundingBox,
                     expectedRegion: definition.valueRegion
                 )
-                let validity = parsed.wasCorrected ? 0.65 : 1.0
-                let composite =
-                    observation.confidence * 0.55 + labelConfidence * 0.2 + spatial * 0.15
-                    + validity * 0.1
 
-                candidates.append(
-                    FieldCandidate(
+                let parsedCandidates = parseFieldValues(
+                    from: observation.text,
+                    fieldID: definition.fieldID,
+                    teamLevel: teamLevel
+                )
+
+                return parsedCandidates.map { parsed in
+                    let validity = parsed.wasCorrected ? 0.65 : 1.0
+                    let composite =
+                        observation.confidence * 0.55 + labelConfidence * 0.2 + spatial * 0.15
+                        + validity * 0.1
+
+                    return FieldCandidate(
                         value: parsed.value,
                         rawText: observation.text,
                         sourceRect: observation.boundingBox,
@@ -408,9 +401,8 @@ final class ScoresheetImportService: ScoresheetImporting {
                         failureReason: parsed.failureReason,
                         compositeScore: composite
                     )
-                )
+                }
             }
-        }
 
         return candidates.sorted { lhs, rhs in
             if lhs.compositeScore == rhs.compositeScore {
@@ -457,17 +449,15 @@ final class ScoresheetImportService: ScoresheetImporting {
             for: #"(?<![\p{L}])[0-9OoIl]+(?:[.,][0-9OoIl]+)?(?![\p{L}])"#
         )
         let isAmbiguous = Set(matches).count > 1
-        var candidates: [ParsedValueCandidate] = []
-        for match in matches {
-            guard let rawValue = Double(match) else { continue }
-            candidates.append(
-                contentsOf: validatedScoreCandidates(
+        let candidates = matches
+            .compactMap { Double($0) }
+            .flatMap { rawValue in
+                validatedScoreCandidates(
                     from: rawValue,
                     range: range,
                     isAmbiguous: isAmbiguous
                 )
-            )
-        }
+            }
 
         return candidates.uniqued()
     }
@@ -590,24 +580,6 @@ final class ScoresheetImportService: ScoresheetImporting {
     }
 
     private static func makeFieldDefinitions() -> [ScoresheetFieldDefinition] {
-        var definitions: [ScoresheetFieldDefinition] = []
-
-        func append(
-            _ fieldID: ScoresheetFieldID,
-            aliases: [String],
-            labelRegion: CGRect,
-            valueRegion: CGRect
-        ) {
-            definitions.append(
-                ScoresheetFieldDefinition(
-                    fieldID: fieldID,
-                    aliases: aliases,
-                    labelRegion: labelRegion,
-                    valueRegion: valueRegion
-                )
-            )
-        }
-
         let buildingLabelX = 0.055
         let buildingValueX = 0.255
         let tumblingLabelX = 0.37
@@ -638,11 +610,6 @@ final class ScoresheetImportService: ScoresheetImporting {
             (.buildingShowmanship, ["Building Showmanship", "Showmanship"], 0.71),
         ]
 
-        for (fieldID, aliases, y) in buildingRows {
-            let (labelRegion, valueRegion) = row(y, labelX: buildingLabelX, valueX: buildingValueX)
-            append(fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
-        }
-
         let tumblingRows: [(ScoresheetFieldID, [String], CGFloat)] = [
             (.standingDifficulty, ["Standing Difficulty"], 0.14),
             (.standingExecution, ["Standing Execution"], 0.19),
@@ -657,11 +624,6 @@ final class ScoresheetImportService: ScoresheetImporting {
             (.tumblingShowmanship, ["Tumbling Showmanship", "Showmanship"], 0.78),
         ]
 
-        for (fieldID, aliases, y) in tumblingRows {
-            let (labelRegion, valueRegion) = row(y, labelX: tumblingLabelX, valueX: tumblingValueX)
-            append(fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
-        }
-
         let overallRows: [(ScoresheetFieldID, [String], CGFloat)] = [
             (.danceDifficulty, ["Dance Difficulty"], 0.16),
             (.danceExecution, ["Dance Execution"], 0.26),
@@ -669,11 +631,6 @@ final class ScoresheetImportService: ScoresheetImporting {
             (.overallCreativity, ["Overall Creativity", "Creativity"], 0.52),
             (.overallShowmanship, ["Overall Showmanship", "Showmanship"], 0.62),
         ]
-
-        for (fieldID, aliases, y) in overallRows {
-            let (labelRegion, valueRegion) = row(y, labelX: overallLabelX, valueX: overallValueX)
-            append(fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
-        }
 
         let deductionRows: [(ScoresheetFieldID, [String], CGFloat)] = [
             (.athleteFalls, ["Athlete Fall", "Athlete Falls"], 0.74),
@@ -685,16 +642,28 @@ final class ScoresheetImportService: ScoresheetImporting {
             (.timeLimitViolations, ["Time Limit Violation", "Time Limit Violations"], 0.95),
         ]
 
-        for (fieldID, aliases, y) in deductionRows {
-            append(
-                fieldID,
-                aliases: aliases,
-                labelRegion: CGRect(x: 0.08, y: y, width: 0.38, height: rowHeight),
-                valueRegion: CGRect(x: 0.79, y: y, width: 0.08, height: rowHeight)
-            )
+        let buildingDefinitions = buildingRows.map { fieldID, aliases, y -> ScoresheetFieldDefinition in
+            let (labelRegion, valueRegion) = row(y, labelX: buildingLabelX, valueX: buildingValueX)
+            return ScoresheetFieldDefinition(fieldID: fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
         }
 
-        return definitions
+        let tumblingDefinitions = tumblingRows.map { fieldID, aliases, y -> ScoresheetFieldDefinition in
+            let (labelRegion, valueRegion) = row(y, labelX: tumblingLabelX, valueX: tumblingValueX)
+            return ScoresheetFieldDefinition(fieldID: fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
+        }
+
+        let overallDefinitions = overallRows.map { fieldID, aliases, y -> ScoresheetFieldDefinition in
+            let (labelRegion, valueRegion) = row(y, labelX: overallLabelX, valueX: overallValueX)
+            return ScoresheetFieldDefinition(fieldID: fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
+        }
+
+        let deductionDefinitions = deductionRows.map { fieldID, aliases, y -> ScoresheetFieldDefinition in
+            let labelRegion = CGRect(x: 0.08, y: y, width: 0.38, height: rowHeight)
+            let valueRegion = CGRect(x: 0.79, y: y, width: 0.08, height: rowHeight)
+            return ScoresheetFieldDefinition(fieldID: fieldID, aliases: aliases, labelRegion: labelRegion, valueRegion: valueRegion)
+        }
+
+        return buildingDefinitions + tumblingDefinitions + overallDefinitions + deductionDefinitions
     }
 }
 
@@ -780,8 +749,7 @@ private extension String {
 
 private extension Array where Element == ParsedValueCandidate {
     func uniqued() -> [ParsedValueCandidate] {
-        var seen: [ScoresheetFieldValue: ParsedValueCandidate] = [:]
-        for candidate in self {
+        let seen = self.reduce(into: [ScoresheetFieldValue: ParsedValueCandidate]()) { seen, candidate in
             if let existing = seen[candidate.value] {
                 let preferredCandidate =
                     existing.wasCorrected && !candidate.wasCorrected ? candidate : existing
