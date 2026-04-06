@@ -92,8 +92,8 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
 - `ScoreBin/Services/SyncManager.swift` — mergeScoresheets/mergeTeams, updatePendingCount,
   and DateFormatter usage have been optimized 10+ times. 4 PRs (#34–#37) were closed
   without merging — all attempted the same refactor and were rejected. ISO8601DateFormatter
-  is a shared static (confirmed). **FROZEN AS OF 2026-03-19. Last violation: PR #58
-  (2026-03-23).** Do not consolidate again.
+  is a shared static (confirmed). **FROZEN AS OF 2026-03-19. Last violations: PR #58
+  (2026-03-23), PR #60 (2026-03-26 — "batched saving + magic strings").** Do not consolidate again.
 - `ScoreBin/Utilities/Extensions.swift` — DateFormatter and string extensions are finalized.
   Do not add new formatter variants without a documented reason.
 - `ScoreBin/Services/ScoresheetImportService.swift` — OCR parsing and candidate scoring logic.
@@ -240,8 +240,10 @@ Models follow an offline-first pattern:
 ## Commit Hygiene
 
 Before staging any commit, delete all intermediate patch artifacts from the working directory:
-- `*.orig` files (e.g., `InsightsViewModel.swift.orig`)
+- `*.orig` files (e.g., `InsightsViewModel.swift.orig` — committed in PR #67)
 - `patch.diff` or any `*.diff` files
 - Temp Swift files not in the official Xcode target (e.g., `test_auth.swift`)
+- `TECHNICAL_DEBT_LOG.md` — agent planning file committed 10+ times (PRs #58–#69). It tracks agent work, not source code. **Never commit it.**
+- `plan.md`, `test_plan.md` — planning artifacts committed in PRs #65–#66. **Never commit them.**
 
-These are tools, not source code. Jules has merged PRs containing `.orig` and `patch.diff` files — they create noise in git history and should never be committed.
+These are tools, not source code. If these files keep appearing in your staging area, add them to `.gitignore`. Do not include any of these in your PR — reject the commit and re-stage without them.
