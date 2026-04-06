@@ -26,13 +26,14 @@ struct ScoreDistributionChart: View {
         )
 
         let aggregated = scores.reduce(into: initialData) { result, score in
-
-            if score < 30 { result.counts[0] += 1 }
-            else if score < 35 { result.counts[1] += 1 }
-            else if score < 40 { result.counts[2] += 1 }
-            else if score < 45 { result.counts[3] += 1 }
-            else if score < 47 { result.counts[4] += 1 }
-            else { result.counts[5] += 1 }
+            switch score {
+            case ..<30: result.counts[0] += 1
+            case 30..<35: result.counts[1] += 1
+            case 35..<40: result.counts[2] += 1
+            case 40..<45: result.counts[3] += 1
+            case 45..<47: result.counts[4] += 1
+            default: result.counts[5] += 1
+            }
 
             result.total += score
             if score > result.high { result.high = score }
