@@ -639,3 +639,15 @@ Reduces mutable intermediate state allocations during parsing and UI building, l
 
 **Risk Assessment:**
 Low risk. The core OCR mapping logic and field definitions themselves are unchanged. The logic shift is purely syntactical and semantic at the collection-processing layer.
+
+## ⚡ [Performance] Remove unused single-pass methods in CompetitionViewModel
+**What:** Removed `averageScore(for:)`, `highestScore(for:)`, `lowestScore(for:)`, and `scoresheetsByRound(for:)` in `ScoreBin/ViewModels/CompetitionViewModel.swift`.
+**Why:** These methods individually called `summary(for: competition)`, which triggers an O(N) `.reduce(into:)` iteration over all scoresheets. Since these are redundant and unused (the single `summary` call is already used optimally in views), deleting them prevents future anti-patterns where a developer might call each of these stats properties in a view and inadvertently cause 4 separate array iterations.
+**Measured Improvement:** Eliminated 4 redundant getter methods and prevented potential O(N*4) view recalculation bottlenecks.
+**Risk Assessment:** None.
+
+## ⚡ [Maintainability] Refactor ScoreDistributionChart bucketing
+**What:** In `ScoreBin/Views/Insights/ScoreDistributionChart.swift`, replaced the chained `if / else if` statements used to bucket scores in `computeChartData(from:)` with a Swift-optimized `switch` statement using ranges (e.g., `case ..<30:`).
+**Why:** A `switch` statement with explicit ranges provides better readability and allows the Swift compiler to optimize the branch evaluation more effectively than sequential `else if` statements.
+**Measured Improvement:** Simplified control flow within an O(N) array reduction block.
+**Risk Assessment:** None. The tier limits and bin behavior remain functionally identical.

@@ -102,22 +102,6 @@ class CompetitionViewModel {
         )
     }
 
-    func averageScore(for competition: Competition) -> Double {
-        summary(for: competition).averageScore
-    }
-
-    func highestScore(for competition: Competition) -> Double {
-        summary(for: competition).highestScore
-    }
-
-    func lowestScore(for competition: Competition) -> Double {
-        summary(for: competition).lowestScore
-    }
-
-    func scoresheetsByRound(for competition: Competition) -> [String: [Scoresheet]] {
-        summary(for: competition).scoresheetsByRound
-    }
-
     private func roundSortIndex(_ round: String) -> Int {
         if let index = RoundType.allCases.firstIndex(where: { $0.rawValue == round }) {
             return index
