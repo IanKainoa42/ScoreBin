@@ -651,3 +651,12 @@ Low risk. The core OCR mapping logic and field definitions themselves are unchan
 **Why:** A `switch` statement with explicit ranges provides better readability and allows the Swift compiler to optimize the branch evaluation more effectively than sequential `else if` statements.
 **Measured Improvement:** Simplified control flow within an O(N) array reduction block.
 **Risk Assessment:** None. The tier limits and bin behavior remain functionally identical.
+
+## ⚡ [Performance] Remove redundant iterations and sequence allocations in ScoresheetImportService
+**What:** Refactored `buildCandidates(for:observations:teamLevel:labelConfidence:)`, `labelConfidence(for:observations:)`, and `parseFieldValues(from:fieldID:teamLevel:)` in `ScoreBin/Services/ScoresheetImportService.swift` to optimize collection traversal logic.
+1. In `buildCandidates`, a chained sequence of `.filter().flatMap().map()` was replaced with a single-pass `reduce(into:)`.
+2. In `parseFieldValues`, a chained sequence of `.compactMap().flatMap()` was replaced with a single-pass `reduce(into:)`.
+3. In `labelConfidence`, an `.reduce(0)` closure was replaced with a `for-in` loop with an early `break` short-circuit when a `1.0` confidence score is reached, and token generation (`Set(normalizedText.split(...))`) was hoisted outside the inner loop.
+**Why:** The original sequence operations spawned several intermediate arrays internally during chained map/filter combinations which generates memory churn during parsing. `reduce(into:)` uses a mutable accumulator variable initialized once, which minimizes Swift allocations during string and OCR observation parsing. The `labelConfidence` changes allow O(1) early exit instead of forcibly running an O(N) evaluation on the entire array, and caches a relatively heavy sequence parsing action.
+**Measured Improvement:** Eliminated 5 intermediate array allocations inside hot path string parsing loops and enables short-circuiting during OCR iteration.
+**Risk Assessment:** Low risk. Functionally identical implementations with identical boundary/fallback returns.

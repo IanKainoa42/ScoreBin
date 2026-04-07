@@ -369,30 +369,26 @@ final class ScoresheetImportService: ScoresheetImporting {
     ) -> [FieldCandidate] {
         let valueRegion = definition.valueRegion.insetBy(dx: -0.015, dy: -0.008)
 
-        let candidates: [FieldCandidate] = observations
-            .filter { observation in
-                observation.boundingBox.intersects(valueRegion)
-                    || valueRegion.contains(observation.boundingBox.center)
-            }
-            .flatMap { observation -> [FieldCandidate] in
-                let spatial = spatialConfidence(
-                    observation.boundingBox,
-                    expectedRegion: definition.valueRegion
-                )
+        let candidates = observations.reduce(into: [FieldCandidate]()) { result, observation in
+            guard observation.boundingBox.intersects(valueRegion) || valueRegion.contains(observation.boundingBox.center) else { return }
 
-                let parsedCandidates = parseFieldValues(
-                    from: observation.text,
-                    fieldID: definition.fieldID,
-                    teamLevel: teamLevel
-                )
+            let spatial = spatialConfidence(
+                observation.boundingBox,
+                expectedRegion: definition.valueRegion
+            )
 
-                return parsedCandidates.map { parsed in
-                    let validity = parsed.wasCorrected ? 0.65 : 1.0
-                    let composite =
-                        observation.confidence * 0.55 + labelConfidence * 0.2 + spatial * 0.15
-                        + validity * 0.1
+            let parsedCandidates = parseFieldValues(
+                from: observation.text,
+                fieldID: definition.fieldID,
+                teamLevel: teamLevel
+            )
 
-                    return FieldCandidate(
+            for parsed in parsedCandidates {
+                let validity = parsed.wasCorrected ? 0.65 : 1.0
+                let composite = observation.confidence * 0.55 + labelConfidence * 0.2 + spatial * 0.15 + validity * 0.1
+
+                result.append(
+                    FieldCandidate(
                         value: parsed.value,
                         rawText: observation.text,
                         sourceRect: observation.boundingBox,
@@ -449,15 +445,15 @@ final class ScoresheetImportService: ScoresheetImporting {
             for: #"(?<![\p{L}])[0-9OoIl]+(?:[.,][0-9OoIl]+)?(?![\p{L}])"#
         )
         let isAmbiguous = Set(matches).count > 1
-        let candidates = matches
-            .compactMap { Double($0) }
-            .flatMap { rawValue in
-                validatedScoreCandidates(
-                    from: rawValue,
-                    range: range,
-                    isAmbiguous: isAmbiguous
-                )
-            }
+        let candidates = matches.reduce(into: [ParsedValueCandidate]()) { result, match in
+            guard let rawValue = Double(match) else { return }
+            let validated = validatedScoreCandidates(
+                from: rawValue,
+                range: range,
+                isAmbiguous: isAmbiguous
+            )
+            result.append(contentsOf: validated)
+        }
 
         return candidates.uniqued()
     }
@@ -541,28 +537,33 @@ final class ScoresheetImportService: ScoresheetImporting {
         let labelRegion = definition.labelRegion.insetBy(dx: -0.05, dy: -0.03)
         let normalizedAliases = definition.aliases.map(\.normalizedForMatching)
 
-        return observations.reduce(0) { currentBest, observation in
+        var currentBest = 0.0
+
+        for observation in observations {
             guard
                 observation.boundingBox.intersects(labelRegion)
                     || labelRegion.contains(observation.boundingBox.center)
-            else {
-                return currentBest
-            }
+            else { continue }
 
             let normalizedText = observation.text.normalizedForMatching
-            let score = normalizedAliases.reduce(0.0) { best, alias in
+            let textTokens = Set(normalizedText.split(separator: " ").map(String.init))
+
+            var observationScore = 0.0
+            for alias in normalizedAliases {
                 if normalizedText.contains(alias) || alias.contains(normalizedText) {
-                    return max(best, 1)
+                    observationScore = 1.0
+                    break
                 }
                 let aliasTokens = Set(alias.split(separator: " ").map(String.init))
-                let textTokens = Set(normalizedText.split(separator: " ").map(String.init))
                 if !aliasTokens.isEmpty && aliasTokens.isSubset(of: textTokens) {
-                    return max(best, 0.75)
+                    observationScore = max(observationScore, 0.75)
                 }
-                return best
             }
-            return max(currentBest, score)
+
+            currentBest = max(currentBest, observationScore)
+            if currentBest >= 1.0 { break }
         }
+        return currentBest
     }
 
     private func spatialConfidence(_ rect: CGRect, expectedRegion: CGRect) -> Double {
