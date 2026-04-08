@@ -80,19 +80,21 @@ struct GymAnalyticsView: View {
     // MARK: - Level Stats
 
     private func levelStatsSection(summary: InsightsViewModel.GymSummary) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let activeStats = summary.levelStats.filter { $0.scoresheetCount > 0 }
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Average Score by Level")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            if summary.levelStats.isEmpty || summary.levelStats.allSatisfy({ $0.scoresheetCount == 0 }) {
+            if activeStats.isEmpty {
                 Text("No scoresheets recorded yet")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                Chart(summary.levelStats.filter { $0.scoresheetCount > 0 }) { stat in
+                Chart(activeStats) { stat in
                     BarMark(
                         x: .value("Level", stat.level),
                         y: .value("Score", stat.averageScore)

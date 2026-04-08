@@ -660,3 +660,9 @@ Low risk. The core OCR mapping logic and field definitions themselves are unchan
 **Why:** The original sequence operations spawned several intermediate arrays internally during chained map/filter combinations which generates memory churn during parsing. `reduce(into:)` uses a mutable accumulator variable initialized once, which minimizes Swift allocations during string and OCR observation parsing. The `labelConfidence` changes allow O(1) early exit instead of forcibly running an O(N) evaluation on the entire array, and caches a relatively heavy sequence parsing action.
 **Measured Improvement:** Eliminated 5 intermediate array allocations inside hot path string parsing loops and enables short-circuiting during OCR iteration.
 **Risk Assessment:** Low risk. Functionally identical implementations with identical boundary/fallback returns.
+
+## ⚡ [Performance] Remove redundant inline filtering in GymAnalyticsView
+**What:** In `ScoreBin/Views/Insights/GymAnalyticsView.swift`, refactored `levelStatsSection` to pre-filter `summary.levelStats` into a local constant `activeStats` before evaluating conditions or rendering the Chart.
+**Why:** The view previously called `.allSatisfy` to check for empty stats, and then redundantly called `.filter { $0.scoresheetCount > 0 }` inline within the `Chart` declaration. Pre-filtering into a local constant consolidates these into a single `O(N)` pass and prevents SwiftUI from re-calculating the filter during every layout pass. (Note: A separate attempt to memoize sorting/grouping in `TeamListView.swift` via `@State` and `.onChange` was reverted as it was identified as a SwiftUI anti-pattern causing double-renders).
+**Measured Improvement:** Eliminated 1 redundant `O(N)` collection operation per view render cycle.
+**Risk Assessment:** None. The filtered elements remain mathematically identical.
