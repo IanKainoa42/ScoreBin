@@ -397,7 +397,8 @@ final class ScoresheetImportService: ScoresheetImporting {
                         failureReason: parsed.failureReason,
                         compositeScore: composite
                     )
-                }
+                )
+            }
             }
 
         return candidates.sorted { lhs, rhs in

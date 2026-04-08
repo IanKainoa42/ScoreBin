@@ -26,6 +26,7 @@ struct InsightsDashboardView: View {
                     // Team Performance
                     if dashboard.teamCount > 0 {
                         teamPerformanceSection
+                        compareTeamsLink
                     }
                 }
                 .padding()
@@ -150,6 +151,25 @@ struct InsightsDashboardView: View {
         }
         .padding()
         .cardStyle()
+    }
+
+    private var compareTeamsLink: some View {
+        NavigationLink(destination: TeamComparisonView()) {
+            HStack {
+                Image(systemName: "arrow.left.arrow.right")
+                    .foregroundColor(.scoreBinCyan)
+                Text("Compare Teams")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding()
+            .cardStyle()
+        }
     }
 
     private func reloadDashboard() {
