@@ -666,3 +666,9 @@ Low risk. The core OCR mapping logic and field definitions themselves are unchan
 **Why:** The view previously called `.allSatisfy` to check for empty stats, and then redundantly called `.filter { $0.scoresheetCount > 0 }` inline within the `Chart` declaration. Pre-filtering into a local constant consolidates these into a single `O(N)` pass and prevents SwiftUI from re-calculating the filter during every layout pass. (Note: A separate attempt to memoize sorting/grouping in `TeamListView.swift` via `@State` and `.onChange` was reverted as it was identified as a SwiftUI anti-pattern causing double-renders).
 **Measured Improvement:** Eliminated 1 redundant `O(N)` collection operation per view render cycle.
 **Risk Assessment:** None. The filtered elements remain mathematically identical.
+
+## ⚡ [Performance] Consolidate array counts and iterations in CompetitionViewModel
+**What:** Refactored `summary(for:)` in `ScoreBin/ViewModels/CompetitionViewModel.swift` to use a single `.reduce(into:)` that calculates both the `scoresheets.count` and iterates through elements, rather than calling `.count` multiple times on the initial array.
+**Why:** Calling `.count` across elements in combination with `.reduce` can cause redundant O(N) array traversals depending on the collection's type. Grouping everything into the single existing `.reduce(into:)` iteration ensures both time and space complexity are optimized.
+**Measured Improvement:** Eliminated 2 redundant `.count` evaluations that were O(N) calls on potentially large collections within the view model rendering cycle.
+**Risk Assessment:** None. Functionally identical implementation.

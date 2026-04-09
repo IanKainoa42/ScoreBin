@@ -68,12 +68,14 @@ class CompetitionViewModel {
 
         let aggregates = scoresheets.reduce(
             into: (
+                count: 0,
                 totalScore: 0.0,
                 highest: -Double.infinity,
                 lowest: Double.infinity,
                 byRound: [String: [Scoresheet]]()
             )
         ) { result, sheet in
+            result.count += 1
             result.totalScore += sheet.finalScore
             result.highest = max(result.highest, sheet.finalScore)
             result.lowest = min(result.lowest, sheet.finalScore)
@@ -93,8 +95,8 @@ class CompetitionViewModel {
         }
 
         return CompetitionSummary(
-            totalScoresheets: scoresheets.count,
-            averageScore: (aggregates.totalScore / Double(scoresheets.count)).rounded2,
+            totalScoresheets: aggregates.count,
+            averageScore: (aggregates.totalScore / Double(aggregates.count)).rounded2,
             highestScore: aggregates.highest.rounded2,
             lowestScore: aggregates.lowest.rounded2,
             scoresheetsByRound: scoresheetsByRound,
