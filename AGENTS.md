@@ -97,11 +97,12 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
 - `ScoreBin/Utilities/Extensions.swift` — DateFormatter and string extensions are finalized.
   Do not add new formatter variants without a documented reason.
 - `ScoreBin/Services/ScoresheetImportService.swift` — OCR parsing and candidate scoring logic.
-  Touched 3 times in 3 days (PRs #65, #68, #69 — Apr 2–5 2026) converting loops to `compactMap`,
+  Touched 4 times in 5 days (PRs #67, #68, #69, #71 — Apr 3–7 2026) converting loops to `compactMap`,
   `reduce(into:)`, and `flatMap`. The declarative refactor is complete as of PR #69.
-  **FROZEN AS OF 2026-04-05.** Do not submit further loop/declarative/compactMap optimization
-  tasks. This is the same escalation trajectory as InsightsViewModel (9+ rewrites) — stopping
-  it here. Unlock condition: specific failing OCR parse test with a sample PDF that reproduces it.
+  **FROZEN AS OF 2026-04-05. Post-freeze violation: PR #71 (2026-04-07 — "Optimize OCR parsing iterations").**
+  Do not submit further loop/declarative/compactMap/reduce optimization tasks.
+  This is the same escalation trajectory as InsightsViewModel (9+ rewrites) — stopping it here.
+  Unlock condition: specific failing OCR parse test with a sample PDF that reproduces it.
 
 **HARD STOP for agents:** Do NOT modify these files unless your issue description
 contains **all three** of:

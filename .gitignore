@@ -45,3 +45,11 @@ fastlane/test_output
 *.xcconfig
 !*.example.xcconfig
 Secrets.swift
+
+# Agent workspace artifacts (never commit these)
+TECHNICAL_DEBT_LOG.md
+plan.md
+test_plan.md
+*.orig
+patch.diff
+*.diff
