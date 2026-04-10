@@ -672,3 +672,9 @@ Low risk. The core OCR mapping logic and field definitions themselves are unchan
 **Why:** Calling `.count` across elements in combination with `.reduce` can cause redundant O(N) array traversals depending on the collection's type. Grouping everything into the single existing `.reduce(into:)` iteration ensures both time and space complexity are optimized.
 **Measured Improvement:** Eliminated 2 redundant `.count` evaluations that were O(N) calls on potentially large collections within the view model rendering cycle.
 **Risk Assessment:** None. Functionally identical implementation.
+
+## ⚡ [Performance] Stabilize Identifiable elements in TeamComparisonView
+**What:** In `ScoreBin/Views/Insights/TeamComparisonView.swift`, changed the `id` of `struct CategoryBar: Identifiable` from a dynamic `let id = UUID()` to a stable computed string `var id: String { "\(category)-\(team)" }`.
+**Why:** Generating a new `UUID()` inside a local view-building function causes SwiftUI to assign new identities to elements on every render cycle. This results in layout thrashing, as SwiftUI tears down and recreates the `BarMark` views instead of smoothly updating them. A stable, deterministic identifier derived from the data prevents this.
+**Measured Improvement:** Prevents unnecessary view invalidations and recreation of Chart `BarMark` elements during re-renders, improving layout performance.
+**Risk Assessment:** None. Functionally identical visualization with proper SwiftUI state diffing.
