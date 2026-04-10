@@ -211,7 +211,7 @@ struct TeamComparisonView: View {
         b: InsightsViewModel.TeamSummary
     ) -> some View {
         struct CategoryBar: Identifiable {
-            let id = UUID()
+            var id: String { "\(category)-\(team)" }
             let category: String
             let team: String
             let percentage: Double
