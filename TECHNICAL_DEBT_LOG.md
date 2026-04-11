@@ -678,3 +678,9 @@ Low risk. The core OCR mapping logic and field definitions themselves are unchan
 **Why:** Generating a new `UUID()` inside a local view-building function causes SwiftUI to assign new identities to elements on every render cycle. This results in layout thrashing, as SwiftUI tears down and recreates the `BarMark` views instead of smoothly updating them. A stable, deterministic identifier derived from the data prevents this.
 **Measured Improvement:** Prevents unnecessary view invalidations and recreation of Chart `BarMark` elements during re-renders, improving layout performance.
 **Risk Assessment:** None. Functionally identical visualization with proper SwiftUI state diffing.
+
+## [2026-04-10] Clean up redundant computed properties in UI Views
+**What:** Removed redundant intermediate computed properties (e.g., `var stuntTotal: Double { scoresheet.stuntTotal.rounded2 }`) from SwiftUI Judge Section Views (`BuildingJudgeSection`, `TumblingJudgeSection`, `OverallJudgeSection`, `DeductionsSection`) and inlined the exact logic (`scoresheet.stuntTotal.rounded2`) into the view body usages.
+**Why:** To reduce unnecessary boilerplate code, prevent redundant property allocations, and preserve the precise mathematical behavior of the app by ensuring all rounding is performed exactly at the display layer and not accumulated within the model logic.
+**Measured Improvement/Rationale:** Reduced line count and cognitive load in the UI components without risking downstream data mutation logic or violating frozen architectures.
+**Risk Assessment:** Very low. The behavior of the `SectionTotalRow` component remains identical, as the mathematical operations simply occur inline instead of through a single-use proxy computed property. Does not affect model schemas or persistence.
