@@ -3,18 +3,6 @@ import SwiftUI
 struct BuildingJudgeSection: View {
     @Binding var scoresheet: Scoresheet
 
-    var stuntTotal: Double {
-        scoresheet.stuntTotal.rounded2
-    }
-
-    var pyramidTotal: Double {
-        scoresheet.pyramidTotal.rounded2
-    }
-
-    var tossTotal: Double {
-        scoresheet.tossTotal.rounded2
-    }
-
     /// Level 1 teams cannot perform tosses
     var showTosses: Bool {
         ScoringRules.isTossAllowed(forLevel: scoresheet.team?.level)
@@ -62,7 +50,7 @@ struct BuildingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Stunt Total",
-                        value: stuntTotal,
+                        value: scoresheet.stuntTotal.rounded2,
                         maxValue: ScoringRules.Maximums.stuntTotal,
                         color: .buildingRed
                     )
@@ -90,7 +78,7 @@ struct BuildingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Pyramid Total",
-                        value: pyramidTotal,
+                        value: scoresheet.pyramidTotal.rounded2,
                         maxValue: ScoringRules.Maximums.pyramidTotal,
                         color: .buildingRed
                     )
@@ -120,7 +108,7 @@ struct BuildingJudgeSection: View {
 
                         SectionTotalRow(
                             label: "Toss Total",
-                            value: tossTotal,
+                            value: scoresheet.tossTotal.rounded2,
                             maxValue: ScoringRules.Maximums.tossTotal,
                             color: .buildingRed
                         )

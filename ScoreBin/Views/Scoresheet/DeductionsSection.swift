@@ -3,10 +3,6 @@ import SwiftUI
 struct DeductionsSection: View {
     @Binding var scoresheet: Scoresheet
 
-    var totalDeductions: Double {
-        scoresheet.totalDeductions.rounded2
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -16,8 +12,8 @@ struct DeductionsSection: View {
                     .font(.headline)
                     .fontWeight(.bold)
                 Spacer()
-                if totalDeductions > 0 {
-                    Text("-\(totalDeductions.scoreFormatted)")
+                if scoresheet.totalDeductions.rounded2 > 0 {
+                    Text("-\(scoresheet.totalDeductions.rounded2.scoreFormatted)")
                         .font(.headline)
                         .fontWeight(.bold)
                 }
