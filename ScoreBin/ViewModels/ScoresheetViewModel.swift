@@ -138,10 +138,13 @@ class ScoresheetViewModel {
 
     func save() {
         guard let context = modelContext else { return }
-
-        if scoresheet.team == nil {
-            scoresheet.team = selectedTeam
+        guard let selectedTeam else {
+            // Prevent orphan scoresheets; UI should already block this.
+            print("Cannot save scoresheet without a selected team")
+            return
         }
+
+        scoresheet.team = selectedTeam
         if scoresheet.competition == nil {
             scoresheet.competition = selectedCompetition
         }
