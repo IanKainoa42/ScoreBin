@@ -6,22 +6,22 @@ struct StickyScoreBar: View {
     var body: some View {
         HStack(spacing: 0) {
             // Building
-            miniScore(label: "BLD", value: viewModel.buildingTotal, color: .buildingRed)
+            miniScore(label: "BLD", value: viewModel.scoresheet.buildingTotal.rounded2, color: .buildingRed)
 
             divider
 
             // Tumbling
-            miniScore(label: "TUM", value: viewModel.tumblingTotal, color: .tumblingTeal)
+            miniScore(label: "TUM", value: viewModel.scoresheet.tumblingTotal.rounded2, color: .tumblingTeal)
 
             divider
 
             // Overall
-            miniScore(label: "OVR", value: viewModel.overallTotal, color: .overallYellow)
+            miniScore(label: "OVR", value: viewModel.scoresheet.overallTotal.rounded2, color: .overallYellow)
 
             divider
 
             // Deductions
-            miniScore(label: "DED", value: -viewModel.totalDeductions, color: .red)
+            miniScore(label: "DED", value: -viewModel.scoresheet.totalDeductions.rounded2, color: .red)
 
             divider
 
@@ -30,7 +30,7 @@ struct StickyScoreBar: View {
                 Text("FINAL")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundColor(.gray)
-                Text(viewModel.finalScore.scoreFormatted)
+                Text(viewModel.scoresheet.finalScore.rounded2.scoreFormatted)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(Color.scoreBinGradient)
             }
