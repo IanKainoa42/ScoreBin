@@ -244,7 +244,7 @@ Before staging any commit, delete all intermediate patch artifacts from the work
 - `*.orig` files (e.g., `InsightsViewModel.swift.orig` — committed in PR #67)
 - `patch.diff` or any `*.diff` files
 - Temp Swift files not in the official Xcode target (e.g., `test_auth.swift`)
-- `TECHNICAL_DEBT_LOG.md` — agent planning file committed 10+ times (PRs #58–#69). It tracks agent work, not source code. **Never commit it.**
+- `TECHNICAL_DEBT_LOG.md` — agent planning file committed 14+ times (PRs #58–#75). It tracks agent work, not source code. **Never commit it.** This file was added to `.gitignore` on 2026-04-09 (commit `277eea9`) but was already tracked — it continued appearing in PRs #73, #74, #75 post-gitignore because `.gitignore` does not affect already-tracked files. It was **untracked via `git rm --cached` on 2026-04-12**. If it re-appears in your staging area, it means Jules re-added it with `git add -f`. Do not do this.
 - `plan.md`, `test_plan.md` — planning artifacts committed in PRs #65–#66. **Never commit them.**
 
-These are tools, not source code. If these files keep appearing in your staging area, add them to `.gitignore`. The global `~/.claude/CLAUDE.md` has the same rule — ScoreBin agents have violated it 10+ times despite it existing globally because Jules reads the repo-level file, not the global one. This entry is the authoritative ScoreBin version.
+These are tools, not source code. All of the above are now in `.gitignore`. The root cause of continued violations is Jules running `git add -f` or `git add .` which overrides gitignore — do not use force-add for artifact files.
