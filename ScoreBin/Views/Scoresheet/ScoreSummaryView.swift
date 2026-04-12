@@ -9,28 +9,28 @@ struct ScoreSummaryView: View {
             HStack(spacing: 12) {
                 CategoryTotalCard(
                     title: "Building",
-                    score: viewModel.buildingTotal,
+                    score: viewModel.scoresheet.buildingTotal.rounded2,
                     maxScore: viewModel.maxBuildingScore,
                     color: .buildingRed
                 )
 
                 CategoryTotalCard(
                     title: "Tumbling",
-                    score: viewModel.tumblingTotal,
+                    score: viewModel.scoresheet.tumblingTotal.rounded2,
                     maxScore: viewModel.maxTumblingScore,
                     color: .tumblingTeal
                 )
 
                 CategoryTotalCard(
                     title: "Overall",
-                    score: viewModel.overallTotal,
+                    score: viewModel.scoresheet.overallTotal.rounded2,
                     maxScore: viewModel.maxOverallScore,
                     color: .overallYellow
                 )
 
                 CategoryTotalCard(
                     title: "Deductions",
-                    score: -viewModel.totalDeductions,
+                    score: -viewModel.scoresheet.totalDeductions.rounded2,
                     maxScore: 0,
                     color: .red,
                     isDeduction: true
@@ -48,7 +48,7 @@ struct ScoreSummaryView: View {
                         Text("Raw Score")
                             .font(.caption)
                             .foregroundColor(.gray)
-                        Text("\(viewModel.rawScore.scoreFormatted) / \(viewModel.maxTotalScore.scoreFormatted)")
+                        Text("\(viewModel.scoresheet.rawScore.rounded2.scoreFormatted) / \(viewModel.maxTotalScore.scoreFormatted)")
                             .font(.title3)
                             .fontWeight(.semibold)
                     }
@@ -59,7 +59,7 @@ struct ScoreSummaryView: View {
                         Text("Percent Perfection")
                             .font(.caption)
                             .foregroundColor(.gray)
-                        Text(viewModel.percentPerfection.scoreFormatted + "%")
+                        Text(viewModel.scoresheet.percentPerfection.rounded2.scoreFormatted + "%")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(.scoreBinCyan)
@@ -77,7 +77,7 @@ struct ScoreSummaryView: View {
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(.gray)
-                        Text(viewModel.finalScore.scoreFormatted)
+                        Text(viewModel.scoresheet.finalScore.rounded2.scoreFormatted)
                             .font(.system(size: 48, weight: .bold))
                             .foregroundStyle(Color.scoreBinGradient)
                     }

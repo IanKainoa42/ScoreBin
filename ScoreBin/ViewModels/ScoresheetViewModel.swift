@@ -62,78 +62,6 @@ class ScoresheetViewModel {
         ScoringRules.maxScore(forLevel: selectedTeam?.level)
     }
 
-    // MARK: - Building Judge Totals
-
-    var stuntTotal: Double {
-        scoresheet.stuntTotal.rounded2
-    }
-
-    var pyramidTotal: Double {
-        scoresheet.pyramidTotal.rounded2
-    }
-
-    var tossTotal: Double {
-        scoresheet.tossTotal.rounded2
-    }
-
-    var buildingTotal: Double {
-        scoresheet.buildingTotal.rounded2
-    }
-
-    // MARK: - Tumbling Judge Totals
-
-    var standingTotal: Double {
-        scoresheet.standingTotal.rounded2
-    }
-
-    var runningTotal: Double {
-        scoresheet.runningTotal.rounded2
-    }
-
-    var jumpsTotal: Double {
-        scoresheet.jumpsTotal.rounded2
-    }
-
-    var tumblingTotal: Double {
-        scoresheet.tumblingTotal.rounded2
-    }
-
-    // MARK: - Overall Judge Totals
-
-    var danceTotal: Double {
-        scoresheet.danceTotal.rounded2
-    }
-
-    var creativityAvg: Double {
-        scoresheet.creativityAverage.rounded2
-    }
-
-    var showmanshipAvg: Double {
-        scoresheet.showmanshipAverage.rounded2
-    }
-
-    var overallTotal: Double {
-        scoresheet.overallTotal.rounded2
-    }
-
-    // MARK: - Final Scores
-
-    var totalDeductions: Double {
-        scoresheet.totalDeductions.rounded2
-    }
-
-    var rawScore: Double {
-        scoresheet.rawScore.rounded2
-    }
-
-    var percentPerfection: Double {
-        scoresheet.percentPerfection.rounded2
-    }
-
-    var finalScore: Double {
-        scoresheet.finalScore.rounded2
-    }
-
     // MARK: - Save/Load
 
     func save() {
@@ -155,7 +83,6 @@ class ScoresheetViewModel {
             try context.save()
             Task { @MainActor in
                 SyncManager.shared.markForSync(scoresheet)
-                SyncManager.shared.updatePendingCount()
             }
         } catch {
             print("Failed to save scoresheet: \(error)")
