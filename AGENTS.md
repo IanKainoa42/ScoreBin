@@ -103,6 +103,15 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
   Do not submit further loop/declarative/compactMap/reduce optimization tasks.
   This is the same escalation trajectory as InsightsViewModel (9+ rewrites) — stopping it here.
   Unlock condition: specific failing OCR parse test with a sample PDF that reproduces it.
+- `ScoreBin/ViewModels/ScoresheetViewModel.swift` — intermediate computed property removal
+  complete (PRs #65, #76 — Apr 2–12 2026). Formatters cached, redundant getters removed,
+  concurrency modernized. **FROZEN for "redundant property" / "remove getters" /
+  "consolidate computed" / "cache formatter" tasks AS OF 2026-04-13.**
+  Unlock condition: user-visible calculation bug or a failing XCTest assertion.
+- `ScoreBin/ViewModels/CompetitionViewModel.swift` — iteration optimizations complete
+  (PRs #70, #73 — Apr 6–9 2026). `.count` consolidations and `.reduce(into:)` refactors done.
+  **FROZEN for iteration/allocation optimization tasks AS OF 2026-04-13.**
+  Unlock condition: Instruments trace showing this function as a measurable hot path.
 
 **HARD STOP for agents:** Do NOT modify these files unless your issue description
 contains **all three** of:
