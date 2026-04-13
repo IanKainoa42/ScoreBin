@@ -217,11 +217,9 @@ struct TeamComparisonView: View {
             let percentage: Double
         }
 
-        let bars: [CategoryBar] = zip(a.categoryBreakdown, b.categoryBreakdown).flatMap { catA, catB in
-            [
-                CategoryBar(category: catA.category, team: a.team.name, percentage: catA.percentage),
-                CategoryBar(category: catB.category, team: b.team.name, percentage: catB.percentage)
-            ]
+        let bars = zip(a.categoryBreakdown, b.categoryBreakdown).reduce(into: [CategoryBar]()) { result, pair in
+            result.append(CategoryBar(category: pair.0.category, team: a.team.name, percentage: pair.0.percentage))
+            result.append(CategoryBar(category: pair.1.category, team: b.team.name, percentage: pair.1.percentage))
         }
 
         return VStack(alignment: .leading, spacing: 12) {
@@ -278,7 +276,8 @@ struct TeamComparisonView: View {
         a: InsightsViewModel.TeamSummary,
         b: InsightsViewModel.TeamSummary
     ) -> some View {
-        let allCategories = Array(Set(a.deductionPatterns.map(\.category) + b.deductionPatterns.map(\.category))).sorted()
+        let uniqueCategories = a.deductionPatterns.reduce(into: Set<String>()) { $0.insert($1.category) }
+        let allCategories = b.deductionPatterns.reduce(into: uniqueCategories) { $0.insert($1.category) }.sorted()
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Deduction Patterns")
