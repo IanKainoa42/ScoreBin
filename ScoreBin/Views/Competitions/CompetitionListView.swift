@@ -81,7 +81,11 @@ struct CompetitionListView: View {
         for index in offsets {
             modelContext.delete(competitions[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save competition deletion: \(error)")
+        }
     }
 }
 

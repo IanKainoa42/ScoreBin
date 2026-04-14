@@ -64,7 +64,11 @@ struct AddCompetitionView: View {
         )
 
         modelContext.insert(competition)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save new competition: \(error)")
+        }
         dismiss()
     }
 }

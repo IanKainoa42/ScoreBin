@@ -214,7 +214,11 @@ struct EditCompetitionView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        try? modelContext.save()
+                        do {
+                            try modelContext.save()
+                        } catch {
+                            print("Failed to save competition edit: \(error)")
+                        }
                         dismiss()
                     }
                 }

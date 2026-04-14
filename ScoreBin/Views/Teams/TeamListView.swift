@@ -114,7 +114,11 @@ struct TeamListView: View {
         for index in offsets {
             modelContext.delete(teams[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save team deletion: \(error)")
+        }
     }
 }
 

@@ -29,7 +29,11 @@ class CompetitionViewModel {
 
         if let context = modelContext {
             context.insert(competition)
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                print("Failed to save new competition: \(error)")
+            }
         }
 
         return competition
@@ -38,7 +42,11 @@ class CompetitionViewModel {
     func deleteCompetition(_ competition: Competition) {
         guard let context = modelContext else { return }
         context.delete(competition)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save competition deletion: \(error)")
+        }
     }
 
     func updateCompetition(_ competition: Competition, name: String, date: Date, location: String, notes: String) {
@@ -47,7 +55,11 @@ class CompetitionViewModel {
         competition.location = location
         competition.notes = notes
 
-        try? modelContext?.save()
+        do {
+            try modelContext?.save()
+        } catch {
+            print("Failed to save competition update: \(error)")
+        }
     }
 
     // MARK: - Statistics
