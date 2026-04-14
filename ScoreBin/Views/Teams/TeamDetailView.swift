@@ -264,7 +264,11 @@ struct EditTeamView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        try? modelContext.save()
+                        do {
+                            try modelContext.save()
+                        } catch {
+                            print("Failed to save team edit: \(error)")
+                        }
                         dismiss()
                     }
                 }

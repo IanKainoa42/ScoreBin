@@ -101,7 +101,11 @@ struct AddTeamView: View {
         )
 
         modelContext.insert(team)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save new team: \(error)")
+        }
         dismiss()
     }
 }
@@ -152,7 +156,11 @@ struct AddGymView: View {
         )
 
         modelContext.insert(gym)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save new gym: \(error)")
+        }
         dismiss()
     }
 }
