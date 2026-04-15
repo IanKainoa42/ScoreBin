@@ -276,8 +276,9 @@ struct TeamComparisonView: View {
         a: InsightsViewModel.TeamSummary,
         b: InsightsViewModel.TeamSummary
     ) -> some View {
-        let uniqueCategories = a.deductionPatterns.reduce(into: Set<String>()) { $0.insert($1.category) }
-        let allCategories = b.deductionPatterns.reduce(into: uniqueCategories) { $0.insert($1.category) }.sorted()
+        let allCategories = (a.deductionPatterns + b.deductionPatterns)
+            .reduce(into: Set<String>()) { $0.insert($1.category) }
+            .sorted()
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Deduction Patterns")
