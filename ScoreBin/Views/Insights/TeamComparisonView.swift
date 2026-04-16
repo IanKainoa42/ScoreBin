@@ -10,22 +10,14 @@ struct TeamComparisonView: View {
     @State private var teamAID: PersistentIdentifier?
     @State private var teamBID: PersistentIdentifier?
 
-    private var activeTeams: [Team] {
-        allTeams.filter { !$0.scoresheets.isEmpty }
-    }
-
-    private var teamA: Team? {
-        activeTeams.first { $0.persistentModelID == teamAID }
-    }
-
-    private var teamB: Team? {
-        activeTeams.first { $0.persistentModelID == teamBID }
-    }
-
     var body: some View {
+        let activeTeams = allTeams.filter { !$0.scoresheets.isEmpty }
+        let teamA = activeTeams.first { $0.persistentModelID == teamAID }
+        let teamB = activeTeams.first { $0.persistentModelID == teamBID }
+
         ScrollView {
             LazyVStack(alignment: .center, spacing: 16) {
-                pickerSection
+                pickerSection(activeTeams: activeTeams)
 
                 if activeTeams.count < 2 {
                     emptyState
@@ -62,14 +54,14 @@ struct TeamComparisonView: View {
 
     // MARK: - Picker Section
 
-    private var pickerSection: some View {
+    private func pickerSection(activeTeams: [Team]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Teams")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            teamPicker(label: "Team A", selection: $teamAID, accent: .scoreBinCyan)
-            teamPicker(label: "Team B", selection: $teamBID, accent: .scoreBinEmerald)
+            teamPicker(label: "Team A", selection: $teamAID, accent: .scoreBinCyan, activeTeams: activeTeams)
+            teamPicker(label: "Team B", selection: $teamBID, accent: .scoreBinEmerald, activeTeams: activeTeams)
         }
         .padding()
         .cardStyle()
@@ -78,7 +70,8 @@ struct TeamComparisonView: View {
     private func teamPicker(
         label: String,
         selection: Binding<PersistentIdentifier?>,
-        accent: Color
+        accent: Color,
+        activeTeams: [Team]
     ) -> some View {
         HStack {
             Circle()
