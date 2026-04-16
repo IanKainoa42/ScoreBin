@@ -255,5 +255,6 @@ Before staging any commit, delete all intermediate patch artifacts from the work
 - Temp Swift files not in the official Xcode target (e.g., `test_auth.swift`)
 - `TECHNICAL_DEBT_LOG.md` — agent planning file committed 14+ times (PRs #58–#75). **Never commit it.** Added to `.gitignore` on 2026-04-09 but was still tracked — continued appearing in PRs #73, #74, #75 post-gitignore. **Untracked via `git rm --cached` on 2026-04-12.** If it re-appears in your staging area, you used `git add -f` or `git add .` — do not force-add this file.
 - `plan.md`, `test_plan.md` — planning artifacts committed in PRs #65–#66. **Never commit them.**
+- `*.bak` files (e.g., `CLAUDE.md.bak` — committed in PR #76). **Never commit backup files.**
 
 These are tools, not source code. All are now in `.gitignore`. Do not use `git add -f` or `git add .` to bypass gitignore — stage specific files by path only.
