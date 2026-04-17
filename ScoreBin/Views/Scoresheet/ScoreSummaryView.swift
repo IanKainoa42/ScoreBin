@@ -48,7 +48,7 @@ struct ScoreSummaryView: View {
                         Text("Raw Score")
                             .font(.caption)
                             .foregroundColor(.gray)
-                        Text("\(viewModel.scoresheet.rawScore.rounded2.scoreFormatted) / \(viewModel.maxTotalScore.scoreFormatted)")
+                        Text("\(viewModel.scoresheet.rawScore.scoreFormatted) / \(viewModel.maxTotalScore.scoreFormatted)")
                             .font(.title3)
                             .fontWeight(.semibold)
                     }
@@ -59,7 +59,7 @@ struct ScoreSummaryView: View {
                         Text("Percent Perfection")
                             .font(.caption)
                             .foregroundColor(.gray)
-                        Text(viewModel.scoresheet.percentPerfection.rounded2.scoreFormatted + "%")
+                        Text(viewModel.scoresheet.percentPerfection.scoreFormatted + "%")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(.scoreBinCyan)
@@ -77,7 +77,7 @@ struct ScoreSummaryView: View {
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(.gray)
-                        Text(viewModel.scoresheet.finalScore.rounded2.scoreFormatted)
+                        Text(viewModel.scoresheet.finalScore.scoreFormatted)
                             .font(.system(size: 48, weight: .bold))
                             .foregroundStyle(Color.scoreBinGradient)
                     }
