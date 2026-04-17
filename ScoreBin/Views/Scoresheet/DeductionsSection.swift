@@ -13,7 +13,7 @@ struct DeductionsSection: View {
                     .fontWeight(.bold)
                 Spacer()
                 if scoresheet.totalDeductions.rounded2 > 0 {
-                    Text("-\(scoresheet.totalDeductions.rounded2.scoreFormatted)")
+                    Text("-\(scoresheet.totalDeductions.scoreFormatted)")
                         .font(.headline)
                         .fontWeight(.bold)
                 }

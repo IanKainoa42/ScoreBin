@@ -30,7 +30,7 @@ struct StickyScoreBar: View {
                 Text("FINAL")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundColor(.gray)
-                Text(viewModel.scoresheet.finalScore.rounded2.scoreFormatted)
+                Text(viewModel.scoresheet.finalScore.scoreFormatted)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(Color.scoreBinGradient)
             }
