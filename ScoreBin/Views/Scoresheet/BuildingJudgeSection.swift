@@ -50,7 +50,7 @@ struct BuildingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Stunt Total",
-                        value: scoresheet.stuntTotal.rounded2,
+                        value: scoresheet.stuntTotal,
                         maxValue: ScoringRules.Maximums.stuntTotal,
                         color: .buildingRed
                     )
@@ -78,7 +78,7 @@ struct BuildingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Pyramid Total",
-                        value: scoresheet.pyramidTotal.rounded2,
+                        value: scoresheet.pyramidTotal,
                         maxValue: ScoringRules.Maximums.pyramidTotal,
                         color: .buildingRed
                     )
@@ -108,7 +108,7 @@ struct BuildingJudgeSection: View {
 
                         SectionTotalRow(
                             label: "Toss Total",
-                            value: scoresheet.tossTotal.rounded2,
+                            value: scoresheet.tossTotal,
                             maxValue: ScoringRules.Maximums.tossTotal,
                             color: .buildingRed
                         )
