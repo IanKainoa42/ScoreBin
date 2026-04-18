@@ -37,7 +37,7 @@ struct OverallJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Dance Total",
-                        value: scoresheet.danceTotal.rounded2,
+                        value: scoresheet.danceTotal,
                         maxValue: ScoringRules.Maximums.danceTotal,
                         color: .overallYellow
                     )

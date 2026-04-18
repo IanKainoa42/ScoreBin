@@ -41,7 +41,7 @@ struct TumblingJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Standing Total",
-                        value: scoresheet.standingTotal.rounded2,
+                        value: scoresheet.standingTotal,
                         maxValue: ScoringRules.Maximums.standingTotal,
                         color: .tumblingTeal
                     )
@@ -79,7 +79,7 @@ struct TumblingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Running Total",
-                        value: scoresheet.runningTotal.rounded2,
+                        value: scoresheet.runningTotal,
                         maxValue: ScoringRules.Maximums.runningTotal,
                         color: .tumblingTeal
                     )
@@ -108,7 +108,7 @@ struct TumblingJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Jumps Total",
-                        value: scoresheet.jumpsTotal.rounded2,
+                        value: scoresheet.jumpsTotal,
                         maxValue: ScoringRules.Maximums.jumpsTotal,
                         color: .tumblingTeal
                     )

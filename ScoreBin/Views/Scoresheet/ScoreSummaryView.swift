@@ -9,28 +9,28 @@ struct ScoreSummaryView: View {
             HStack(spacing: 12) {
                 CategoryTotalCard(
                     title: "Building",
-                    score: viewModel.scoresheet.buildingTotal.rounded2,
+                    score: viewModel.scoresheet.buildingTotal,
                     maxScore: viewModel.maxBuildingScore,
                     color: .buildingRed
                 )
 
                 CategoryTotalCard(
                     title: "Tumbling",
-                    score: viewModel.scoresheet.tumblingTotal.rounded2,
+                    score: viewModel.scoresheet.tumblingTotal,
                     maxScore: viewModel.maxTumblingScore,
                     color: .tumblingTeal
                 )
 
                 CategoryTotalCard(
                     title: "Overall",
-                    score: viewModel.scoresheet.overallTotal.rounded2,
+                    score: viewModel.scoresheet.overallTotal,
                     maxScore: viewModel.maxOverallScore,
                     color: .overallYellow
                 )
 
                 CategoryTotalCard(
                     title: "Deductions",
-                    score: -viewModel.scoresheet.totalDeductions.rounded2,
+                    score: -viewModel.scoresheet.totalDeductions,
                     maxScore: 0,
                     color: .red,
                     isDeduction: true
