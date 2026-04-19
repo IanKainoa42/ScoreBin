@@ -13,6 +13,7 @@ struct AddTeamView: View {
     @State private var ageDivision = "senior"
     @State private var tier = "elite"
     @State private var athleteCount = 20
+    @State private var saveError: String?
 
     var isValid: Bool {
         !name.isBlank
@@ -87,6 +88,19 @@ struct AddTeamView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .alert(
+                "Error Saving",
+                isPresented: Binding(
+                    get: { saveError != nil },
+                    set: { if !$0 { saveError = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                if let saveError {
+                    Text(saveError)
+                }
+            }
         }
     }
 
@@ -103,10 +117,11 @@ struct AddTeamView: View {
         modelContext.insert(team)
         do {
             try modelContext.save()
+            dismiss()
         } catch {
+            saveError = error.localizedDescription
             print("Failed to save new team: \(error)")
         }
-        dismiss()
     }
 }
 
@@ -116,6 +131,7 @@ struct AddGymView: View {
 
     @State private var name = ""
     @State private var location = ""
+    @State private var saveError: String?
 
     var isValid: Bool {
         !name.isBlank
@@ -146,6 +162,19 @@ struct AddGymView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .alert(
+                "Error Saving",
+                isPresented: Binding(
+                    get: { saveError != nil },
+                    set: { if !$0 { saveError = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                if let saveError {
+                    Text(saveError)
+                }
+            }
         }
     }
 
@@ -158,10 +187,11 @@ struct AddGymView: View {
         modelContext.insert(gym)
         do {
             try modelContext.save()
+            dismiss()
         } catch {
+            saveError = error.localizedDescription
             print("Failed to save new gym: \(error)")
         }
-        dismiss()
     }
 }
 
