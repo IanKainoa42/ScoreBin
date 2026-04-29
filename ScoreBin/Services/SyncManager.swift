@@ -292,9 +292,6 @@ class SyncManager {
                     context.insert(gym)
                 }
             }
-            if (index + 1) % 100 == 0 {
-                try context.save()
-            }
         }
         try context.save()
     }
@@ -318,9 +315,6 @@ class SyncManager {
                     team.update(from: data)
                     context.insert(team)
                 }
-            }
-            if (index + 1) % 100 == 0 {
-                try context.save()
             }
         }
         try context.save()
@@ -349,9 +343,6 @@ class SyncManager {
                     competition.update(from: data)
                     context.insert(competition)
                 }
-            }
-            if (index + 1) % 100 == 0 {
-                try context.save()
             }
         }
         try context.save()
@@ -435,9 +426,6 @@ class SyncManager {
                 scoresheet.competition = comp
             }
 
-            if (index + 1) % 100 == 0 {
-                try context.save()
-            }
         }
         try context.save()
     }
