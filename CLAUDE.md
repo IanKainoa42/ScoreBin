@@ -93,7 +93,11 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
   and DateFormatter usage have been optimized 10+ times. 4 PRs (#34–#37) were closed
   without merging — all attempted the same refactor and were rejected. ISO8601DateFormatter
   is a shared static (confirmed). **FROZEN AS OF 2026-03-19. Last violations: PR #58
-  (2026-03-23), PR #60 (2026-03-26 — "batched saving + magic strings").** Do not consolidate again.
+  (2026-03-23), PR #60 (2026-03-26 — "batched saving + magic strings"), PR #84
+  (2026-04-29 — "remove intermediate saves").** Do not consolidate DateFormatters, remove
+  intermediate saves, or batch context.save() calls. The intermediate saves in merge loops
+  are intentional memory-pressure checkpoints, not redundant I/O. 3rd post-freeze violation
+  — 4th triggers an automatic session rejection.
 - `ScoreBin/Utilities/Extensions.swift` — DateFormatter and string extensions are finalized.
   Do not add new formatter variants without a documented reason.
 - `ScoreBin/Services/ScoresheetImportService.swift` — OCR parsing and candidate scoring logic.
