@@ -21,12 +21,10 @@ class InsightsViewModel {
 
     func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
         guard !teams.isEmpty else { return [] }
-        // Note: Removed .lazy as we're converting back to Array immediately anyway
-        let active = teams.filter { !$0.scoresheets.isEmpty }
         if let limit {
-            return Array(active.prefix(limit))
+            return Array(teams.lazy.filter { !$0.scoresheets.isEmpty }.prefix(limit))
         }
-        return active
+        return teams.filter { !$0.scoresheets.isEmpty }
     }
 
     func scoreHistory(for team: Team) -> [ScoreDataPoint] {
