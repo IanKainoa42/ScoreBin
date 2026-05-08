@@ -355,20 +355,16 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        // Collect referenced Team and Competition IDs
-        var teamIDs = Set<UUID>()
-        var compIDs = Set<UUID>()
+        // Collect referenced Team and Competition IDs declaratively
+        let teamIDs = Set(parsedData.compactMap { _, data -> UUID? in
+            guard let teamIDStr = data["team_id"] as? String else { return nil }
+            return UUID(uuidString: teamIDStr)
+        })
 
-        for (_, data) in parsedData {
-            if let teamIDStr = data["team_id"] as? String, let tid = UUID(uuidString: teamIDStr) {
-                teamIDs.insert(tid)
-            }
-            if let compIDStr = data["competition_id"] as? String,
-                let cid = UUID(uuidString: compIDStr)
-            {
-                compIDs.insert(cid)
-            }
-        }
+        let compIDs = Set(parsedData.compactMap { _, data -> UUID? in
+            guard let compIDStr = data["competition_id"] as? String else { return nil }
+            return UUID(uuidString: compIDStr)
+        })
 
         // Fetch Teams
         let teamsMap: [UUID: Team]
