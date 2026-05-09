@@ -227,12 +227,15 @@ export default function ScoresheetForm() {
         creativity_score: overall.creativity,
         showmanship_score: overall.showmanship,
       },
-      deductions: Object.entries(deductions)
-        .filter(([_, count]) => count > 0)
-        .map(([type, count]) => ({
-          category: type.replace(/([A-Z])/g, '_$1').toLowerCase(),
-          count: count,
-        })),
+      deductions: Object.entries(deductions).reduce((acc, [type, count]) => {
+        if (count > 0) {
+          acc.push({
+            category: type.replace(/([A-Z])/g, '_$1').toLowerCase(),
+            count: count,
+          });
+        }
+        return acc;
+      }, []),
     };
     
     console.log('Export data:', JSON.stringify(data, null, 2));
