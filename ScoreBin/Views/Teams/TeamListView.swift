@@ -9,7 +9,7 @@ struct TeamListView: View {
     @State private var showingAddSheet = false
     @State private var showingAddGymSheet = false
     @State private var searchText = ""
-    @State private var saveError: String?
+    @State private var saveError: IdentifiableError?
 
     var body: some View {
         NavigationStack {
@@ -49,18 +49,10 @@ struct TeamListView: View {
             .sheet(isPresented: $showingAddGymSheet) {
                 AddGymView()
             }
-            .alert(
-                "Error Saving",
-                isPresented: Binding(
-                    get: { saveError != nil },
-                    set: { if !$0 { saveError = nil } }
-                )
-            ) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                if let saveError {
-                    Text(saveError)
-                }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }
@@ -131,7 +123,7 @@ struct TeamListView: View {
         do {
             try modelContext.save()
         } catch {
-            saveError = error.localizedDescription
+            saveError = IdentifiableError(message: error.localizedDescription)
             print("Failed to save team deletion: \(error)")
         }
     }
