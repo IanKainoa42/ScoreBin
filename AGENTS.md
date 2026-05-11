@@ -133,6 +133,8 @@ This includes automated sessions (Daily Optimization Workflow, Bolt agent, Senti
 Post a comment: "Task rejected: [file] is locked per Known Fragile Areas. No changes
 made. Add a failing test or user-visible regression to unlock."
 
+**Prohibited dispatch session names (effective 2026-05-11):** Do NOT dispatch Jules or any agent to ScoreBin with session titles containing "Daily iOS Code Optimization", "Daily Optimization Protocol", "Daily Debt Reduction", "Technical Debt Strategy", or any similar vague-scope variant. Three such sessions were stuck in `AWAITING_USER_FEEDBACK` as of 2026-05-11 (dispatched May 9–11) — all generated PRs targeting frozen files (#84, #88, #89). Required format for any ScoreBin agent dispatch: "Fix [specific function] in [specific file] so that [specific measurable condition]." Vague scope = reject at dispatch without creating a PR.
+
 Dispatch system will block re-dispatch if the same file was touched for the same
 stated reason in the last 14 PRs.
 
