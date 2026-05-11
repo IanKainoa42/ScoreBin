@@ -216,7 +216,7 @@ struct EditTeamView: View {
     @Query(sort: \Gym.name) private var gyms: [Gym]
     @Bindable var team: Team
 
-    @State private var saveError: String?
+    @State private var saveError: IdentifiableError?
 
     var body: some View {
         NavigationStack {
@@ -270,24 +270,16 @@ struct EditTeamView: View {
                             try modelContext.save()
                             dismiss()
                         } catch {
-                            saveError = error.localizedDescription
+                            saveError = IdentifiableError(message: error.localizedDescription)
                             print("Failed to save team edit: \(error)")
                         }
                     }
                 }
             }
-            .alert(
-                "Error Saving",
-                isPresented: Binding(
-                    get: { saveError != nil },
-                    set: { if !$0 { saveError = nil } }
-                )
-            ) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                if let saveError {
-                    Text(saveError)
-                }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }

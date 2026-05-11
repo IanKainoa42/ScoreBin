@@ -13,7 +13,7 @@ struct AddTeamView: View {
     @State private var ageDivision = "senior"
     @State private var tier = "elite"
     @State private var athleteCount = 20
-    @State private var saveError: String?
+    @State private var saveError: IdentifiableError?
 
     var isValid: Bool {
         !name.isBlank
@@ -88,18 +88,10 @@ struct AddTeamView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .alert(
-                "Error Saving",
-                isPresented: Binding(
-                    get: { saveError != nil },
-                    set: { if !$0 { saveError = nil } }
-                )
-            ) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                if let saveError {
-                    Text(saveError)
-                }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }
@@ -119,7 +111,7 @@ struct AddTeamView: View {
             try modelContext.save()
             dismiss()
         } catch {
-            saveError = error.localizedDescription
+            saveError = IdentifiableError(message: error.localizedDescription)
             print("Failed to save new team: \(error)")
         }
     }
@@ -131,7 +123,7 @@ struct AddGymView: View {
 
     @State private var name = ""
     @State private var location = ""
-    @State private var saveError: String?
+    @State private var saveError: IdentifiableError?
 
     var isValid: Bool {
         !name.isBlank
@@ -162,18 +154,10 @@ struct AddGymView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .alert(
-                "Error Saving",
-                isPresented: Binding(
-                    get: { saveError != nil },
-                    set: { if !$0 { saveError = nil } }
-                )
-            ) {
-                Button("OK", role: .cancel) { saveError = nil }
-            } message: {
-                if let saveError {
-                    Text(saveError)
-                }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }
@@ -189,7 +173,7 @@ struct AddGymView: View {
             try modelContext.save()
             dismiss()
         } catch {
-            saveError = error.localizedDescription
+            saveError = IdentifiableError(message: error.localizedDescription)
             print("Failed to save new gym: \(error)")
         }
     }

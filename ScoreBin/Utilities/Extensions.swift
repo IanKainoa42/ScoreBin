@@ -78,3 +78,8 @@ extension Date {
     /// Format date for competition display
     var competitionFormatted: String { mediumFormatted }
 }
+
+struct IdentifiableError: Identifiable {
+    let id = UUID()
+    let message: String
+}
