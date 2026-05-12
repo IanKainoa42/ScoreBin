@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -117,7 +117,7 @@ acceptance criterion.** Agents loop on them indefinitely otherwise.
   **FROZEN for iteration/allocation optimization tasks AS OF 2026-04-13.**
   Unlock condition: Instruments trace showing this function as a measurable hot path.
 - `ScoreBin/Views/Scoresheet/OverallJudgeSection.swift`, `ScoreSummaryView.swift`, `StickyScoreBar.swift` — scoresheet presentation views hit in 3 consecutive optimization PRs (#75, #81, #82 — Apr 11–18 2026) each removing "redundant `.rounded2`" calls. **FROZEN for `.rounded2`/`scoreFormatted`/computed property removal AS OF 2026-04-20.** Unlock condition: a specific double-formatting bug with incorrect output, verified by unit test.
-- `ScoreBin/Views/Insights/TeamComparisonView.swift` — touched in 4 consecutive PRs (#74, #77, #79, #80 — Apr 10–16 2026): Identifiable stability, activeTeams refactor, Set creation, local constant. **FROZEN for all "optimization"/"refactor"/"consolidate" tasks AS OF 2026-04-20.** Additionally: the swallowed-save-errors fix from PR #78 (Apr 14) was re-applied in PR #83 (Apr 19) to the same Competition/Team views — confirmed duplicate fix. Views in `Competitions/` and `Teams/` are also locked for save-error refactors until a user-visible save failure or failing XCTest is cited.
+- `ScoreBin/Views/Insights/TeamComparisonView.swift` — touched in 4 consecutive PRs (#74, #77, #79, #80 — Apr 10–16 2026). **FROZEN for all "optimization"/"refactor"/"consolidate" tasks AS OF 2026-04-20.** Additionally: the swallowed-save-errors fix from PR #78 was re-applied in PR #83 to the same Competition/Team views — confirmed duplicate fix. Views in `Competitions/` and `Teams/` are also locked for save-error refactors until a user-visible save failure or failing XCTest is cited.
   Unlock condition: user-visible save failure or a failing XCTest.
 
 **HARD STOP for agents:** Do NOT modify these files unless your issue description
@@ -262,8 +262,8 @@ Before staging any commit, delete all intermediate patch artifacts from the work
 - `*.orig` files (e.g., `InsightsViewModel.swift.orig` — committed in PR #67)
 - `patch.diff` or any `*.diff` files
 - Temp Swift files not in the official Xcode target (e.g., `test_auth.swift`)
-- `TECHNICAL_DEBT_LOG.md` — agent planning file committed 20+ times (PRs #58–#83). **HARD STOP — NEVER commit this file.** In `.gitignore` since 2026-04-09, untracked via `git rm --cached` on 2026-04-12, then **re-committed in every PR from #73–#83 via `git add -f` or `git add .`**. If it appears in your staging area: run `git reset HEAD TECHNICAL_DEBT_LOG.md && git rm --cached TECHNICAL_DEBT_LOG.md`. Stage files by specific path only — never `git add .` or `git add -f`.
+- `TECHNICAL_DEBT_LOG.md` — agent planning file committed 20+ times (PRs #58–#83). **HARD STOP — NEVER commit this file.** In `.gitignore` since 2026-04-09, untracked on 2026-04-12, **re-committed in every PR from #73–#83 via `git add -f` or `git add .`**. If it appears in staging: run `git reset HEAD TECHNICAL_DEBT_LOG.md && git rm --cached TECHNICAL_DEBT_LOG.md`. Stage files by explicit path only.
 - `plan.md`, `test_plan.md` — planning artifacts committed in PRs #65–#66. **Never commit them.**
 - `*.bak` files (e.g., `CLAUDE.md.bak` — committed in PR #76). **Never commit backup files.**
 
-These are tools, not source code. All of the above are in `.gitignore`. Do not use `git add -f` or `git add .` — these commands override gitignore and are the root cause of every violation above. Stage files by explicit path only.
+These are tools, not source code. All are now in `.gitignore`. Do not use `git add -f` or `git add .` to bypass gitignore — stage specific files by path only.

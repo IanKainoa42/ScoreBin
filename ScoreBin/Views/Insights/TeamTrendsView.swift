@@ -9,19 +9,21 @@ struct TeamTrendsView: View {
     @State private var viewModel = InsightsViewModel()
 
     var body: some View {
+        let summary = viewModel.teamSummary(for: team)
+
         ScrollView {
             LazyVStack(alignment: .center, spacing: 16) {
                 // Score Over Time Chart
-                scoreOverTimeSection
+                scoreOverTimeSection(summary: summary)
 
                 // Category Breakdown
-                categoryBreakdownSection
+                categoryBreakdownSection(summary: summary)
 
                 // Deduction Patterns
-                deductionPatternsSection
+                deductionPatternsSection(summary: summary)
 
                 // All Scoresheets
-                allScoresheetsSection
+                allScoresheetsSection(summary: summary)
             }
             .padding()
         }
@@ -35,22 +37,20 @@ struct TeamTrendsView: View {
 
     // MARK: - Score Over Time
 
-    private var scoreOverTimeSection: some View {
+    private func scoreOverTimeSection(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Score Progression")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            if team.scoresheets.isEmpty {
+            if summary.scoreHistory.isEmpty {
                 Text("No scoresheets yet")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
             } else {
-                let dataPoints = viewModel.scoreHistory(for: team)
-
-                Chart(dataPoints) { point in
+                Chart(summary.scoreHistory) { point in
                     LineMark(
                         x: .value("Date", point.date),
                         y: .value("Score", point.score)
@@ -86,15 +86,13 @@ struct TeamTrendsView: View {
 
     // MARK: - Category Breakdown
 
-    private var categoryBreakdownSection: some View {
+    private func categoryBreakdownSection(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Average Category Scores")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let breakdown = viewModel.averageCategoryBreakdown(for: team)
-
-            Chart(breakdown) { category in
+            Chart(summary.categoryBreakdown) { category in
                 BarMark(
                     x: .value("Category", category.category),
                     y: .value("Percentage", category.percentage)
@@ -123,7 +121,7 @@ struct TeamTrendsView: View {
 
             // Legend
             HStack(spacing: 16) {
-                ForEach(breakdown) { category in
+                ForEach(summary.categoryBreakdown) { category in
                     HStack(spacing: 4) {
                         Circle()
                             .fill(colorForCategory(category.category))
@@ -141,22 +139,20 @@ struct TeamTrendsView: View {
 
     // MARK: - Deduction Patterns
 
-    private var deductionPatternsSection: some View {
+    private func deductionPatternsSection(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Deduction Patterns")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let patterns = viewModel.deductionPatterns(for: team)
-
-            if patterns.isEmpty {
+            if summary.deductionPatterns.isEmpty {
                 Text("No deductions recorded")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                ForEach(patterns) { pattern in
+                ForEach(summary.deductionPatterns) { pattern in
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(pattern.category)
@@ -184,13 +180,13 @@ struct TeamTrendsView: View {
 
     // MARK: - All Scoresheets
 
-    private var allScoresheetsSection: some View {
+    private func allScoresheetsSection(summary: InsightsViewModel.TeamSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("All Scoresheets")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            ForEach(team.scoresheets.sorted { $0.createdAt > $1.createdAt }) { sheet in
+            ForEach(summary.sortedScoresheets) { sheet in
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(sheet.competition?.name ?? "Practice")

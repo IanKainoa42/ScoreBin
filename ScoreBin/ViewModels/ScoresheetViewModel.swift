@@ -62,86 +62,17 @@ class ScoresheetViewModel {
         ScoringRules.maxScore(forLevel: selectedTeam?.level)
     }
 
-    // MARK: - Building Judge Totals
-
-    var stuntTotal: Double {
-        scoresheet.stuntTotal.rounded2
-    }
-
-    var pyramidTotal: Double {
-        scoresheet.pyramidTotal.rounded2
-    }
-
-    var tossTotal: Double {
-        scoresheet.tossTotal.rounded2
-    }
-
-    var buildingTotal: Double {
-        scoresheet.buildingTotal.rounded2
-    }
-
-    // MARK: - Tumbling Judge Totals
-
-    var standingTotal: Double {
-        scoresheet.standingTotal.rounded2
-    }
-
-    var runningTotal: Double {
-        scoresheet.runningTotal.rounded2
-    }
-
-    var jumpsTotal: Double {
-        scoresheet.jumpsTotal.rounded2
-    }
-
-    var tumblingTotal: Double {
-        scoresheet.tumblingTotal.rounded2
-    }
-
-    // MARK: - Overall Judge Totals
-
-    var danceTotal: Double {
-        scoresheet.danceTotal.rounded2
-    }
-
-    var creativityAvg: Double {
-        scoresheet.creativityAverage.rounded2
-    }
-
-    var showmanshipAvg: Double {
-        scoresheet.showmanshipAverage.rounded2
-    }
-
-    var overallTotal: Double {
-        scoresheet.overallTotal.rounded2
-    }
-
-    // MARK: - Final Scores
-
-    var totalDeductions: Double {
-        scoresheet.totalDeductions.rounded2
-    }
-
-    var rawScore: Double {
-        scoresheet.rawScore.rounded2
-    }
-
-    var percentPerfection: Double {
-        scoresheet.percentPerfection.rounded2
-    }
-
-    var finalScore: Double {
-        scoresheet.finalScore.rounded2
-    }
-
     // MARK: - Save/Load
 
     func save() {
         guard let context = modelContext else { return }
-
-        if scoresheet.team == nil {
-            scoresheet.team = selectedTeam
+        guard let selectedTeam else {
+            // Prevent orphan scoresheets; UI should already block this.
+            print("Cannot save scoresheet without a selected team")
+            return
         }
+
+        scoresheet.team = selectedTeam
         if scoresheet.competition == nil {
             scoresheet.competition = selectedCompetition
         }
@@ -152,7 +83,6 @@ class ScoresheetViewModel {
             try context.save()
             Task { @MainActor in
                 SyncManager.shared.markForSync(scoresheet)
-                SyncManager.shared.updatePendingCount()
             }
         } catch {
             print("Failed to save scoresheet: \(error)")
@@ -192,5 +122,39 @@ class ScoresheetViewModel {
         if let json = exportJSON() {
             UIPasteboard.general.string = json
         }
+    }
+
+    // MARK: - Import
+
+    func applyImportDraft(_ draft: ScoresheetImportDraft) {
+        let importedScoresheet = Scoresheet(
+            id: draft.id,
+            createdAt: draft.createdAt,
+            team: selectedTeam,
+            competition: selectedCompetition,
+            round: draft.round
+        )
+
+        for fieldID in ScoresheetFieldID.allCases {
+            if let value = draft.parsedFields[fieldID]?.candidateValue {
+                fieldID.apply(value, to: importedScoresheet)
+            }
+        }
+
+        if !ScoringRules.isTossAllowed(forLevel: selectedTeam?.level) {
+            importedScoresheet.tossDifficulty = 0
+            importedScoresheet.tossExecution = 0
+        }
+
+        importedScoresheet.importedAt = draft.createdAt
+        importedScoresheet.importSourceType = draft.sourceType.rawValue
+        importedScoresheet.importSourceRelativePath = draft.sourceRelativePath
+        importedScoresheet.importPreviewRelativePath = draft.previewRelativePath
+        importedScoresheet.parserVersion = draft.parserVersion
+        importedScoresheet.syncStatus = .pending
+
+        scoresheet = importedScoresheet
+        scoresheet.team = selectedTeam
+        scoresheet.competition = selectedCompetition
     }
 }

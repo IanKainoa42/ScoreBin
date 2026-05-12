@@ -10,18 +10,20 @@ struct CompetitionDetailView: View {
     @State private var selectedScoresheet: Scoresheet?
 
     var body: some View {
+        let summary = viewModel.summary(for: competition)
+
         ScrollView {
             LazyVStack(alignment: .center, spacing: 16) {
                 // Competition Info Card
                 infoCard
 
                 // Statistics Card
-                if !competition.scoresheets.isEmpty {
-                    statsCard
+                if summary.totalScoresheets > 0 {
+                    statsCard(summary: summary)
                 }
 
                 // Scoresheets by Round
-                scoresheetsByRound
+                scoresheetsByRound(summary: summary)
             }
             .padding()
         }
@@ -78,21 +80,19 @@ struct CompetitionDetailView: View {
         .cardStyle()
     }
 
-    private var statsCard: some View {
+    private func statsCard(summary: CompetitionViewModel.CompetitionSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Statistics")
                 .font(.headline)
                 .foregroundColor(.white)
 
             HStack(spacing: 20) {
-                StatItem(title: "Total", value: "\(competition.scoresheets.count)")
+                StatItem(title: "Total", value: "\(summary.totalScoresheets)")
                 StatItem(
-                    title: "Average", value: viewModel.averageScore(for: competition).scoreFormatted
+                    title: "Average", value: summary.averageScore.scoreFormatted
                 )
-                StatItem(
-                    title: "High", value: viewModel.highestScore(for: competition).scoreFormatted)
-                StatItem(
-                    title: "Low", value: viewModel.lowestScore(for: competition).scoreFormatted)
+                StatItem(title: "High", value: summary.highestScore.scoreFormatted)
+                StatItem(title: "Low", value: summary.lowestScore.scoreFormatted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,28 +100,27 @@ struct CompetitionDetailView: View {
         .cardStyle()
     }
 
-    private var scoresheetsByRound: some View {
+    private func scoresheetsByRound(summary: CompetitionViewModel.CompetitionSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Scoresheets")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            if competition.scoresheets.isEmpty {
+            if summary.totalScoresheets == 0 {
                 Text("No scoresheets for this competition yet")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.vertical, 20)
                     .frame(maxWidth: .infinity)
             } else {
-                let byRound = viewModel.scoresheetsByRound(for: competition)
-                ForEach(Array(byRound.keys.sorted()), id: \.self) { round in
+                ForEach(summary.sortedRounds, id: \.self) { round in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(round)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.scoreBinCyan)
 
-                        ForEach(byRound[round] ?? []) { sheet in
+                        ForEach(summary.scoresheetsByRound[round] ?? []) { sheet in
                             Button {
                                 selectedScoresheet = sheet
                             } label: {
@@ -190,6 +189,7 @@ struct EditCompetitionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Bindable var competition: Competition
+    @State private var saveError: IdentifiableError?
 
     var body: some View {
         NavigationStack {
@@ -215,10 +215,20 @@ struct EditCompetitionView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
-                        try? modelContext.save()
-                        dismiss()
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            saveError = IdentifiableError(message: error.localizedDescription)
+                            print("Failed to save competition edit: \(error)")
+                        }
                     }
                 }
+            }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }

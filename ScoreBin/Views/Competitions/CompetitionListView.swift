@@ -6,6 +6,7 @@ struct CompetitionListView: View {
     @Query(sort: \Competition.date, order: .reverse) private var competitions: [Competition]
 
     @State private var showingAddSheet = false
+    @State private var saveError: IdentifiableError?
 
     var body: some View {
         NavigationStack {
@@ -29,6 +30,11 @@ struct CompetitionListView: View {
             }
             .sheet(isPresented: $showingAddSheet) {
                 AddCompetitionView()
+            }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
             }
         }
     }
@@ -81,7 +87,12 @@ struct CompetitionListView: View {
         for index in offsets {
             modelContext.delete(competitions[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = IdentifiableError(message: error.localizedDescription)
+            print("Failed to save competition deletion: \(error)")
+        }
     }
 }
 

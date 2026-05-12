@@ -3,16 +3,6 @@ import SwiftUI
 struct DeductionsSection: View {
     @Binding var scoresheet: Scoresheet
 
-    var totalDeductions: Double {
-        (Double(scoresheet.athleteFalls) * ScoringRules.Deductions.athleteFall +
-         Double(scoresheet.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall +
-         Double(scoresheet.buildingBobbles) * ScoringRules.Deductions.buildingBobble +
-         Double(scoresheet.buildingFalls) * ScoringRules.Deductions.buildingFall +
-         Double(scoresheet.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall +
-         Double(scoresheet.boundaryViolations) * ScoringRules.Deductions.boundaryViolation +
-         Double(scoresheet.timeLimitViolations) * ScoringRules.Deductions.timeLimitViolation).rounded2
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -22,8 +12,8 @@ struct DeductionsSection: View {
                     .font(.headline)
                     .fontWeight(.bold)
                 Spacer()
-                if totalDeductions > 0 {
-                    Text("-\(totalDeductions.scoreFormatted)")
+                if scoresheet.totalDeductions > 0 {
+                    Text("-\(scoresheet.totalDeductions.scoreFormatted)")
                         .font(.headline)
                         .fontWeight(.bold)
                 }
@@ -34,43 +24,43 @@ struct DeductionsSection: View {
 
             VStack(spacing: 0) {
                 DeductionCounterRow(
-                    label: "Athlete Fall",
+                    label: ScoringRules.DeductionLabels.athleteFalls,
                     count: $scoresheet.athleteFalls,
                     pointsPer: ScoringRules.Deductions.athleteFall
                 )
 
                 DeductionCounterRow(
-                    label: "Major Athlete Fall",
+                    label: ScoringRules.DeductionLabels.majorAthleteFalls,
                     count: $scoresheet.majorAthleteFalls,
                     pointsPer: ScoringRules.Deductions.majorAthleteFall
                 )
 
                 DeductionCounterRow(
-                    label: "Building Bobble",
+                    label: ScoringRules.DeductionLabels.buildingBobbles,
                     count: $scoresheet.buildingBobbles,
                     pointsPer: ScoringRules.Deductions.buildingBobble
                 )
 
                 DeductionCounterRow(
-                    label: "Building Fall",
+                    label: ScoringRules.DeductionLabels.buildingFalls,
                     count: $scoresheet.buildingFalls,
                     pointsPer: ScoringRules.Deductions.buildingFall
                 )
 
                 DeductionCounterRow(
-                    label: "Major Building Fall",
+                    label: ScoringRules.DeductionLabels.majorBuildingFalls,
                     count: $scoresheet.majorBuildingFalls,
                     pointsPer: ScoringRules.Deductions.majorBuildingFall
                 )
 
                 DeductionCounterRow(
-                    label: "Boundary Violation",
+                    label: ScoringRules.DeductionLabels.boundaryViolation,
                     count: $scoresheet.boundaryViolations,
                     pointsPer: ScoringRules.Deductions.boundaryViolation
                 )
 
                 DeductionCounterRow(
-                    label: "Time Limit Violation",
+                    label: ScoringRules.DeductionLabels.timeLimitViolation,
                     count: $scoresheet.timeLimitViolations,
                     pointsPer: ScoringRules.Deductions.timeLimitViolation
                 )

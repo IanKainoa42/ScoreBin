@@ -9,14 +9,7 @@ struct TeamListView: View {
     @State private var showingAddSheet = false
     @State private var showingAddGymSheet = false
     @State private var searchText = ""
-
-    /// Teams filtered by search text (matches on team name, case-insensitive)
-    private var filteredTeams: [Team] {
-        if searchText.isEmpty {
-            return teams
-        }
-        return teams.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
+    @State private var saveError: IdentifiableError?
 
     var body: some View {
         NavigationStack {
@@ -56,6 +49,11 @@ struct TeamListView: View {
             .sheet(isPresented: $showingAddGymSheet) {
                 AddGymView()
             }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
+            }
         }
     }
 
@@ -93,7 +91,12 @@ struct TeamListView: View {
     private var teamsList: some View {
         List {
             // Teams grouped by Gym, filtered by search
-            let teamsByGym = Dictionary(grouping: filteredTeams) { $0.gym?.name ?? "No Gym" }
+            let teamsByGym = teams.reduce(into: [String: [Team]]()) { result, team in
+                if searchText.isEmpty || team.name.localizedCaseInsensitiveContains(searchText) {
+                    let gymName = team.gym?.name ?? "No Gym"
+                    result[gymName, default: []].append(team)
+                }
+            }
             let sortedGyms = teamsByGym.keys.sorted()
 
             ForEach(sortedGyms, id: \.self) { gymName in
@@ -117,7 +120,12 @@ struct TeamListView: View {
         for index in offsets {
             modelContext.delete(teams[index])
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = IdentifiableError(message: error.localizedDescription)
+            print("Failed to save team deletion: \(error)")
+        }
     }
 }
 

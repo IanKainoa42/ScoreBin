@@ -132,7 +132,9 @@ class SyncManager {
         let batchData = items.map { dataProvider($0) }
 
         try await bulkUploadAction(batchData)
-        items.forEach { updateStatus($0) }
+        for item in items {
+            updateStatus(item)
+        }
     }
 
     // MARK: - Individual Sync Methods
@@ -280,7 +282,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -290,7 +292,11 @@ class SyncManager {
                     context.insert(gym)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -303,7 +309,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -313,7 +319,11 @@ class SyncManager {
                     context.insert(team)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -329,7 +339,7 @@ class SyncManager {
         let existingRecords = try context.fetch(descriptor)
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             if let existing = existingMap[id] {
                 existing.update(from: data)
             } else {
@@ -340,7 +350,11 @@ class SyncManager {
                     context.insert(competition)
                 }
             }
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 
     @MainActor
@@ -356,19 +370,19 @@ class SyncManager {
         let existingMap = Dictionary(uniqueKeysWithValues: existingRecords.map { ($0.id, $0) })
 
         // Collect referenced Team and Competition IDs
-        var teamIDs = Set<UUID>()
-        var compIDs = Set<UUID>()
+        let teamIDs = Set(parsedData.compactMap {
+            if let teamIDStr = $0.1["team_id"] as? String {
+                return UUID(uuidString: teamIDStr)
+            }
+            return nil
+        })
 
-        for (_, data) in parsedData {
-            if let teamIDStr = data["team_id"] as? String, let tid = UUID(uuidString: teamIDStr) {
-                teamIDs.insert(tid)
+        let compIDs = Set(parsedData.compactMap {
+            if let compIDStr = $0.1["competition_id"] as? String {
+                return UUID(uuidString: compIDStr)
             }
-            if let compIDStr = data["competition_id"] as? String,
-                let cid = UUID(uuidString: compIDStr)
-            {
-                compIDs.insert(cid)
-            }
-        }
+            return nil
+        })
 
         // Fetch Teams
         let teamsMap: [UUID: Team]
@@ -393,7 +407,7 @@ class SyncManager {
             compsMap = [:]
         }
 
-        for (id, data) in parsedData {
+        for (index, (id, data)) in parsedData.enumerated() {
             let scoresheet: Scoresheet
             if let existing = existingMap[id] {
                 scoresheet = existing
@@ -420,6 +434,11 @@ class SyncManager {
             {
                 scoresheet.competition = comp
             }
+
+            if (index + 1) % 100 == 0 {
+                try context.save()
+            }
         }
+        try context.save()
     }
 }

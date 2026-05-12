@@ -13,6 +13,7 @@ struct AddTeamView: View {
     @State private var ageDivision = "senior"
     @State private var tier = "elite"
     @State private var athleteCount = 20
+    @State private var saveError: IdentifiableError?
 
     var isValid: Bool {
         !name.isBlank
@@ -87,6 +88,11 @@ struct AddTeamView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
+            }
         }
     }
 
@@ -101,8 +107,13 @@ struct AddTeamView: View {
         )
 
         modelContext.insert(team)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = IdentifiableError(message: error.localizedDescription)
+            print("Failed to save new team: \(error)")
+        }
     }
 }
 
@@ -112,6 +123,7 @@ struct AddGymView: View {
 
     @State private var name = ""
     @State private var location = ""
+    @State private var saveError: IdentifiableError?
 
     var isValid: Bool {
         !name.isBlank
@@ -142,6 +154,11 @@ struct AddGymView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
+            }
         }
     }
 
@@ -152,8 +169,13 @@ struct AddGymView: View {
         )
 
         modelContext.insert(gym)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = IdentifiableError(message: error.localizedDescription)
+            print("Failed to save new gym: \(error)")
+        }
     }
 }
 

@@ -4,10 +4,6 @@ struct OverallJudgeSection: View {
     @Binding var scoresheet: Scoresheet
     var viewModel: ScoresheetViewModel
 
-    var danceTotal: Double {
-        (scoresheet.danceDifficulty + scoresheet.danceExecution).rounded2
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -41,7 +37,7 @@ struct OverallJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Dance Total",
-                        value: danceTotal,
+                        value: scoresheet.danceTotal,
                         maxValue: ScoringRules.Maximums.danceTotal,
                         color: .overallYellow
                     )
@@ -106,7 +102,7 @@ struct OverallJudgeSection: View {
                             .font(.subheadline)
                             .foregroundColor(.gray)
                         Spacer()
-                        Text(viewModel.creativityAvg.scoreFormatted)
+                        Text(viewModel.scoresheet.creativityAverage.scoreFormatted)
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.scoreBinPurple)
@@ -118,7 +114,7 @@ struct OverallJudgeSection: View {
                             .font(.subheadline)
                             .foregroundColor(.gray)
                         Spacer()
-                        Text(viewModel.showmanshipAvg.scoreFormatted)
+                        Text(viewModel.scoresheet.showmanshipAverage.scoreFormatted)
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.scoreBinPurple)

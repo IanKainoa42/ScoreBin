@@ -9,6 +9,7 @@ struct AddCompetitionView: View {
     @State private var date = Date()
     @State private var location = ""
     @State private var notes = ""
+    @State private var saveError: IdentifiableError?
 
     var isValid: Bool {
         !name.isBlank
@@ -52,6 +53,11 @@ struct AddCompetitionView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .alert("Error Saving", item: $saveError) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { error in
+                Text(error.message)
+            }
         }
     }
 
@@ -64,8 +70,13 @@ struct AddCompetitionView: View {
         )
 
         modelContext.insert(competition)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveError = IdentifiableError(message: error.localizedDescription)
+            print("Failed to save new competition: \(error)")
+        }
     }
 }
 

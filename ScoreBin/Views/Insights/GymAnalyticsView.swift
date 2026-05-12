@@ -9,16 +9,18 @@ struct GymAnalyticsView: View {
     @State private var viewModel = InsightsViewModel()
 
     var body: some View {
+        let summary = viewModel.gymSummary(for: gym)
+
         ScrollView {
             LazyVStack(alignment: .center, spacing: 16) {
                 // Gym Overview
-                gymOverviewSection
+                gymOverviewSection(summary: summary)
 
                 // Level Statistics
-                levelStatsSection
+                levelStatsSection(summary: summary)
 
                 // Teams List
-                teamsListSection
+                teamsListSection(summary: summary)
             }
             .padding()
         }
@@ -32,20 +34,15 @@ struct GymAnalyticsView: View {
 
     // MARK: - Gym Overview
 
-    private var gymOverviewSection: some View {
+    private func gymOverviewSection(summary: InsightsViewModel.GymSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Overview")
                 .font(.headline)
                 .foregroundColor(.white)
 
             HStack(spacing: 20) {
-                let counts = gym.teams.reduce(into: (sheets: 0, athletes: 0)) { result, team in
-                    result.sheets += team.scoresheets.count
-                    result.athletes += team.athleteCount
-                }
-
                 VStack(spacing: 4) {
-                    Text("\(gym.teams.count)")
+                    Text("\(summary.teamCount)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.scoreBinCyan)
@@ -55,7 +52,7 @@ struct GymAnalyticsView: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("\(counts.sheets)")
+                    Text("\(summary.totalScoresheets)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.scoreBinEmerald)
@@ -65,7 +62,7 @@ struct GymAnalyticsView: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("\(counts.athletes)")
+                    Text("\(summary.totalAthletes)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.overallYellow)
@@ -82,22 +79,22 @@ struct GymAnalyticsView: View {
 
     // MARK: - Level Stats
 
-    private var levelStatsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private func levelStatsSection(summary: InsightsViewModel.GymSummary) -> some View {
+        let activeStats = summary.levelStats.filter { $0.scoresheetCount > 0 }
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Average Score by Level")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            let stats = viewModel.statsPerLevel(for: gym)
-
-            if stats.isEmpty || stats.allSatisfy({ $0.scoresheetCount == 0 }) {
+            if activeStats.isEmpty {
                 Text("No scoresheets recorded yet")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                Chart(stats.filter { $0.scoresheetCount > 0 }) { stat in
+                Chart(activeStats) { stat in
                     BarMark(
                         x: .value("Level", stat.level),
                         y: .value("Score", stat.averageScore)
@@ -113,7 +110,7 @@ struct GymAnalyticsView: View {
                 .frame(height: 200)
 
                 // Stats table
-                ForEach(stats) { stat in
+                ForEach(summary.levelStats) { stat in
                     HStack {
                         Text(stat.level)
                             .font(.subheadline)
@@ -148,13 +145,13 @@ struct GymAnalyticsView: View {
 
     // MARK: - Teams List
 
-    private var teamsListSection: some View {
+    private func teamsListSection(summary: InsightsViewModel.GymSummary) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Teams")
                 .font(.headline)
                 .foregroundColor(.white)
 
-            ForEach(gym.teams.sorted { $0.level < $1.level }) { team in
+            ForEach(summary.sortedTeams) { team in
                 NavigationLink(destination: TeamTrendsView(team: team)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {

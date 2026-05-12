@@ -9,13 +9,13 @@ struct ScoresheetEntryView: View {
     @State private var showingSaveAlert = false
     @State private var showingResetConfirmation = false
 
-    /// Team must be selected before scoring and saving are allowed
-    private var canEnterScores: Bool {
+    /// Team must be selected before saving is allowed
+    private var canSave: Bool {
         viewModel.selectedTeam != nil
     }
 
-    private var canSave: Bool {
-        canEnterScores
+    private var canScore: Bool {
+        viewModel.selectedTeam != nil
     }
 
     var body: some View {
@@ -31,7 +31,7 @@ struct ScoresheetEntryView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.overallYellow)
-                                Text("Select a team above to enable score entry")
+                                Text("Select a team above to start scoring")
                                     .font(.subheadline)
                                     .foregroundColor(.overallYellow)
                             }
@@ -44,17 +44,17 @@ struct ScoresheetEntryView: View {
 
                         // Judge Panels
                         judgeGridSection
-                            .disabled(!canEnterScores)
-                            .opacity(canEnterScores ? 1 : 0.45)
+                            .disabled(!canScore)
+                            .opacity(canScore ? 1 : 0.35)
 
                         // Deductions
                         DeductionsSection(scoresheet: $viewModel.scoresheet)
-                            .disabled(!canEnterScores)
-                            .opacity(canEnterScores ? 1 : 0.45)
+                            .disabled(!canScore)
+                            .opacity(canScore ? 1 : 0.35)
 
                         // Score Summary
                         ScoreSummaryView(viewModel: viewModel)
-                            .opacity(canEnterScores ? 1 : 0.6)
+                            .opacity(canScore ? 1 : 0.35)
 
                         // Bottom spacer so content isn't hidden behind sticky bar
                         Color.clear.frame(height: 60)
@@ -64,6 +64,7 @@ struct ScoresheetEntryView: View {
 
                 // Sticky score bar - always visible at bottom
                 StickyScoreBar(viewModel: viewModel)
+                    .opacity(canScore ? 1 : 0.6)
             }
             .background(Color.scoreBinBackground)
             .navigationTitle("Scoresheet")

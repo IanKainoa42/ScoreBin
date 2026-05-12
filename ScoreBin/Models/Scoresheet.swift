@@ -70,6 +70,13 @@ final class Scoresheet {
     var syncStatus: ScoresheetSyncStatus
     var supabaseId: String?
 
+    // MARK: - Import Audit
+    var importedAt: Date?
+    var importSourceType: String?
+    var importSourceRelativePath: String?
+    var importPreviewRelativePath: String?
+    var parserVersion: String?
+
     init(
         id: UUID = UUID(),
         createdAt: Date = Date(),
@@ -128,6 +135,13 @@ final class Scoresheet {
         // Sync
         self.syncStatus = ScoresheetSyncStatus.pending
         self.supabaseId = nil
+
+        // Import audit
+        self.importedAt = nil
+        self.importSourceType = nil
+        self.importSourceRelativePath = nil
+        self.importPreviewRelativePath = nil
+        self.parserVersion = nil
     }
 
     // MARK: - Computed Totals

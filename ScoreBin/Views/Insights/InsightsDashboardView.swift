@@ -4,11 +4,9 @@ import Charts
 
 struct InsightsDashboardView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var teams: [Team]
-    @Query(sort: \Scoresheet.createdAt, order: .reverse) private var scoresheets: [Scoresheet]
-    @Query private var competitions: [Competition]
 
     @State private var viewModel = InsightsViewModel()
+    @State private var dashboard = InsightsViewModel.DashboardSnapshot.empty
 
     var body: some View {
         NavigationStack {
@@ -21,21 +19,26 @@ struct InsightsDashboardView: View {
                     recentActivitySection
 
                     // Score Distribution Chart
-                    if !scoresheets.isEmpty {
+                    if dashboard.scoresheetCount > 0 {
                         scoreDistributionSection
                     }
 
                     // Team Performance
-                    if !teams.isEmpty {
+                    if dashboard.teamCount > 0 {
                         teamPerformanceSection
+                        compareTeamsLink
                     }
                 }
                 .padding()
             }
             .background(Color.scoreBinBackground)
             .navigationTitle("Insights")
+            .refreshable {
+                reloadDashboard()
+            }
             .onAppear {
                 viewModel.modelContext = modelContext
+                reloadDashboard()
             }
         }
     }
@@ -51,21 +54,21 @@ struct InsightsDashboardView: View {
             HStack(spacing: 16) {
                 OverviewStatCard(
                     title: "Teams",
-                    value: "\(teams.count)",
+                    value: "\(dashboard.teamCount)",
                     icon: "person.3.fill",
                     color: .scoreBinCyan
                 )
 
                 OverviewStatCard(
                     title: "Scoresheets",
-                    value: "\(scoresheets.count)",
+                    value: "\(dashboard.scoresheetCount)",
                     icon: "doc.text.fill",
                     color: .scoreBinEmerald
                 )
 
                 OverviewStatCard(
                     title: "Competitions",
-                    value: "\(competitions.count)",
+                    value: "\(dashboard.competitionCount)",
                     icon: "trophy.fill",
                     color: .overallYellow
                 )
@@ -83,7 +86,7 @@ struct InsightsDashboardView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
-            if scoresheets.isEmpty {
+            if dashboard.recentActivity.isEmpty {
                 VStack(spacing: 8) {
                     Text("No scoresheets yet")
                         .font(.subheadline)
@@ -95,8 +98,8 @@ struct InsightsDashboardView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 20)
             } else {
-                ForEach(scoresheets.prefix(5)) { sheet in
-                    RecentActivityRow(scoresheet: sheet)
+                ForEach(dashboard.recentActivity) { item in
+                    RecentActivityRow(item: item)
                 }
             }
         }
@@ -112,7 +115,7 @@ struct InsightsDashboardView: View {
                 .font(.headline)
                 .foregroundColor(.white)
 
-            ScoreDistributionChart(scoresheets: scoresheets)
+            ScoreDistributionChart(scores: dashboard.distributionScores)
                 .frame(height: 200)
         }
         .padding()
@@ -122,22 +125,18 @@ struct InsightsDashboardView: View {
     // MARK: - Team Performance Section
 
     private var teamPerformanceSection: some View {
-        let activeTeams = viewModel.activeTeams(from: teams, limit: 5)
-
         return VStack(alignment: .leading, spacing: 12) {
             Text("Team Performance")
                 .font(.headline)
                 .foregroundColor(.white)
 
-
-
-            ForEach(activeTeams.prefix(5)) { team in
-                NavigationLink(destination: TeamTrendsView(team: team)) {
-                    TeamPerformanceRow(team: team, viewModel: viewModel)
+            ForEach(dashboard.teamSummaries, id: \.team.id) { summary in
+                NavigationLink(destination: TeamTrendsView(team: summary.team)) {
+                    TeamPerformanceRow(summary: summary)
                 }
             }
 
-            if activeTeams.isEmpty {
+            if dashboard.teamSummaries.isEmpty {
                 VStack(spacing: 8) {
                     Text("No team performance data yet")
                         .font(.subheadline)
@@ -152,6 +151,34 @@ struct InsightsDashboardView: View {
         }
         .padding()
         .cardStyle()
+    }
+
+    private var compareTeamsLink: some View {
+        NavigationLink(destination: TeamComparisonView()) {
+            HStack {
+                Image(systemName: "arrow.left.arrow.right")
+                    .foregroundColor(.scoreBinCyan)
+                Text("Compare Teams")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding()
+            .cardStyle()
+        }
+    }
+
+    private func reloadDashboard() {
+        do {
+            dashboard = try viewModel.dashboardSnapshot(context: modelContext)
+        } catch {
+            print("Failed to load dashboard snapshot: \(error)")
+            dashboard = .empty
+        }
     }
 }
 
@@ -186,23 +213,23 @@ struct OverviewStatCard: View {
 }
 
 struct RecentActivityRow: View {
-    let scoresheet: Scoresheet
+    let item: InsightsViewModel.RecentActivitySummary
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(scoresheet.team?.name ?? "Unknown Team")
+                Text(item.teamName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
 
                 HStack(spacing: 8) {
-                    if let competition = scoresheet.competition {
-                        Text(competition.name)
+                    if let competitionName = item.competitionName {
+                        Text(competitionName)
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
-                    Text(scoresheet.createdAt.shortFormatted)
+                    Text(item.createdAt.shortFormatted)
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -210,7 +237,7 @@ struct RecentActivityRow: View {
 
             Spacer()
 
-            Text(scoresheet.finalScore.scoreFormatted)
+            Text(item.finalScore.scoreFormatted)
                 .font(.headline)
                 .fontWeight(.bold)
                 .foregroundColor(.scoreBinEmerald)
@@ -220,18 +247,17 @@ struct RecentActivityRow: View {
 }
 
 struct TeamPerformanceRow: View {
-    let team: Team
-    var viewModel: InsightsViewModel
+    let summary: InsightsViewModel.TeamSummary
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(team.name)
+                Text(summary.team.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
 
-                Text("\(team.scoresheets.count) scoresheets")
+                Text("\(summary.totalScoresheets) scoresheets")
                     .font(.caption)
                     .foregroundColor(.gray)
             }
@@ -239,16 +265,15 @@ struct TeamPerformanceRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(viewModel.averageScore(for: team).scoreFormatted)
+                Text(summary.averageScore.scoreFormatted)
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(.scoreBinCyan)
 
-                let improvement = viewModel.scoreImprovement(for: team)
-                if improvement != 0 {
-                    Text((improvement >= 0 ? "+" : "") + improvement.scoreFormatted)
+                if summary.scoreImprovement != 0 {
+                    Text((summary.scoreImprovement >= 0 ? "+" : "") + summary.scoreImprovement.scoreFormatted)
                         .font(.caption)
-                        .foregroundColor(improvement >= 0 ? .green : .red)
+                        .foregroundColor(summary.scoreImprovement >= 0 ? .green : .red)
                 }
             }
 

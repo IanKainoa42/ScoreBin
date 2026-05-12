@@ -3,20 +3,6 @@ import SwiftUI
 struct TumblingJudgeSection: View {
     @Binding var scoresheet: Scoresheet
 
-    var standingTotal: Double {
-        (scoresheet.standingDifficulty + scoresheet.standingExecution + scoresheet.standingDrivers)
-            .rounded2
-    }
-
-    var runningTotal: Double {
-        (scoresheet.runningDifficulty + scoresheet.runningExecution + scoresheet.runningDrivers + scoresheet.runningDriverMaxPart)
-            .rounded2
-    }
-
-    var jumpsTotal: Double {
-        (scoresheet.jumpsDifficulty + scoresheet.jumpsExecution).rounded2
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -55,7 +41,7 @@ struct TumblingJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Standing Total",
-                        value: standingTotal,
+                        value: scoresheet.standingTotal,
                         maxValue: ScoringRules.Maximums.standingTotal,
                         color: .tumblingTeal
                     )
@@ -93,7 +79,7 @@ struct TumblingJudgeSection: View {
                     )
                     SectionTotalRow(
                         label: "Running Total",
-                        value: runningTotal,
+                        value: scoresheet.runningTotal,
                         maxValue: ScoringRules.Maximums.runningTotal,
                         color: .tumblingTeal
                     )
@@ -122,7 +108,7 @@ struct TumblingJudgeSection: View {
 
                     SectionTotalRow(
                         label: "Jumps Total",
-                        value: jumpsTotal,
+                        value: scoresheet.jumpsTotal,
                         maxValue: ScoringRules.Maximums.jumpsTotal,
                         color: .tumblingTeal
                     )

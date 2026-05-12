@@ -8,12 +8,17 @@ struct ScoreSheetDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Header Card
                     headerSection
                         .padding(.horizontal)
+
+                    if scoresheet.importPreviewRelativePath != nil {
+                        ImportedScoresheetPreviewCard(scoresheet: scoresheet)
+                            .padding(.horizontal)
+                    }
 
                     // Score Summary
                     scoreSummarySection
@@ -79,7 +84,15 @@ struct ScoreSheetDetailView: View {
                     .foregroundColor(.gray)
             }
 
-            Text(scoresheet.createdAt.formatted(date: .abbreviated, time: .shortened))
+            if let importSourceType = scoresheet.importSourceType {
+                Text(
+                    "Imported from \(ScoresheetImportSourceType(rawValue: importSourceType)?.displayName ?? importSourceType)"
+                )
+                .font(.caption)
+                .foregroundColor(.scoreBinCyan)
+            }
+
+            Text(scoresheet.createdAt.abbreviatedDateTimeFormatted)
                 .font(.caption)
                 .foregroundColor(.gray)
                 .padding(.top, 4)
@@ -135,37 +148,37 @@ struct ScoreSheetDetailView: View {
             VStack(spacing: 8) {
                 if scoresheet.athleteFalls > 0 {
                     DeductionRow(
-                        name: "Athlete Fall", count: scoresheet.athleteFalls,
+                        name: ScoringRules.DeductionLabels.athleteFalls, count: scoresheet.athleteFalls,
                         value: ScoringRules.Deductions.athleteFall)
                 }
                 if scoresheet.majorAthleteFalls > 0 {
                     DeductionRow(
-                        name: "Major Athlete Fall", count: scoresheet.majorAthleteFalls,
+                        name: ScoringRules.DeductionLabels.majorAthleteFalls, count: scoresheet.majorAthleteFalls,
                         value: ScoringRules.Deductions.majorAthleteFall)
                 }
                 if scoresheet.buildingBobbles > 0 {
                     DeductionRow(
-                        name: "Building Bobble", count: scoresheet.buildingBobbles,
+                        name: ScoringRules.DeductionLabels.buildingBobbles, count: scoresheet.buildingBobbles,
                         value: ScoringRules.Deductions.buildingBobble)
                 }
                 if scoresheet.buildingFalls > 0 {
                     DeductionRow(
-                        name: "Building Fall", count: scoresheet.buildingFalls,
+                        name: ScoringRules.DeductionLabels.buildingFalls, count: scoresheet.buildingFalls,
                         value: ScoringRules.Deductions.buildingFall)
                 }
                 if scoresheet.majorBuildingFalls > 0 {
                     DeductionRow(
-                        name: "Major Building Fall", count: scoresheet.majorBuildingFalls,
+                        name: ScoringRules.DeductionLabels.majorBuildingFalls, count: scoresheet.majorBuildingFalls,
                         value: ScoringRules.Deductions.majorBuildingFall)
                 }
                 if scoresheet.boundaryViolations > 0 {
                     DeductionRow(
-                        name: "Boundary Violation", count: scoresheet.boundaryViolations,
+                        name: ScoringRules.DeductionLabels.boundaryViolations, count: scoresheet.boundaryViolations,
                         value: ScoringRules.Deductions.boundaryViolation)
                 }
                 if scoresheet.timeLimitViolations > 0 {
                     DeductionRow(
-                        name: "Time Limit", count: scoresheet.timeLimitViolations,
+                        name: ScoringRules.DeductionLabels.timeLimitViolations, count: scoresheet.timeLimitViolations,
                         value: ScoringRules.Deductions.timeLimitViolation)
                 }
             }
@@ -284,7 +297,7 @@ struct ScoreSectionView: View {
 
                         Spacer()
 
-                        Text("\(item.value.scoreFormatted)")
+                        Text(item.value.scoreFormatted)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
@@ -328,7 +341,7 @@ struct DeductionRow: View {
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(4)
 
-            Text((Double(count) * value).deductionFormatted)
+            Text("-\((Double(count) * value).scoreFormatted)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.red)
@@ -338,7 +351,7 @@ struct DeductionRow: View {
 }
 
 struct ScoreDetailItem: Identifiable {
-    let id = UUID()
+    var id: String { label }
     let label: String
     let value: Double
     let max: Double

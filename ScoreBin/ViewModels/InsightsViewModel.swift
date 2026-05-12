@@ -19,6 +19,45 @@ class InsightsViewModel {
         let label: String
     }
 
+    struct TeamSummary {
+        let team: Team
+        let totalScoresheets: Int
+        let sortedScoresheets: [Scoresheet]
+        let recentScoresheets: [Scoresheet]
+        let scoreHistory: [ScoreDataPoint]
+        let averageScore: Double
+        let bestScore: Double
+        let scoreImprovement: Double
+        let categoryBreakdown: [CategoryBreakdown]
+        let deductionPatterns: [DeductionPattern]
+    }
+
+    struct RecentActivitySummary: Identifiable {
+        let id: UUID
+        let teamName: String
+        let competitionName: String?
+        let createdAt: Date
+        let finalScore: Double
+    }
+
+    struct DashboardSnapshot {
+        let teamCount: Int
+        let scoresheetCount: Int
+        let competitionCount: Int
+        let recentActivity: [RecentActivitySummary]
+        let distributionScores: [Double]
+        let teamSummaries: [TeamSummary]
+
+        static let empty = DashboardSnapshot(
+            teamCount: 0,
+            scoresheetCount: 0,
+            competitionCount: 0,
+            recentActivity: [],
+            distributionScores: [],
+            teamSummaries: []
+        )
+    }
+
     func activeTeams(from teams: [Team], limit: Int? = nil) -> [Team] {
         guard !teams.isEmpty else { return [] }
         let active = teams.lazy.filter { !$0.scoresheets.isEmpty }
@@ -28,38 +67,150 @@ class InsightsViewModel {
         return Array(active)
     }
 
-    func scoreHistory(for team: Team) -> [ScoreDataPoint] {
-        team.scoresheets
-            .map { sheet in
-                ScoreDataPoint(
-                    id: sheet.id,
-                    date: sheet.createdAt,
-                    score: sheet.finalScore,
-                    label: sheet.competition?.name ?? "Practice"
-                )
+    @MainActor
+    func dashboardSnapshot(context: ModelContext) throws -> DashboardSnapshot {
+        let teamCount = try context.fetchCount(FetchDescriptor<Team>())
+        let competitionCount = try context.fetchCount(FetchDescriptor<Competition>())
+
+        let scoresheetDescriptor = FetchDescriptor<Scoresheet>(
+            sortBy: [SortDescriptor(\Scoresheet.createdAt, order: .reverse)]
+        )
+        let scoresheets = try context.fetch(scoresheetDescriptor)
+
+        let recentActivity = scoresheets.prefix(5).map { sheet in
+            RecentActivitySummary(
+                id: sheet.id,
+                teamName: sheet.team?.name ?? "Unknown Team",
+                competitionName: sheet.competition?.name,
+                createdAt: sheet.createdAt,
+                finalScore: sheet.finalScore
+            )
+        }
+
+        let teamDescriptor = FetchDescriptor<Team>(
+            sortBy: [SortDescriptor(\Team.name)]
+        )
+        let activeTeamSummaries = try context.fetch(teamDescriptor)
+            .lazy
+            .filter { !$0.scoresheets.isEmpty }
+            .prefix(5)
+            .map { self.teamSummary(for: $0) }
+
+        return DashboardSnapshot(
+            teamCount: teamCount,
+            scoresheetCount: scoresheets.count,
+            competitionCount: competitionCount,
+            recentActivity: Array(recentActivity),
+            distributionScores: scoresheets.map(\.finalScore),
+            teamSummaries: Array(activeTeamSummaries)
+        )
+    }
+
+    func teamSummary(for team: Team, recentLimit: Int? = nil) -> TeamSummary {
+        let sortedScoresheets = team.scoresheets.sorted { $0.createdAt > $1.createdAt }
+        let totalScoresheets = sortedScoresheets.count
+        let buildingMax = ScoringRules.buildingMax(forLevel: team.level)
+
+        guard totalScoresheets > 0 else {
+            return TeamSummary(
+                team: team,
+                totalScoresheets: 0,
+                sortedScoresheets: [],
+                recentScoresheets: [],
+                scoreHistory: [],
+                averageScore: 0,
+                bestScore: 0,
+                scoreImprovement: 0,
+                categoryBreakdown: emptyCategoryBreakdown(buildingMax: buildingMax),
+                deductionPatterns: []
+            )
+        }
+
+        let history = sortedScoresheets.reversed().map { sheet in
+            ScoreDataPoint(
+                id: sheet.id,
+                date: sheet.createdAt,
+                score: sheet.finalScore,
+                label: sheet.competition?.name ?? "Practice"
+            )
+        }
+
+        let totals = sortedScoresheets.reduce(
+            into: (
+                finalScore: 0.0,
+                building: 0.0,
+                tumbling: 0.0,
+                overall: 0.0,
+                athleteFalls: 0,
+                majorAthleteFalls: 0,
+                buildingBobbles: 0,
+                buildingFalls: 0,
+                majorBuildingFalls: 0,
+                bestScore: -Double.infinity
+            )
+        ) { result, sheet in
+            result.finalScore += sheet.finalScore
+            result.building += sheet.buildingTotal
+            result.tumbling += sheet.tumblingTotal
+            result.overall += sheet.overallTotal
+            result.athleteFalls += sheet.athleteFalls
+            result.majorAthleteFalls += sheet.majorAthleteFalls
+            result.buildingBobbles += sheet.buildingBobbles
+            result.buildingFalls += sheet.buildingFalls
+            result.majorBuildingFalls += sheet.majorBuildingFalls
+            result.bestScore = max(result.bestScore, sheet.finalScore)
+        }
+
+        let count = Double(totalScoresheets)
+        let recentScoresheets = recentLimit.map { Array(sortedScoresheets.prefix($0)) } ?? sortedScoresheets
+        let scoreImprovement: Double = {
+            guard totalScoresheets >= 2,
+                  let firstScore = sortedScoresheets.first?.finalScore,
+                  let lastScore = sortedScoresheets.last?.finalScore else {
+                return 0.0
             }
-            .sorted { $0.date < $1.date }
+            return (firstScore - lastScore).rounded2
+        }()
+
+        return TeamSummary(
+            team: team,
+            totalScoresheets: totalScoresheets,
+            sortedScoresheets: sortedScoresheets,
+            recentScoresheets: recentScoresheets,
+            scoreHistory: history,
+            averageScore: (totals.finalScore / count).rounded2,
+            bestScore: totals.bestScore.rounded2,
+            scoreImprovement: scoreImprovement,
+            categoryBreakdown: categoryBreakdown(
+                building: totals.building / count,
+                tumbling: totals.tumbling / count,
+                overall: totals.overall / count,
+                buildingMax: buildingMax
+            ),
+            deductionPatterns: deductionPatterns(
+                athleteFalls: totals.athleteFalls,
+                majorAthleteFalls: totals.majorAthleteFalls,
+                buildingBobbles: totals.buildingBobbles,
+                buildingFalls: totals.buildingFalls,
+                majorBuildingFalls: totals.majorBuildingFalls
+            )
+        )
+    }
+
+    func scoreHistory(for team: Team) -> [ScoreDataPoint] {
+        teamSummary(for: team).scoreHistory
     }
 
     func averageScore(for team: Team) -> Double {
-        guard !team.scoresheets.isEmpty else { return 0 }
-        let total = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
-        return (total / Double(team.scoresheets.count)).rounded2
+        teamSummary(for: team).averageScore
     }
 
     func bestScore(for team: Team) -> Double {
-        team.scoresheets.map(\.finalScore).max() ?? 0
+        teamSummary(for: team).bestScore
     }
 
     func scoreImprovement(for team: Team) -> Double {
-        let scoresheets = team.scoresheets
-        guard scoresheets.count >= 2 else { return 0 }
-
-        guard let earliest = scoresheets.min(by: { $0.createdAt < $1.createdAt }),
-              let latest = scoresheets.max(by: { $0.createdAt < $1.createdAt })
-        else { return 0 }
-
-        return (latest.finalScore - earliest.finalScore).rounded2
+        teamSummary(for: team).scoreImprovement
     }
 
     // MARK: - Gym Analytics
@@ -72,31 +223,68 @@ class InsightsViewModel {
         let scoresheetCount: Int
     }
 
-    func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
-        let statsByLevel = gym.teams.reduce(into: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)]()) { result, team in
-            let level = team.level
-            let sheets = team.scoresheets
-            let count = sheets.count
-            let sum = sheets.reduce(0.0) { $0 + $1.finalScore }
+    struct GymSummary {
+        let teamCount: Int
+        let totalScoresheets: Int
+        let totalAthletes: Int
+        let levelStats: [GymLevelStats]
+        let sortedTeams: [Team]
+    }
 
-            var current = result[level] ?? (0.0, 0, 0)
+    func gymSummary(for gym: Gym) -> GymSummary {
+        let sortedTeams = gym.teams.sorted {
+            if $0.level == $1.level {
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            return $0.level.localizedCaseInsensitiveCompare($1.level) == .orderedAscending
+        }
+
+        let aggregates = sortedTeams.reduce(
+            into: (
+                scoresheets: 0,
+                athletes: 0,
+                statsByLevel: [String: (totalScore: Double, scoresheetCount: Int, teamCount: Int)]()
+            )
+        ) { result, team in
+            let count = team.scoresheets.count
+            let sum = team.scoresheets.reduce(0.0) { $0 + $1.finalScore }
+
+            result.scoresheets += count
+            result.athletes += team.athleteCount
+
+            var current = result.statsByLevel[team.level] ?? (0.0, 0, 0)
             current.totalScore += sum
             current.scoresheetCount += count
             current.teamCount += 1
-            result[level] = current
+            result.statsByLevel[team.level] = current
         }
 
-        return statsByLevel.map { level, stats in
-            let avgScore =
+        let levelStats = aggregates.statsByLevel.map { level, stats in
+            let averageScore =
                 stats.scoresheetCount == 0 ? 0 : stats.totalScore / Double(stats.scoresheetCount)
 
             return GymLevelStats(
                 level: level,
-                averageScore: avgScore.rounded2,
+                averageScore: averageScore.rounded2,
                 teamCount: stats.teamCount,
                 scoresheetCount: stats.scoresheetCount
             )
-        }.sorted { $0.level < $1.level }
+        }
+        .sorted { (lhs: GymLevelStats, rhs: GymLevelStats) in
+            lhs.level.localizedCaseInsensitiveCompare(rhs.level) == .orderedAscending
+        }
+
+        return GymSummary(
+            teamCount: sortedTeams.count,
+            totalScoresheets: aggregates.scoresheets,
+            totalAthletes: aggregates.athletes,
+            levelStats: levelStats,
+            sortedTeams: sortedTeams
+        )
+    }
+
+    func statsPerLevel(for gym: Gym) -> [GymLevelStats] {
+        gymSummary(for: gym).levelStats
     }
 
     // MARK: - Category Breakdown
@@ -136,47 +324,7 @@ class InsightsViewModel {
     }
 
     func averageCategoryBreakdown(for team: Team) -> [CategoryBreakdown] {
-        let buildingMax = ScoringRules.buildingMax(forLevel: team.level)
-
-        guard !team.scoresheets.isEmpty else {
-            return [
-                CategoryBreakdown(category: "Building", score: 0, maxScore: buildingMax, percentage: 0),
-                CategoryBreakdown(category: "Tumbling", score: 0, maxScore: ScoringRules.Maximums.tumblingTotal, percentage: 0),
-                CategoryBreakdown(category: "Overall", score: 0, maxScore: ScoringRules.Maximums.overallTotal, percentage: 0)
-            ]
-        }
-
-        let count = Double(team.scoresheets.count)
-        let totals = team.scoresheets.reduce(into: (building: 0.0, tumbling: 0.0, overall: 0.0)) { result, sheet in
-            result.building += sheet.buildingTotal
-            result.tumbling += sheet.tumblingTotal
-            result.overall += sheet.overallTotal
-        }
-
-        let avgBuilding = totals.building / count
-        let avgTumbling = totals.tumbling / count
-        let avgOverall = totals.overall / count
-
-        return [
-            CategoryBreakdown(
-                category: "Building",
-                score: avgBuilding.rounded2,
-                maxScore: buildingMax,
-                percentage: (avgBuilding / buildingMax * 100).rounded2
-            ),
-            CategoryBreakdown(
-                category: "Tumbling",
-                score: avgTumbling.rounded2,
-                maxScore: ScoringRules.Maximums.tumblingTotal,
-                percentage: (avgTumbling / ScoringRules.Maximums.tumblingTotal * 100).rounded2
-            ),
-            CategoryBreakdown(
-                category: "Overall",
-                score: avgOverall.rounded2,
-                maxScore: ScoringRules.Maximums.overallTotal,
-                percentage: (avgOverall / ScoringRules.Maximums.overallTotal * 100).rounded2
-            )
-        ]
+        teamSummary(for: team).categoryBreakdown
     }
 
     // MARK: - Deduction Patterns
@@ -189,58 +337,94 @@ class InsightsViewModel {
     }
 
     func deductionPatterns(for team: Team) -> [DeductionPattern] {
-        let stats = team.scoresheets.reduce(into: (athleteFalls: 0, majorAthleteFalls: 0, buildingBobbles: 0, buildingFalls: 0, majorBuildingFalls: 0)) { result, sheet in
-            result.athleteFalls += sheet.athleteFalls
-            result.majorAthleteFalls += sheet.majorAthleteFalls
-            result.buildingBobbles += sheet.buildingBobbles
-            result.buildingFalls += sheet.buildingFalls
-            result.majorBuildingFalls += sheet.majorBuildingFalls
-        }
-
-        var patterns: [DeductionPattern] = []
-
-        if stats.athleteFalls > 0 {
-            patterns.append(DeductionPattern(
-                category: ScoringRules.DeductionLabels.athleteFalls,
-                totalCount: stats.athleteFalls,
-                totalPoints: Double(stats.athleteFalls) * ScoringRules.Deductions.athleteFall
-            ))
-        }
-
-        if stats.majorAthleteFalls > 0 {
-            patterns.append(DeductionPattern(
-                category: ScoringRules.DeductionLabels.majorAthleteFalls,
-                totalCount: stats.majorAthleteFalls,
-                totalPoints: Double(stats.majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
-            ))
-        }
-
-        if stats.buildingBobbles > 0 {
-            patterns.append(DeductionPattern(
-                category: ScoringRules.DeductionLabels.buildingBobbles,
-                totalCount: stats.buildingBobbles,
-                totalPoints: Double(stats.buildingBobbles) * ScoringRules.Deductions.buildingBobble
-            ))
-        }
-
-        if stats.buildingFalls > 0 {
-            patterns.append(DeductionPattern(
-                category: ScoringRules.DeductionLabels.buildingFalls,
-                totalCount: stats.buildingFalls,
-                totalPoints: Double(stats.buildingFalls) * ScoringRules.Deductions.buildingFall
-            ))
-        }
-
-        if stats.majorBuildingFalls > 0 {
-            patterns.append(DeductionPattern(
-                category: ScoringRules.DeductionLabels.majorBuildingFalls,
-                totalCount: stats.majorBuildingFalls,
-                totalPoints: Double(stats.majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
-            ))
-        }
-
-        return patterns.sorted { $0.totalPoints > $1.totalPoints }
+        teamSummary(for: team).deductionPatterns
     }
 
     // MARK: - View Helpers
+
+    private func emptyCategoryBreakdown(buildingMax: Double) -> [CategoryBreakdown] {
+        [
+            CategoryBreakdown(category: "Building", score: 0, maxScore: buildingMax, percentage: 0),
+            CategoryBreakdown(
+                category: "Tumbling",
+                score: 0,
+                maxScore: ScoringRules.Maximums.tumblingTotal,
+                percentage: 0
+            ),
+            CategoryBreakdown(
+                category: "Overall",
+                score: 0,
+                maxScore: ScoringRules.Maximums.overallTotal,
+                percentage: 0
+            ),
+        ]
+    }
+
+    private func categoryBreakdown(
+        building: Double,
+        tumbling: Double,
+        overall: Double,
+        buildingMax: Double
+    ) -> [CategoryBreakdown] {
+        [
+            CategoryBreakdown(
+                category: "Building",
+                score: building.rounded2,
+                maxScore: buildingMax,
+                percentage: (building / buildingMax * 100).rounded2
+            ),
+            CategoryBreakdown(
+                category: "Tumbling",
+                score: tumbling.rounded2,
+                maxScore: ScoringRules.Maximums.tumblingTotal,
+                percentage: (tumbling / ScoringRules.Maximums.tumblingTotal * 100).rounded2
+            ),
+            CategoryBreakdown(
+                category: "Overall",
+                score: overall.rounded2,
+                maxScore: ScoringRules.Maximums.overallTotal,
+                percentage: (overall / ScoringRules.Maximums.overallTotal * 100).rounded2
+            ),
+        ]
+    }
+
+    private func deductionPatterns(
+        athleteFalls: Int,
+        majorAthleteFalls: Int,
+        buildingBobbles: Int,
+        buildingFalls: Int,
+        majorBuildingFalls: Int
+    ) -> [DeductionPattern] {
+        let possiblePatterns = [
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.athleteFalls,
+                totalCount: athleteFalls,
+                totalPoints: Double(athleteFalls) * ScoringRules.Deductions.athleteFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.majorAthleteFalls,
+                totalCount: majorAthleteFalls,
+                totalPoints: Double(majorAthleteFalls) * ScoringRules.Deductions.majorAthleteFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.buildingBobbles,
+                totalCount: buildingBobbles,
+                totalPoints: Double(buildingBobbles) * ScoringRules.Deductions.buildingBobble
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.buildingFalls,
+                totalCount: buildingFalls,
+                totalPoints: Double(buildingFalls) * ScoringRules.Deductions.buildingFall
+            ),
+            DeductionPattern(
+                category: ScoringRules.DeductionLabels.majorBuildingFalls,
+                totalCount: majorBuildingFalls,
+                totalPoints: Double(majorBuildingFalls) * ScoringRules.Deductions.majorBuildingFall
+            )
+        ]
+
+        return possiblePatterns
+            .filter { $0.totalCount > 0 }
+            .sorted { $0.totalPoints > $1.totalPoints }
+    }
 }
