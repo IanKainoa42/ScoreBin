@@ -267,3 +267,7 @@ Before staging any commit, delete all intermediate patch artifacts from the work
 - `*.bak` files (e.g., `CLAUDE.md.bak` — committed in PR #76). **Never commit backup files.**
 
 These are tools, not source code. All are now in `.gitignore`. Do not use `git add -f` or `git add .` to bypass gitignore — stage specific files by path only.
+
+## Imported Claude Cowork project instructions
+
+This project is for gathering this season's score sheets from every competition that we've been to, as well as last year's score sheets and the year before that, probably back to 2023. 23, 24, 25, and this would be twenty-six for Cheerforce San Diego just to see the overall scoring trends.
